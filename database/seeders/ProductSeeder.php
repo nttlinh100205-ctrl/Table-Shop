@@ -11,16 +11,16 @@ class ProductSeeder extends Seeder
     public function run(): void
     {
         $products = [
-            ['Quần jean nam', 'Quần', 350000],
-            ['Áo thun nữ', 'Áo', 250000],
-            ['Phụ kiện thời trang', 'Phụ kiện', 150000],
-            ['Áo sơ mi nam', 'Áo', 300000],
-            ['Quần short nữ', 'Quần', 280000],
-            ['Balo mini', 'Phụ kiện', 400000],
-            ['Áo khoác jean', 'Áo', 500000],
-            ['Vòng tay đá', 'Phụ kiện', 180000],
-            ['Quần tây nam', 'Quần', 320000],
-            ['Áo hoodie', 'Áo', 450000],
+            ['Bàn làm việc BC111', 'Bàn văn phòng', 3500000],
+            ['Bàn văn phòng BC113', 'Bàn văn phòng', 2800000],
+            ['Cụm bàn 4 người BC114', 'Bàn văn phòng', 8500000],
+            ['Cụm bàn 6 người BC115', 'Bàn văn phòng', 12000000],
+            ['Ghế lưới GX698D', 'Ghế văn phòng', 1800000],
+            ['Ghế xoay văn phòng BLV135', 'Ghế văn phòng', 2200000],
+            ['Ghế giám đốc BT26', 'Ghế văn phòng', 3500000],
+            ['Tủ hồ sơ 3 ngăn', 'Tủ - Kệ', 1500000],
+            ['Kệ sách văn phòng', 'Tủ - Kệ', 900000],
+            ['Sofa phòng khách 3 chỗ', 'Sofa - Ghế thư giãn', 5500000],
         ];
 
         foreach ($products as [$name, $categoryName, $price]) {
