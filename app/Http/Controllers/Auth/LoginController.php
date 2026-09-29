@@ -78,6 +78,6 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('success', 'Bạn đã đăng xuất.');
+        return redirect()->route('user.home')->with('success', 'Bạn đã đăng xuất thành công.');
     }
 }

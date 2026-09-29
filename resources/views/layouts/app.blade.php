@@ -259,8 +259,8 @@
 
     <nav class="navbar navbar-expand-lg navbar-store">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ auth()->check() && !auth()->user()->isAdmin() ? route('user.home') : url('/') }}">
-                <i class="bi bi-shop me-1"></i>Store
+            <a class="navbar-brand fw-bold" href="{{ route('user.home') }}">
+                <i class="bi bi-shop me-1"></i>Table Shop
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -269,105 +269,110 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    @auth
-                        @if(auth()->user()->isAdmin())
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
-                                   href="{{ route('admin.dashboard') }}">Dashboard</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}"
-                                   href="{{ route('admin.categories.index') }}">Categories</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}"
-                                   href="{{ route('admin.products.index') }}">Products</a>
-                            </li>
-                        @else
-                            {{-- Danh mục 3 cấp (logo Store = trang chủ) --}}
-                            @foreach($navCategories as $root)
-                                <li class="nav-item nav-cat-item">
-                                    <a class="nav-link {{ request('category') == $root->id ? 'active' : '' }}"
-                                       href="{{ route('user.home', ['category' => $root->id]) }}">
-                                        {{ $root->name }}
-                                        @if($root->subCategories->count())
-                                            <i class="bi bi-chevron-down" style="font-size:0.7rem;"></i>
-                                        @endif
-                                    </a>
-
+                    @if(auth()->check() && auth()->user()->isAdmin())
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
+                               href="{{ route('admin.dashboard') }}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}"
+                               href="{{ route('admin.categories.index') }}">Categories</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}"
+                               href="{{ route('admin.products.index') }}">Products</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('user.home') }}" target="_blank">
+                                <i class="bi bi-box-arrow-up-right me-1"></i>Xem Shop
+                            </a>
+                        </li>
+                    @else
+                        {{-- Danh mục 3 cấp (cho cả khách và người dùng) --}}
+                        @foreach($navCategories as $root)
+                            <li class="nav-item nav-cat-item">
+                                <a class="nav-link {{ request('category') == $root->id ? 'active' : '' }}"
+                                   href="{{ route('user.home', ['category' => $root->id]) }}">
+                                    {{ $root->name }}
                                     @if($root->subCategories->count())
-                                        <ul class="cat-menu">
-                                            @foreach($root->subCategories as $child)
-                                                <li class="{{ $child->subSubCategories->count() ? 'has-children' : '' }}">
-                                                    <a class="{{ request('sub_category') == $child->id ? 'active' : '' }}"
-                                                       href="{{ route('user.home', ['sub_category' => $child->id]) }}">
-                                                        {{ $child->name }}
-                                                    </a>
-                                                    @if($child->subSubCategories->count())
-                                                        <ul class="cat-submenu">
-                                                            @foreach($child->subSubCategories as $grand)
-                                                                <li>
-                                                                    <a class="{{ request('sub_sub_category') == $grand->id ? 'active' : '' }}"
-                                                                       href="{{ route('user.home', ['sub_sub_category' => $grand->id]) }}">
-                                                                        {{ $grand->name }}
-                                                                    </a>
-                                                                </li>
-                                                            @endforeach
-                                                        </ul>
-                                                    @endif
-                                                </li>
-                                            @endforeach
-                                        </ul>
+                                        <i class="bi bi-chevron-down" style="font-size:0.7rem;"></i>
                                     @endif
-                                </li>
-                            @endforeach
-                        @endif
-                    @endauth
+                                </a>
+
+                                @if($root->subCategories->count())
+                                    <ul class="cat-menu">
+                                        @foreach($root->subCategories as $child)
+                                            <li class="{{ $child->subSubCategories->count() ? 'has-children' : '' }}">
+                                                <a class="{{ request('sub_category') == $child->id ? 'active' : '' }}"
+                                                   href="{{ route('user.home', ['sub_category' => $child->id]) }}">
+                                                    {{ $child->name }}
+                                                </a>
+                                                @if($child->subSubCategories->count())
+                                                    <ul class="cat-submenu">
+                                                        @foreach($child->subSubCategories as $grand)
+                                                            <li>
+                                                                <a class="{{ request('sub_sub_category') == $grand->id ? 'active' : '' }}"
+                                                                   href="{{ route('user.home', ['sub_sub_category' => $grand->id]) }}">
+                                                                    {{ $grand->name }}
+                                                                </a>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                @endif
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                            </li>
+                        @endforeach
+                    @endif
                 </ul>
 
                 <ul class="navbar-nav align-items-lg-center">
-                    @auth
-                        @if(!auth()->user()->isAdmin())
-                            <li class="nav-item me-lg-2 mb-2 mb-lg-0">
-                                <form action="{{ route('user.home') }}" method="GET" class="d-flex">
-                                    <div class="input-group input-group-sm">
-                                        <input type="search"
-                                               name="q"
-                                               class="form-control"
-                                               placeholder="Tìm sản phẩm..."
-                                               value="{{ request('q') }}"
-                                               aria-label="Tìm kiếm">
-                                        <button class="btn btn-search" type="submit" title="Tìm">
-                                            <i class="bi bi-search"></i>
-                                        </button>
-                                    </div>
-                                </form>
-                            </li>
+                    @if(!auth()->check() || !auth()->user()->isAdmin())
+                        <li class="nav-item me-lg-2 mb-2 mb-lg-0">
+                            <form action="{{ route('user.home') }}" method="GET" class="d-flex">
+                                <div class="input-group input-group-sm">
+                                    <input type="search"
+                                           name="q"
+                                           class="form-control"
+                                           placeholder="Tìm sản phẩm..."
+                                           value="{{ request('q') }}"
+                                           aria-label="Tìm kiếm">
+                                    <button class="btn btn-search" type="submit" title="Tìm">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </li>
 
-                            @php
-                                $cartCount = collect(session('cart', []))->sum('quantity');
-                            @endphp
+                        @php
+                            $cartCount = collect(session('cart', []))->sum('quantity');
+                        @endphp
+                        @auth
                             <li class="nav-item">
                                 <a href="{{ route('user.orders.index') }}"
                                    class="nav-link nav-icon-link {{ request()->routeIs('user.orders.*') ? 'active' : '' }}"
-                                   title="Đơn hàng">
+                                   title="Đơn hàng của tôi">
                                     <i class="bi bi-bag-check fs-5"></i>
                                 </a>
                             </li>
-                            <li class="nav-item me-lg-1">
-                                <a href="{{ route('user.cart.index') }}"
-                                   class="nav-link nav-icon-link position-relative {{ request()->routeIs('user.cart.*') ? 'active' : '' }}"
-                                   title="Giỏ hàng">
-                                    <i class="bi bi-cart3 fs-5"></i>
-                                    <span id="cart-count-badge"
-                                          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                          style="font-size:0.65rem; {{ $cartCount == 0 ? 'display:none' : '' }}">
-                                        {{ $cartCount }}
-                                    </span>
-                                </a>
-                            </li>
-                        @endif
+                        @endauth
+                        <li class="nav-item me-lg-1">
+                            <a href="{{ route('user.cart.index') }}"
+                               class="nav-link nav-icon-link position-relative {{ request()->routeIs('user.cart.*') ? 'active' : '' }}"
+                               title="Giỏ hàng">
+                                <i class="bi bi-cart3 fs-5"></i>
+                                <span id="cart-count-badge"
+                                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                      style="font-size:0.65rem; {{ $cartCount == 0 ? 'display:none' : '' }}">
+                                    {{ $cartCount }}
+                                </span>
+                            </a>
+                        </li>
+                    @endif
 
+                    @auth
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                data-bs-toggle="dropdown" aria-expanded="false">
@@ -375,7 +380,7 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                 @if(auth()->user()->isAdmin())
-                                    <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">Dashboard Admin</a></li>
                                 @else
                                     <li><a class="dropdown-item" href="{{ route('user.orders.index') }}">
                                         <i class="bi bi-bag-check me-1"></i>Đơn hàng của tôi
@@ -392,6 +397,17 @@
                                     </form>
                                 </li>
                             </ul>
+                        </li>
+                    @else
+                        <li class="nav-item ms-lg-2">
+                            <a href="{{ route('login') }}" class="nav-link">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
+                            </a>
+                        </li>
+                        <li class="nav-item ms-1">
+                            <a href="{{ route('register') }}" class="btn btn-sm" style="background:#5c4a1f; color:#fff; font-weight:600; font-size:0.82rem; border-radius:2rem; padding: 0.35rem 0.9rem;">
+                                <i class="bi bi-person-plus me-1"></i>Đăng ký
+                            </a>
                         </li>
                     @endauth
                 </ul>

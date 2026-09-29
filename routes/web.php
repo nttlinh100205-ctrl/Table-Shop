@@ -33,24 +33,10 @@ Route::get('/up', function () {
     return response('OK', 200)->header('Content-Type', 'text/plain');
 });
 
-// Trang chủ công khai
-Route::get('/', function () {
-    if (auth()->check()) {
-        $user = auth()->user();
+// Trang chủ công khai cho mọi người
+Route::get('/', [HomeController::class, 'index'])->name('user.home');
+Route::get('/products/{id}', [HomeController::class, 'show'])->name('products.show');
 
-        // Admin không bắt xác thực email
-        if ($user->isAdmin()) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        if (!$user->hasVerifiedEmail()) {
-            return redirect()->route('verification.notice');
-        }
-
-        return redirect()->route('user.home');
-    }
-    return redirect()->route('login');
-});
 
 /*
 |--------------------------------------------------------------------------
@@ -149,24 +135,33 @@ Route::prefix('admin')
 
 /*
 |--------------------------------------------------------------------------
-| User routes — người dùng đã đăng nhập
-| Thư mục xử lý: App\Http\Controllers\User
+| User routes — Công khai (Chi tiết sản phẩm, Giỏ hàng)
+| Cho phép cả khách vãng lai và người dùng đã đăng nhập
+|--------------------------------------------------------------------------
+*/
+Route::prefix('user')->name('user.')->group(function () {
+    Route::get('/home', function () {
+        return redirect()->route('user.home');
+    });
+    Route::get('/products/{id}', [HomeController::class, 'show'])->name('products.show');
+
+    // Giỏ hàng (dùng session)
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
+    Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+});
+
+/*
+|--------------------------------------------------------------------------
+| User routes — Bắt buộc đăng nhập (Thanh toán, Đơn hàng, Livechat)
 |--------------------------------------------------------------------------
 */
 Route::prefix('user')
     ->name('user.')
     ->middleware(['auth', 'verified', 'user'])
     ->group(function () {
-        Route::get('/home', [HomeController::class, 'index'])->name('home');
-        Route::get('/products/{id}', [HomeController::class, 'show'])->name('products.show');
-
-        // Giỏ hàng (session)
-        Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-        Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
-        Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
-        Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
-        Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
-
         // Thanh toán & đơn hàng
         Route::get('/payment', [OrderController::class, 'index'])->name('payment.index');
         Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
