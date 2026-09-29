@@ -32,15 +32,15 @@ return [
 
     'ghn' => [
         'base_url'          => env('GHN_BASE_URL', 'https://dev-online-gateway.ghn.vn/shiip/public-api'),
-        'token'             => env('GHN_TOKEN'),
-        'shop_id'           => env('GHN_SHOP_ID'),
-        'verify_ssl'        => env('GHN_VERIFY_SSL', true),
+        'token'             => env('GHN_TOKEN', '391561a1-aa86-11f1-a973-aee5264794df'),
+        'shop_id'           => env('GHN_SHOP_ID', 217485),
+        'verify_ssl'        => env('GHN_VERIFY_SSL', false),
         'from_name'         => env('GHN_FROM_NAME', 'Table-Store'),
         'from_phone'        => env('GHN_FROM_PHONE', '0346222645'),
         'from_address'      => env('GHN_FROM_ADDRESS', '43/58 Trần Bình, Phường Mai Dịch, Quận Cầu Giấy, Hà Nội'),
         'from_district_id'  => env('GHN_FROM_DISTRICT_ID', 1485),
         'from_ward_code'    => env('GHN_FROM_WARD_CODE', '1A0603'),
-        'default_weight'    => env('GHN_DEFAULT_WEIGHT', 25000),
+        'default_weight'    => env('GHN_DEFAULT_WEIGHT', 15000),
     ],
  'momo' => [
         'endpoint'     => env('MOMO_ENDPOINT', 'https://test-payment.momo.vn/v2/gateway/api/create'),

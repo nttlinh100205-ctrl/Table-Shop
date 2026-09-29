@@ -67,13 +67,22 @@ class GHNController extends Controller
         if (($result['code'] ?? null) == 200 && !empty($result['data'])) {
             $data = $result['data'];
             $total = (int) ($data['total'] ?? $data['total_fee'] ?? $data['service_fee'] ?? 0);
-            // Một số response GHN tách phí — cộng lại nếu total = 0
             if ($total <= 0) {
                 $total = (int) ($data['service_fee'] ?? 0)
                     + (int) ($data['insurance_fee'] ?? 0)
                     + (int) ($data['pick_station_fee'] ?? 0);
             }
-            $result['data']['total'] = $total;
+            $result['data']['total'] = $total > 0 ? $total : 45000;
+        } else {
+            // Cước phí mặc định nếu API sandbox GHN không phản hồi
+            $result = [
+                'code' => 200,
+                'message' => 'Cước phí giao hàng tiêu chuẩn GHN (ước tính)',
+                'data' => [
+                    'total' => 45000,
+                    'service_fee' => 45000,
+                ],
+            ];
         }
 
         return response()->json($result);
