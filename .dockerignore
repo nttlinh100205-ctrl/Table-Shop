@@ -14,7 +14,9 @@ node_modules
 tests
 .phpunit.cache
 .phpunit.result.cache
-storage
+storage/framework
+storage/logs
+!storage/app/public/products
 bootstrap/cache
 public/hot
 public/storage

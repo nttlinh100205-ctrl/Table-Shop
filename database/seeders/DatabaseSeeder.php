@@ -13,8 +13,9 @@ class DatabaseSeeder extends Seeder
             $this->call([
                 AdminUserSeeder::class,
                 CategorySeeder::class,
-                ProductSeeder::class,
                 ColorSeeder::class,
+                ClusterDeskSeeder::class,
+                ProductSeeder::class,
             ]);
         });
     }
