@@ -53,7 +53,13 @@ case "${RUN_MIGRATIONS:-true}" in
 esac
 
 case "${RUN_SEEDERS:-false}" in
-    true) su-exec www-data php artisan db:seed --force --no-interaction ;;
+    true)
+        if su-exec www-data php artisan db:seed --force --no-interaction; then
+            echo "==> Seeding completed successfully."
+        else
+            echo "==> WARNING: Seeding failed (check SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD). App will still start." >&2
+        fi
+        ;;
     false) ;;
     *) echo "RUN_SEEDERS must be true or false" >&2; exit 1 ;;
 esac
