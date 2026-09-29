@@ -11,23 +11,23 @@ class ProductSeeder extends Seeder
     public function run(): void
     {
         $products = [
-            ['Quần jean nam', 'Quần', 350000, 100],
-            ['Áo thun nữ', 'Áo', 250000, 80],
-            ['Phụ kiện thời trang', 'Phụ kiện', 150000, 120],
-            ['Áo sơ mi nam', 'Áo', 300000, 50],
-            ['Quần short nữ', 'Quần', 280000, 60],
-            ['Balo mini', 'Phụ kiện', 400000, 40],
-            ['Áo khoác jean', 'Áo', 500000, 30],
-            ['Vòng tay đá', 'Phụ kiện', 180000, 70],
-            ['Quần tây nam', 'Quần', 320000, 90],
-            ['Áo hoodie', 'Áo', 450000, 55],
+            ['Quần jean nam', 'Quần', 350000],
+            ['Áo thun nữ', 'Áo', 250000],
+            ['Phụ kiện thời trang', 'Phụ kiện', 150000],
+            ['Áo sơ mi nam', 'Áo', 300000],
+            ['Quần short nữ', 'Quần', 280000],
+            ['Balo mini', 'Phụ kiện', 400000],
+            ['Áo khoác jean', 'Áo', 500000],
+            ['Vòng tay đá', 'Phụ kiện', 180000],
+            ['Quần tây nam', 'Quần', 320000],
+            ['Áo hoodie', 'Áo', 450000],
         ];
 
-        foreach ($products as [$name, $categoryName, $price, $quantity]) {
+        foreach ($products as [$name, $categoryName, $price]) {
             $category = Category::firstOrCreate(['name' => $categoryName]);
             Product::firstOrCreate(
                 ['name' => $name, 'category_id' => $category->id],
-                ['price' => $price, 'quantity' => $quantity],
+                ['price' => $price],
             );
         }
     }
