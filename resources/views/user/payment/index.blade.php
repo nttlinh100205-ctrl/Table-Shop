@@ -898,6 +898,45 @@
                             <span>Tạm tính hàng hóa</span>
                             <strong>{{ number_format($totalPrice, 0, ',', '.') }}đ</strong>
                         </div>
+
+                        {{-- Dòng giảm giá khuyến mãi (nếu có) --}}
+                        <div class="calc-row" id="discount_row" style="{{ ($discountAmount ?? 0) > 0 ? '' : 'display:none;' }}">
+                            <span class="text-success d-flex align-items-center gap-1">
+                                <i class="bi bi-tag-fill"></i> Giảm giá khuyến mãi
+                                <span class="badge bg-success-subtle text-success border border-success-subtle" id="applied_code_badge">{{ $coupon['code'] ?? '' }}</span>
+                            </span>
+                            <strong class="text-success" id="discount_amount_text">-{{ number_format($discountAmount ?? 0, 0, ',', '.') }}đ</strong>
+                        </div>
+
+                        {{-- Ô nhập mã giảm giá Voucher --}}
+                        <div class="coupon-section my-3 pt-2 pb-1 border-top border-bottom">
+                            <div id="coupon_input_group" style="{{ ($discountAmount ?? 0) > 0 ? 'display:none;' : '' }}">
+                                <label class="form-label mb-1 fw-bold small text-muted">Mã khuyến mãi / Voucher</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="coupon_code_input" class="form-control"
+                                           placeholder="Nhập mã voucher (VD: SALE20)..."
+                                           style="text-transform:uppercase; font-weight:700; font-size:0.82rem; letter-spacing:0.04em;">
+                                    <button type="button" id="btn_apply_coupon" class="btn btn-primary" style="font-weight:600; font-size:0.8rem; padding:0 0.85rem;">
+                                        Áp dụng
+                                    </button>
+                                </div>
+                                <div id="coupon_msg" class="small mt-1" style="display:none;"></div>
+                            </div>
+                            <div id="coupon_applied_pill" class="d-flex align-items-center justify-content-between p-2 rounded-2"
+                                 style="background:#f0fdf4; border:1px dashed #86efac; font-size:0.82rem; {{ ($discountAmount ?? 0) > 0 ? '' : 'display:none!important;' }}">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-ticket-perforated text-success fs-5"></i>
+                                    <div>
+                                        <span class="fw-bold text-success" id="pill_code">{{ $coupon['code'] ?? '' }}</span>
+                                        <small class="text-muted d-block" id="pill_desc">Tiết kiệm {{ number_format($discountAmount ?? 0, 0, ',', '.') }}đ</small>
+                                    </div>
+                                </div>
+                                <button type="button" id="btn_remove_coupon" class="btn btn-sm btn-link text-danger p-0 text-decoration-none fw-bold" title="Hủy mã">
+                                    Gỡ bỏ
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="calc-row highlight-shipping">
                             <span>Phí vận chuyển (GHN)</span>
                             <strong id="shipping_fee_text">Chọn địa chỉ</strong>
@@ -909,10 +948,11 @@
                                 <div class="total-desc">Đã bao gồm VAT & phí ship</div>
                             </div>
                             <div class="total-amount" id="final_total_text">
-                                {{ number_format($totalPrice, 0, ',', '.') }}đ
+                                {{ number_format(max(0, $totalPrice - ($discountAmount ?? 0)), 0, ',', '.') }}đ
                             </div>
                         </div>
                         <input type="hidden" id="total_price_input" value="{{ (int) $totalPrice }}">
+                        <input type="hidden" id="discount_amount_input" value="{{ (int) ($discountAmount ?? 0) }}">
                     </div>
 
                     {{-- Guarantees strip --}}
@@ -957,15 +997,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const provincesUrl = "{{ route('user.locations.provinces') }}";
     const csrf = "{{ csrf_token() }}";
 
+    let currentDiscount = parseInt(document.getElementById('discount_amount_input')?.value || 0, 10) || 0;
+    let currentFee = 0;
+
     function fmt(n) {
         return new Intl.NumberFormat('vi-VN').format(n) + 'đ';
     }
 
     function updateTotals(fee) {
+        currentFee = fee;
+        const finalTotal = Math.max(0, subtotal - currentDiscount + fee);
+
         if (fee > 0) {
             shippingFeeText.innerText = fmt(fee);
             shippingFeeInput.value = fee;
-            finalTotalText.innerText = fmt(subtotal + fee);
+            finalTotalText.innerText = fmt(finalTotal);
             checkoutButtons.forEach(button => { button.disabled = false; });
 
             if (ghnStatusBox) {
@@ -981,7 +1027,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             shippingFeeText.innerText = fee === 0 ? '0đ' : 'Chọn địa chỉ';
             shippingFeeInput.value = 0;
-            finalTotalText.innerText = fmt(subtotal);
+            finalTotalText.innerText = fmt(Math.max(0, subtotal - currentDiscount));
             checkoutButtons.forEach(button => { button.disabled = true; });
 
             if (ghnStatusBox) {
@@ -1156,6 +1202,115 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     };
+
+    // Xử lý Áp dụng và Gỡ bỏ mã khuyến mãi (Voucher)
+    const applyCouponBtn = document.getElementById('btn_apply_coupon');
+    const couponInput = document.getElementById('coupon_code_input');
+    const couponMsg = document.getElementById('coupon_msg');
+    const couponInputGroup = document.getElementById('coupon_input_group');
+    const couponAppliedPill = document.getElementById('coupon_applied_pill');
+    const discountRow = document.getElementById('discount_row');
+    const discountAmountText = document.getElementById('discount_amount_text');
+    const appliedCodeBadge = document.getElementById('applied_code_badge');
+    const pillCode = document.getElementById('pill_code');
+    const pillDesc = document.getElementById('pill_desc');
+    const removeCouponBtn = document.getElementById('btn_remove_coupon');
+
+    if (applyCouponBtn && couponInput) {
+        applyCouponBtn.addEventListener('click', function () {
+            const code = couponInput.value.trim();
+            if (!code) {
+                couponMsg.textContent = 'Vui lòng nhập mã giảm giá.';
+                couponMsg.className = 'small mt-1 text-danger';
+                couponMsg.style.display = 'block';
+                return;
+            }
+
+            applyCouponBtn.disabled = true;
+            applyCouponBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+
+            fetch("{{ route('user.coupon.apply') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                },
+                body: JSON.stringify({ code: code }),
+            })
+            .then(r => r.json().then(data => ({ ok: r.ok, body: data })))
+            .then(({ ok, body }) => {
+                applyCouponBtn.disabled = false;
+                applyCouponBtn.textContent = 'Áp dụng';
+
+                if (ok && body.success) {
+                    currentDiscount = parseInt(body.discount_amount, 10) || 0;
+                    document.getElementById('discount_amount_input').value = currentDiscount;
+
+                    discountAmountText.textContent = '-' + fmt(currentDiscount);
+                    appliedCodeBadge.textContent = body.code;
+                    pillCode.textContent = body.code;
+                    pillDesc.textContent = 'Tiết kiệm ' + fmt(currentDiscount);
+
+                    discountRow.style.display = 'flex';
+                    couponInputGroup.style.display = 'none';
+                    couponAppliedPill.style.display = 'flex';
+                    couponMsg.style.display = 'none';
+
+                    updateTotals(currentFee);
+                } else {
+                    couponMsg.textContent = body.message || 'Mã giảm giá không hợp lệ.';
+                    couponMsg.className = 'small mt-1 text-danger';
+                    couponMsg.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                applyCouponBtn.disabled = false;
+                applyCouponBtn.textContent = 'Áp dụng';
+                couponMsg.textContent = 'Không thể kết nối máy chủ. Vui lòng thử lại sau.';
+                couponMsg.className = 'small mt-1 text-danger';
+                couponMsg.style.display = 'block';
+            });
+        });
+
+        // Cho phép ấn Enter trong ô input voucher để áp dụng
+        couponInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyCouponBtn.click();
+            }
+        });
+    }
+
+    if (removeCouponBtn) {
+        removeCouponBtn.addEventListener('click', function () {
+            removeCouponBtn.disabled = true;
+            fetch("{{ route('user.coupon.remove') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                },
+            })
+            .then(r => r.json())
+            .then(body => {
+                removeCouponBtn.disabled = false;
+                currentDiscount = 0;
+                document.getElementById('discount_amount_input').value = 0;
+                discountRow.style.display = 'none';
+                couponAppliedPill.style.display = 'none';
+                couponInputGroup.style.display = 'block';
+                couponInput.value = '';
+                couponMsg.style.display = 'none';
+
+                updateTotals(currentFee);
+            })
+            .catch(() => {
+                removeCouponBtn.disabled = false;
+            });
+        });
+    }
 });
 </script>
 @endpush

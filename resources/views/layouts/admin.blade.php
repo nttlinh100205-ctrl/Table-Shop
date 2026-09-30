@@ -384,6 +384,12 @@
                 Đơn hàng
             </a>
 
+            <a href="{{ route('admin.promotions.index') }}"
+               class="sidebar-nav-link {{ request()->routeIs('admin.promotions.*') ? 'active' : '' }}">
+                <span class="nav-icon"><i class="bi bi-ticket-perforated"></i></span>
+                Khuyến mãi
+            </a>
+
             <a href="{{ route('admin.finance.index') }}"
                class="sidebar-nav-link {{ request()->routeIs('admin.finance.index') ? 'active' : '' }}">
                 <span class="nav-icon"><i class="bi bi-wallet2"></i></span>

@@ -329,8 +329,27 @@
                         @endforeach
                     </tbody>
                     <tfoot>
+                        @if(($order->discount_amount ?? 0) > 0)
+                            <tr>
+                                <th colspan="3" class="text-end text-muted fw-normal">Tạm tính hàng hóa</th>
+                                <th class="text-end text-muted fw-normal">
+                                    {{ number_format($order->total_price + $order->discount_amount, 0, ',', '.') }}đ
+                                </th>
+                            </tr>
+                            <tr>
+                                <th colspan="3" class="text-end text-success fw-normal">
+                                    <i class="bi bi-tag-fill me-1"></i>Giảm giá khuyến mãi
+                                    @if($order->coupon_code)
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle ms-1">{{ $order->coupon_code }}</span>
+                                    @endif
+                                </th>
+                                <th class="text-end text-success fw-bold">
+                                    -{{ number_format($order->discount_amount, 0, ',', '.') }}đ
+                                </th>
+                            </tr>
+                        @endif
                         <tr>
-                            <th colspan="3" class="text-end">Tổng tiền</th>
+                            <th colspan="3" class="text-end">Tổng tiền hàng</th>
                             <th class="text-end text-danger fs-5">
                                 {{ number_format($order->total_price, 0, ',', '.') }}đ
                             </th>

@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
                 ColorSeeder::class,
                 ClusterDeskSeeder::class,
                 ProductSeeder::class,
+                PromotionSeeder::class,
             ]);
         });
     }

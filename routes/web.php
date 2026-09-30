@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\FinanceController;
 use App\Http\Controllers\Admin\ChatController as AdminChatController;
+use App\Http\Controllers\Admin\PromotionController as AdminPromotionController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\User\HomeController;
@@ -115,6 +116,10 @@ Route::prefix('admin')
         Route::post('/orders/{order}/return', [AdminOrderController::class, 'processReturn'])->name('orders.return');
         Route::post('/orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');
 
+        // Khuyến mãi & Voucher
+        Route::resource('promotions', AdminPromotionController::class);
+        Route::post('/promotions/{promotion}/toggle', [AdminPromotionController::class, 'toggleStatus'])->name('promotions.toggle');
+
         // Người dùng
         Route::resource('users', AdminUserController::class);
 
@@ -151,6 +156,10 @@ Route::prefix('user')->name('user.')->group(function () {
     Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
     Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+
+    // Áp dụng / Hủy voucher giảm giá
+    Route::post('/coupon/apply', [CartController::class, 'applyCoupon'])->name('coupon.apply');
+    Route::post('/coupon/remove', [CartController::class, 'removeCoupon'])->name('coupon.remove');
 });
 
 /*

@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PaymentTransaction;
 use App\Models\ProductVariant;
+use App\Models\Promotion;
 use App\Services\GHNOrderService;
 use App\Services\GHNService;
 use App\Services\MomoService;
@@ -29,7 +30,23 @@ class OrderController extends Controller
 
         $totalPrice = collect($cart)->sum(fn ($item) => $item['price'] * $item['quantity']);
 
-        return view('user.payment.index', compact('cart', 'totalPrice'));
+        // Kiểm tra mã giảm giá đang lưu trong session (nếu có)
+        $coupon = session('coupon');
+        $discountAmount = 0;
+        if (!empty($coupon['code'])) {
+            $promotion = Promotion::where('code', $coupon['code'])->first();
+            $err = null;
+            if ($promotion && $promotion->isValid($totalPrice, $err)) {
+                $discountAmount = $promotion->calculateDiscount($totalPrice);
+                $coupon['discount_amount'] = $discountAmount;
+                session()->put('coupon', $coupon);
+            } else {
+                session()->forget('coupon');
+                $coupon = null;
+            }
+        }
+
+        return view('user.payment.index', compact('cart', 'totalPrice', 'coupon', 'discountAmount'));
     }
 
     /**
@@ -64,27 +81,54 @@ class OrderController extends Controller
                 ->with('error', 'Giỏ hàng đang trống.');
         }
 
-        // total_price = chỉ tiền hàng (giống đơn #13)
+        // total_price = chỉ tiền hàng sau khi trừ khuyến mãi
         // Phí ship lưu riêng ở ghn_total_fee, thu khi nhận hàng
-        $subtotal    = collect($cart)->sum(fn ($item) => $item['price'] * $item['quantity']);
+        $subtotal    = (float) collect($cart)->sum(fn ($item) => $item['price'] * $item['quantity']);
         $shippingFee = (int) ($validated['shipping_fee'] ?? 0);
-        $goodsAmount = (int) round((float) $subtotal);
+
+        // Áp dụng khuyến mãi nếu có
+        $couponSession  = session('coupon');
+        $promotionId    = null;
+        $couponCode     = null;
+        $discountAmount = 0;
+
+        if (!empty($couponSession['code'])) {
+            $promotion = Promotion::where('code', $couponSession['code'])->first();
+            $err = null;
+            if ($promotion && $promotion->isValid($subtotal, $err)) {
+                $discountAmount = $promotion->calculateDiscount($subtotal);
+                $promotionId    = $promotion->id;
+                $couponCode     = $promotion->code;
+            } else {
+                session()->forget('coupon');
+            }
+        }
+
+        $goodsAmount = (int) round(max(0, $subtotal - $discountAmount));
         $method      = $validated['payment_method'];
 
         try {
-            $order = DB::transaction(function () use ($validated, $cart, $goodsAmount, $shippingFee, $method) {
+            $order = DB::transaction(function () use ($validated, $cart, $goodsAmount, $shippingFee, $method, $promotionId, $couponCode, $discountAmount) {
                 $order = Order::create([
                     'user_id'         => Auth::id(),
+                    'promotion_id'    => $promotionId,
+                    'coupon_code'     => $couponCode,
+                    'discount_amount' => $discountAmount,
                     'name'            => $validated['name'],
                     'phone'           => $validated['phone'],
                     'address'         => $validated['address'],
-                    'total_price'     => $goodsAmount, // chỉ tiền hàng
+                    'total_price'     => $goodsAmount, // tiền hàng sau khi trừ giảm giá
                     'status'          => 'pending',
                     'shipping_status' => 'pending',
                     'ghn_total_fee'   => $shippingFee,
                     'to_district_id'  => $validated['to_district_id'],
                     'to_ward_code'    => $validated['to_ward_code'],
                 ]);
+
+                // Tăng số lượt đã sử dụng của mã khuyến mãi
+                if ($promotionId) {
+                    Promotion::where('id', $promotionId)->increment('used_count');
+                }
 
                 foreach ($cart as $item) {
                     $color     = null;
@@ -126,7 +170,7 @@ class OrderController extends Controller
                 return $order->fresh();
             });
 
-            session()->forget('cart');
+            session()->forget(['cart', 'coupon']);
 
             // ===== MoMo: gọi API ngay → chuyển sang trang thanh toán MoMo =====
             if ($method === 'momo') {

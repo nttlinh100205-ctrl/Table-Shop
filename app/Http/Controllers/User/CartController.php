@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Promotion;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -207,7 +208,96 @@ class CartController extends Controller
      */
     public function clear()
     {
-        session()->forget('cart');
+        session()->forget(['cart', 'coupon']);
         return redirect()->route('user.cart.index')->with('success', 'Đã xóa toàn bộ giỏ hàng.');
+    }
+
+    /**
+     * Áp dụng mã khuyến mãi vào giỏ hàng / phiên thanh toán.
+     */
+    public function applyCoupon(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string|max:50',
+        ], [
+            'code.required' => 'Vui lòng nhập mã khuyến mãi.',
+        ]);
+
+        $code = strtoupper(trim($request->code));
+        $promotion = Promotion::where('code', $code)->first();
+
+        if (!$promotion) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mã khuyến mãi "' . $code . '" không tồn tại hoặc đã bị xóa.',
+            ], 422);
+        }
+
+        $cart = session()->get('cart', []);
+        if (empty($cart)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Giỏ hàng đang trống, không thể áp dụng mã giảm giá.',
+            ], 422);
+        }
+
+        $subtotal = (float) collect($cart)->sum(fn ($item) => ($item['price'] ?? 0) * ($item['quantity'] ?? 0));
+
+        $errorMsg = null;
+        if (!$promotion->isValid($subtotal, $errorMsg)) {
+            return response()->json([
+                'success' => false,
+                'message' => $errorMsg,
+            ], 422);
+        }
+
+        $discount = $promotion->calculateDiscount($subtotal);
+        $newTotal = max(0, $subtotal - $discount);
+
+        session()->put('coupon', [
+            'id'                  => $promotion->id,
+            'code'                => $promotion->code,
+            'name'                => $promotion->name,
+            'discount_type'       => $promotion->discount_type,
+            'discount_value'      => (float) $promotion->discount_value,
+            'max_discount_amount' => $promotion->max_discount_amount ? (float) $promotion->max_discount_amount : null,
+            'discount_amount'     => $discount,
+        ]);
+        session()->save();
+
+        return response()->json([
+            'success'         => true,
+            'message'         => 'Áp dụng mã "' . $promotion->code . '" thành công! Bạn được giảm ' . number_format($discount, 0, ',', '.') . 'đ.',
+            'code'            => $promotion->code,
+            'discount_amount' => $discount,
+            'discount_text'   => number_format($discount, 0, ',', '.') . 'đ',
+            'subtotal'        => $subtotal,
+            'new_total'       => $newTotal,
+            'new_total_text'  => number_format($newTotal, 0, ',', '.') . 'đ',
+        ]);
+    }
+
+    /**
+     * Hủy áp dụng mã khuyến mãi.
+     */
+    public function removeCoupon(Request $request)
+    {
+        session()->forget('coupon');
+        session()->save();
+
+        $cart = session()->get('cart', []);
+        $subtotal = (float) collect($cart)->sum(fn ($item) => ($item['price'] ?? 0) * ($item['quantity'] ?? 0));
+
+        if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'success'        => true,
+                'message'        => 'Đã hủy áp dụng mã giảm giá.',
+                'subtotal'       => $subtotal,
+                'new_total'      => $subtotal,
+                'new_total_text' => number_format($subtotal, 0, ',', '.') . 'đ',
+            ]);
+        }
+
+        return back()->with('success', 'Đã hủy mã giảm giá.');
     }
 }
