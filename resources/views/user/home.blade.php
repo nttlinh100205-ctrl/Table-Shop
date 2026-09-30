@@ -241,11 +241,24 @@
 {{-- Banner full-width (ảnh do shop cung cấp) --}}
 <div class="hero-banner-wrap">
     <div class="hero-banner">
+        @php
+            $bannerStoragePath = storage_path('app/public/images/banners/home-banner.png');
+            $bannerPublicPath  = public_path('images/banners/home-banner.png');
+            if (file_exists($bannerStoragePath)) {
+                $bannerSrc = asset('storage/images/banners/home-banner.png');
+            } elseif (file_exists($bannerPublicPath)) {
+                $bannerSrc = asset('images/banners/home-banner.png');
+            } else {
+                $bannerSrc = null;
+            }
+        @endphp
+        @if($bannerSrc)
         <a href="#product-section">
-            <img src="{{ asset('storage/images/banners/home-banner.png') }}"
+            <img src="{{ $bannerSrc }}"
                  alt="Shop bán bàn - Thế giới bàn cao cấp"
                  class="hero-img">
         </a>
+        @endif
     </div>
 </div>
 
