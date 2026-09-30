@@ -71,9 +71,12 @@ nginx -t
 php-fpm -t
 
 # Stop the whole container if either server exits, and forward stop signals.
+# Queue worker failure is non-fatal: log a warning and let the container continue.
 server_pids=()
+queue_pid=""
 cleanup() {
     trap - EXIT TERM INT
+    [[ -n "$queue_pid" ]] && kill -QUIT "$queue_pid" 2>/dev/null || true
     if (( ${#server_pids[@]} )); then
         kill -QUIT "${server_pids[@]}" 2>/dev/null || true
         wait "${server_pids[@]}" 2>/dev/null || true
@@ -86,6 +89,24 @@ php-fpm -F &
 server_pids+=("$!")
 nginx -g 'daemon off;' &
 server_pids+=("$!")
+
+# Queue worker: xử lý email verification jobs (database queue).
+# Restart tự động nếu chết (--tries=3 --sleep=3 --max-time=3600).
+if [[ "${QUEUE_CONNECTION:-sync}" != "sync" ]]; then
+    (
+        while true; do
+            su-exec www-data php artisan queue:work \
+                --queue=default \
+                --tries=3 \
+                --sleep=3 \
+                --max-time=3600 \
+                --no-interaction 2>&1 || true
+            echo "Queue worker restarting..." >&2
+            sleep 2
+        done
+    ) &
+    queue_pid="$!"
+fi
 
 status=0
 wait -n "${server_pids[@]}" || status=$?
