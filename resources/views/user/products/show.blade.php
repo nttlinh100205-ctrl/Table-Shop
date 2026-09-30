@@ -237,55 +237,55 @@
         .pd-specs-title { padding: 16px 16px 0; }
     }
 
-    /* ===== IMAGE ZOOM ===== */
+    /* ===== IMAGE ZOOM — direct scale on image ===== */
     .pd-img-zoom-wrap {
         position: relative;
         overflow: hidden;
         border-radius: 10px;
         background: #fff;
-        cursor: zoom-in;
+        cursor: crosshair;
         display: block;
+        /* hint tooltip */
     }
     .pd-img-zoom-wrap .pd-main-img {
         border-radius: 0;
-        transition: transform 0.1s ease;
         display: block;
         width: 100%;
+        transform-origin: 50% 50%;
+        /* mượt khi ra khỏi ảnh */
+        transition: transform 0.25s ease, transform-origin 0s;
+        will-change: transform;
     }
-    /* Zoom lens overlay */
-    .pd-zoom-lens {
-        display: none;
+    /* Khi hover: scale 2.2× trực tiếp trên ảnh, transition-origin tắt để theo cursor ngay */
+    .pd-img-zoom-wrap:hover .pd-main-img {
+        transform: scale(2.2);
+        transition: transform 0.18s ease;
+        cursor: crosshair;
+    }
+    /* Badge gợi ý zoom (góc dưới phải) */
+    .pd-zoom-hint {
         position: absolute;
-        border: 2px solid #0284c7;
-        border-radius: 6px;
-        width: 120px;
-        height: 120px;
-        background: rgba(2,132,199,0.08);
+        bottom: 8px;
+        right: 10px;
+        background: rgba(15,23,42,0.55);
+        color: #fff;
+        font-size: 0.7rem;
+        padding: 3px 8px;
+        border-radius: 20px;
         pointer-events: none;
-        z-index: 10;
-        box-shadow: 0 0 0 1px rgba(2,132,199,0.3);
-        transform: translate(-50%,-50%);
+        opacity: 1;
+        transition: opacity 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        backdrop-filter: blur(4px);
     }
-    /* Zoom result panel bên phải ảnh */
-    .pd-zoom-result {
-        display: none;
-        position: absolute;
-        top: 0;
-        left: calc(100% + 12px);
-        width: 340px;
-        height: 340px;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 8px 32px rgba(15,23,42,0.14);
-        background-repeat: no-repeat;
-        background-color: #fff;
-        z-index: 200;
-        overflow: hidden;
-    }
+    .pd-img-zoom-wrap:hover .pd-zoom-hint { opacity: 0; }
     @media (max-width: 991px) {
-        .pd-zoom-result { display: none !important; }
-        .pd-zoom-lens { display: none !important; }
+        /* Mobile: disable hover zoom, dùng lightbox thay */
         .pd-img-zoom-wrap { cursor: zoom-in; }
+        .pd-img-zoom-wrap:hover .pd-main-img { transform: none; }
+        .pd-zoom-hint { display: none; }
     }
 
     /* ===== LIGHTBOX ===== */
@@ -382,15 +382,16 @@
                 <div class="col-md-6">
                     <div class="pd-gallery-wrap">
                         @if ($gallery->count())
-                            {{-- Zoom wrap --}}
-                            <div class="pd-img-zoom-wrap" id="pdZoomWrap" title="Di chuột để phóng to">
+                            {{-- Zoom wrap: di chuột vào ảnh tự động zoom --}}
+                            <div class="pd-img-zoom-wrap" id="pdZoomWrap">
                                 <img id="mainImage"
                                      src="{{ $gallery->first() }}"
                                      class="pd-main-img"
                                      alt="{{ $product->name }}"
                                      data-gallery='@json($gallery->values())'>
-                                <div class="pd-zoom-lens" id="pdZoomLens"></div>
-                                <div class="pd-zoom-result" id="pdZoomResult"></div>
+                                <div class="pd-zoom-hint">
+                                    <i class="bi bi-zoom-in"></i> Di chuột để zoom
+                                </div>
                             </div>
                             @if ($gallery->count() > 1)
                                 <div class="pd-thumbs">
@@ -820,9 +821,6 @@ document.querySelectorAll('.pd-thumb').forEach(function (thumb) {
         this.classList.add('active');
         const mainImg = document.getElementById('mainImage');
         mainImg.src = this.dataset.src;
-        // Reset zoom result khi đổi ảnh
-        const zoomResult = document.getElementById('pdZoomResult');
-        if (zoomResult) zoomResult.style.backgroundImage = 'url(' + this.dataset.src + ')';
     });
 });
 
@@ -1113,62 +1111,25 @@ document.querySelectorAll('.pd-tab').forEach(function (tab) {
     });
 })();
 
-/* ===== ZOOM LENS (desktop only) ===== */
+/* ===== ZOOM THEO CURSOR (desktop only) ===== */
 (function () {
-    const wrap   = document.getElementById('pdZoomWrap');
-    const img    = document.getElementById('mainImage');
-    const lens   = document.getElementById('pdZoomLens');
-    const result = document.getElementById('pdZoomResult');
-    if (!wrap || !img || !lens || !result) return;
-
-    const ZOOM = 2.5; // hệ số phóng to
-    const LENS_W = 120, LENS_H = 120;
-
-    function initZoom() {
-        if (window.innerWidth < 992) return; // chỉ desktop
-        const src = img.src;
-        result.style.backgroundImage = `url('${src}')`;
-        const rw = result.offsetWidth, rh = result.offsetHeight;
-        const iw = img.naturalWidth  || img.offsetWidth  * ZOOM;
-        const ih = img.naturalHeight || img.offsetHeight * ZOOM;
-        result.style.backgroundSize = `${img.offsetWidth * ZOOM}px ${img.offsetHeight * ZOOM}px`;
-    }
-
-    wrap.addEventListener('mouseenter', function () {
-        if (window.innerWidth < 992) return;
-        initZoom();
-        lens.style.display   = 'block';
-        result.style.display = 'block';
-    });
+    const wrap = document.getElementById('pdZoomWrap');
+    const img  = document.getElementById('mainImage');
+    if (!wrap || !img) return;
 
     wrap.addEventListener('mousemove', function (e) {
         if (window.innerWidth < 992) return;
         const rect = wrap.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        let y = e.clientY - rect.top;
-
-        // Clamp lens inside wrap
-        x = Math.max(LENS_W / 2, Math.min(rect.width  - LENS_W / 2, x));
-        y = Math.max(LENS_H / 2, Math.min(rect.height - LENS_H / 2, y));
-
-        lens.style.left = `${x}px`;
-        lens.style.top  = `${y}px`;
-
-        // Tỷ lệ zoom
-        const ratioX = (img.offsetWidth  * ZOOM) / img.offsetWidth;
-        const ratioY = (img.offsetHeight * ZOOM) / img.offsetHeight;
-
-        const bgX = (x - LENS_W / 2) * ratioX;
-        const bgY = (y - LENS_H / 2) * ratioY;
-
-        result.style.backgroundPosition = `-${bgX}px -${bgY}px`;
-        result.style.backgroundSize = `${img.offsetWidth * ZOOM}px ${img.offsetHeight * ZOOM}px`;
-        result.style.backgroundImage = `url('${img.src}')`;
+        // Tính % vị trí cursor trong wrap (0–100)
+        const pctX = ((e.clientX - rect.left)  / rect.width)  * 100;
+        const pctY = ((e.clientY - rect.top)   / rect.height) * 100;
+        // transform-origin không cần transition → theo cursor ngay lập tức
+        img.style.transformOrigin = `${pctX}% ${pctY}%`;
     });
 
+    // Reset về center khi rời ảnh (transition 0.25s sẽ zoom out mượt)
     wrap.addEventListener('mouseleave', function () {
-        lens.style.display   = 'none';
-        result.style.display = 'none';
+        img.style.transformOrigin = '50% 50%';
     });
 })();
 
