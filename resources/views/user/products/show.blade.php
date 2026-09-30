@@ -237,55 +237,68 @@
         .pd-specs-title { padding: 16px 16px 0; }
     }
 
-    /* ===== IMAGE ZOOM — direct scale on image ===== */
+    /* ===== PRODUCT IMAGE INNER ZOOM (Auto zoom on hover) ===== */
     .pd-img-zoom-wrap {
         position: relative;
         overflow: hidden;
-        border-radius: 10px;
+        border-radius: 12px;
         background: #fff;
         cursor: crosshair;
         display: block;
-        /* hint tooltip */
+        width: 100%;
+        height: 400px;
+        border: 1px solid #eef2f6;
+        user-select: none;
     }
     .pd-img-zoom-wrap .pd-main-img {
-        border-radius: 0;
-        display: block;
         width: 100%;
-        transform-origin: 50% 50%;
-        /* mượt khi ra khỏi ảnh */
-        transition: transform 0.25s ease, transform-origin 0s;
-        will-change: transform;
-    }
-    /* Khi hover: scale 2.2× trực tiếp trên ảnh, transition-origin tắt để theo cursor ngay */
-    .pd-img-zoom-wrap:hover .pd-main-img {
-        transform: scale(2.2);
-        transition: transform 0.18s ease;
-        cursor: crosshair;
-    }
-    /* Badge gợi ý zoom (góc dưới phải) */
-    .pd-zoom-hint {
-        position: absolute;
-        bottom: 8px;
-        right: 10px;
-        background: rgba(15,23,42,0.55);
-        color: #fff;
-        font-size: 0.7rem;
-        padding: 3px 8px;
-        border-radius: 20px;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto;
+        border-radius: 0;
+        transform-origin: 0 0;
+        transform: translate3d(0, 0, 0) scale(1);
         pointer-events: none;
-        opacity: 1;
-        transition: opacity 0.3s;
+        will-change: transform;
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    /* Nút xem toàn màn hình (gọn gàng góc trên phải) */
+    .pd-fullscreen-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1px solid rgba(0,0,0,0.08);
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(4px);
+        color: #475569;
         display: flex;
         align-items: center;
-        gap: 4px;
-        backdrop-filter: blur(4px);
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.95rem;
+        z-index: 10;
+        transition: all 0.2s ease;
+        opacity: 0.7;
     }
-    .pd-img-zoom-wrap:hover .pd-zoom-hint { opacity: 0; }
-    @media (max-width: 991px) {
-        /* Mobile: disable hover zoom, dùng lightbox thay */
-        .pd-img-zoom-wrap { cursor: zoom-in; }
-        .pd-img-zoom-wrap:hover .pd-main-img { transform: none; }
-        .pd-zoom-hint { display: none; }
+    .pd-fullscreen-btn:hover {
+        opacity: 1;
+        background: #fff;
+        color: #0284c7;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        transform: scale(1.05);
+    }
+    @media (max-width: 767px) {
+        .pd-img-zoom-wrap {
+            height: 280px;
+            cursor: default;
+        }
+        .pd-fullscreen-btn {
+            opacity: 1;
+        }
     }
 
     /* ===== LIGHTBOX ===== */
@@ -382,16 +395,16 @@
                 <div class="col-md-6">
                     <div class="pd-gallery-wrap">
                         @if ($gallery->count())
-                            {{-- Zoom wrap: di chuột vào ảnh tự động zoom --}}
-                            <div class="pd-img-zoom-wrap" id="pdZoomWrap">
+                            {{-- Zoom wrap: Tự động phóng to khi di chuyển chuột qua bất kỳ vùng nào của ảnh --}}
+                            <div class="pd-img-zoom-wrap" id="pdZoomWrap" title="Di chuột để phóng to chi tiết">
                                 <img id="mainImage"
                                      src="{{ $gallery->first() }}"
                                      class="pd-main-img"
                                      alt="{{ $product->name }}"
                                      data-gallery='@json($gallery->values())'>
-                                <div class="pd-zoom-hint">
-                                    <i class="bi bi-zoom-in"></i> Di chuột để zoom
-                                </div>
+                                <button type="button" class="pd-fullscreen-btn" id="pdFullscreenBtn" title="Xem ảnh toàn màn hình" aria-label="Xem ảnh toàn màn hình">
+                                    <i class="bi bi-arrows-fullscreen"></i>
+                                </button>
                             </div>
                             @if ($gallery->count() > 1)
                                 <div class="pd-thumbs">
@@ -820,7 +833,11 @@ document.querySelectorAll('.pd-thumb').forEach(function (thumb) {
         document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
         this.classList.add('active');
         const mainImg = document.getElementById('mainImage');
-        mainImg.src = this.dataset.src;
+        if (mainImg) {
+            mainImg.src = this.dataset.src;
+            mainImg.style.transition = 'none';
+            mainImg.style.transform = 'translate3d(0, 0, 0) scale(1)';
+        }
     });
 });
 
@@ -1111,29 +1128,81 @@ document.querySelectorAll('.pd-tab').forEach(function (tab) {
     });
 })();
 
-/* ===== ZOOM THEO CURSOR (desktop only) ===== */
+/* ===== AUTO ZOOM TRỰC TIẾP TRÊN ẢNH KHI DI CHUỘT (Desktop) ===== */
 (function () {
     const wrap = document.getElementById('pdZoomWrap');
     const img  = document.getElementById('mainImage');
     if (!wrap || !img) return;
 
-    wrap.addEventListener('mousemove', function (e) {
-        if (window.innerWidth < 992) return;
+    const SCALE = 2.4; // Tỉ lệ zoom phóng to
+    let isHovered = false;
+    let targetX = 0, targetY = 0;
+    let currentX = 0, currentY = 0;
+    let animId = null;
+
+    function renderZoom() {
+        if (!isHovered) return;
+
+        // Nội suy mượt mà (Lerp) 0.18 giúp hình ảnh lướt êm ái theo con trỏ chuột
+        currentX += (targetX - currentX) * 0.18;
+        currentY += (targetY - currentY) * 0.18;
+
+        const tx = -currentX * (SCALE - 1);
+        const ty = -currentY * (SCALE - 1);
+
+        img.style.transform = `translate3d(${tx.toFixed(2)}px, ${ty.toFixed(2)}px, 0) scale(${SCALE})`;
+        animId = requestAnimationFrame(renderZoom);
+    }
+
+    wrap.addEventListener('mouseenter', function (e) {
+        // Chỉ kích hoạt tự động zoom trên màn hình desktop có chuột
+        if (window.innerWidth < 992 || window.matchMedia('(pointer: coarse)').matches) return;
+
+        isHovered = true;
         const rect = wrap.getBoundingClientRect();
-        // Tính % vị trí cursor trong wrap (0–100)
-        const pctX = ((e.clientX - rect.left)  / rect.width)  * 100;
-        const pctY = ((e.clientY - rect.top)   / rect.height) * 100;
-        // transform-origin không cần transition → theo cursor ngay lập tức
-        img.style.transformOrigin = `${pctX}% ${pctY}%`;
+        targetX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+        targetY = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+        currentX = targetX;
+        currentY = targetY;
+
+        // Phóng to êm ái từ vị trí con trỏ chuột bước vào
+        img.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+        const tx = -currentX * (SCALE - 1);
+        const ty = -currentY * (SCALE - 1);
+        img.style.transform = `translate3d(${tx.toFixed(2)}px, ${ty.toFixed(2)}px, 0) scale(${SCALE})`;
+
+        setTimeout(() => {
+            if (isHovered) {
+                img.style.transition = 'none';
+                if (!animId) animId = requestAnimationFrame(renderZoom);
+            }
+        }, 220);
     });
 
-    // Reset về center khi rời ảnh (transition 0.25s sẽ zoom out mượt)
+    wrap.addEventListener('mousemove', function (e) {
+        if (!isHovered) return;
+        const rect = wrap.getBoundingClientRect();
+        targetX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+        targetY = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+        if (!animId) {
+            animId = requestAnimationFrame(renderZoom);
+        }
+    });
+
     wrap.addEventListener('mouseleave', function () {
-        img.style.transformOrigin = '50% 50%';
+        if (!isHovered) return;
+        isHovered = false;
+        if (animId) {
+            cancelAnimationFrame(animId);
+            animId = null;
+        }
+        // Tự động thu nhỏ mượt mà về kích thước ban đầu
+        img.style.transition = 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)';
+        img.style.transform = 'translate3d(0, 0, 0) scale(1)';
     });
 })();
 
-/* ===== LIGHTBOX ===== */
+/* ===== LIGHTBOX (Khi nhấn nút Fullscreen hoặc chạm trên mobile) ===== */
 (function () {
     const lb        = document.getElementById('pd-lightbox');
     const lbImg     = document.getElementById('pd-lightbox-img');
@@ -1141,25 +1210,29 @@ document.querySelectorAll('.pd-tab').forEach(function (tab) {
     const lbPrev    = document.getElementById('pd-lightbox-prev');
     const lbNext    = document.getElementById('pd-lightbox-next');
     const lbCounter = document.getElementById('pd-lightbox-counter');
+    const fsBtn     = document.getElementById('pdFullscreenBtn');
+    const wrap      = document.getElementById('pdZoomWrap');
     if (!lb || !lbImg) return;
 
     let gallery = [];
     let current = 0;
 
-    // Lấy danh sách ảnh từ mainImage data-gallery
-    const mainImg = document.getElementById('mainImage');
-    if (mainImg) {
-        try { gallery = JSON.parse(mainImg.dataset.gallery || '[]'); } catch(e) {}
+    function getGallery() {
+        const mainImg = document.getElementById('mainImage');
+        if (mainImg) {
+            try { gallery = JSON.parse(mainImg.dataset.gallery || '[]'); } catch(e) {}
+            if (!gallery.length && mainImg.src) gallery = [mainImg.src];
+        }
+        return gallery;
     }
-    if (!gallery.length && mainImg) gallery = [mainImg.src];
 
     function openLightbox(idx) {
+        getGallery();
         current = Math.max(0, Math.min(gallery.length - 1, idx));
         lbImg.src = gallery[current];
         lb.classList.add('open');
         document.body.style.overflow = 'hidden';
         updateCounter();
-        // Ẩn prev/next nếu chỉ có 1 ảnh
         if (lbPrev) lbPrev.style.display = gallery.length <= 1 ? 'none' : '';
         if (lbNext) lbNext.style.display = gallery.length <= 1 ? 'none' : '';
     }
@@ -1173,17 +1246,32 @@ document.querySelectorAll('.pd-tab').forEach(function (tab) {
         if (lbCounter) lbCounter.textContent = `${current + 1} / ${gallery.length}`;
     }
 
-    // Click vào wrap → mở lightbox
-    const wrap = document.getElementById('pdZoomWrap');
-    if (wrap) {
-        wrap.addEventListener('click', function () {
-            const src = document.getElementById('mainImage').src;
+    // Nút xem toàn màn hình
+    if (fsBtn) {
+        fsBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            getGallery();
+            const src = document.getElementById('mainImage')?.src;
             const idx = gallery.indexOf(src);
             openLightbox(idx >= 0 ? idx : 0);
         });
     }
 
-    // Thumb click → cập nhật gallery index
+    // Trên mobile/màn hình cảm ứng: tap ảnh để xem toàn màn hình
+    if (wrap) {
+        wrap.addEventListener('click', function (e) {
+            if (e.target.closest('#pdFullscreenBtn')) return;
+            if (window.innerWidth < 992 || window.matchMedia('(pointer: coarse)').matches) {
+                getGallery();
+                const src = document.getElementById('mainImage')?.src;
+                const idx = gallery.indexOf(src);
+                openLightbox(idx >= 0 ? idx : 0);
+            }
+        });
+    }
+
+    // Thumb click -> cập nhật gallery index
     document.querySelectorAll('.pd-thumb').forEach(function (t, i) {
         t.addEventListener('click', function () { current = i; });
     });
@@ -1196,6 +1284,7 @@ document.querySelectorAll('.pd-tab').forEach(function (tab) {
 
     if (lbPrev) lbPrev.addEventListener('click', function (e) {
         e.stopPropagation();
+        getGallery();
         current = (current - 1 + gallery.length) % gallery.length;
         lbImg.src = gallery[current];
         updateCounter();
@@ -1203,12 +1292,12 @@ document.querySelectorAll('.pd-tab').forEach(function (tab) {
 
     if (lbNext) lbNext.addEventListener('click', function (e) {
         e.stopPropagation();
+        getGallery();
         current = (current + 1) % gallery.length;
         lbImg.src = gallery[current];
         updateCounter();
     });
 
-    // ESC
     document.addEventListener('keydown', function (e) {
         if (!lb.classList.contains('open')) return;
         if (e.key === 'Escape')     closeLightbox();
