@@ -236,6 +236,127 @@
         .pd-specs-table td { padding: 10px 16px 10px 0; }
         .pd-specs-title { padding: 16px 16px 0; }
     }
+
+    /* ===== IMAGE ZOOM ===== */
+    .pd-img-zoom-wrap {
+        position: relative;
+        overflow: hidden;
+        border-radius: 10px;
+        background: #fff;
+        cursor: zoom-in;
+        display: block;
+    }
+    .pd-img-zoom-wrap .pd-main-img {
+        border-radius: 0;
+        transition: transform 0.1s ease;
+        display: block;
+        width: 100%;
+    }
+    /* Zoom lens overlay */
+    .pd-zoom-lens {
+        display: none;
+        position: absolute;
+        border: 2px solid #0284c7;
+        border-radius: 6px;
+        width: 120px;
+        height: 120px;
+        background: rgba(2,132,199,0.08);
+        pointer-events: none;
+        z-index: 10;
+        box-shadow: 0 0 0 1px rgba(2,132,199,0.3);
+        transform: translate(-50%,-50%);
+    }
+    /* Zoom result panel bên phải ảnh */
+    .pd-zoom-result {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: calc(100% + 12px);
+        width: 340px;
+        height: 340px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 8px 32px rgba(15,23,42,0.14);
+        background-repeat: no-repeat;
+        background-color: #fff;
+        z-index: 200;
+        overflow: hidden;
+    }
+    @media (max-width: 991px) {
+        .pd-zoom-result { display: none !important; }
+        .pd-zoom-lens { display: none !important; }
+        .pd-img-zoom-wrap { cursor: zoom-in; }
+    }
+
+    /* ===== LIGHTBOX ===== */
+    #pd-lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.92);
+        z-index: 9000;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    #pd-lightbox.open { display: flex; }
+    #pd-lightbox-img {
+        max-width: 90vw;
+        max-height: 88vh;
+        object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+        display: block;
+        animation: lb-in 0.2s ease;
+    }
+    @keyframes lb-in {
+        from { opacity:0; transform: scale(0.94); }
+        to   { opacity:1; transform: scale(1); }
+    }
+    #pd-lightbox-close {
+        position: fixed;
+        top: 18px;
+        right: 22px;
+        width: 40px; height: 40px;
+        background: rgba(255,255,255,0.12);
+        border: none;
+        border-radius: 50%;
+        color: #fff;
+        font-size: 1.25rem;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: background 0.15s;
+        z-index: 9001;
+    }
+    #pd-lightbox-close:hover { background: rgba(255,255,255,0.22); }
+    #pd-lightbox-prev, #pd-lightbox-next {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px; height: 44px;
+        background: rgba(255,255,255,0.12);
+        border: none; border-radius: 50%;
+        color: #fff; font-size: 1.2rem;
+        cursor: pointer; display: flex;
+        align-items: center; justify-content: center;
+        transition: background 0.15s;
+        z-index: 9001;
+    }
+    #pd-lightbox-prev { left: 12px; }
+    #pd-lightbox-next { right: 12px; }
+    #pd-lightbox-prev:hover, #pd-lightbox-next:hover { background: rgba(255,255,255,0.25); }
+    #pd-lightbox-counter {
+        position: fixed;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.82rem;
+        color: rgba(255,255,255,0.6);
+        background: rgba(0,0,0,0.4);
+        padding: 3px 12px;
+        border-radius: 20px;
+        z-index: 9001;
+    }
 </style>
 
 @php
@@ -261,8 +382,16 @@
                 <div class="col-md-6">
                     <div class="pd-gallery-wrap">
                         @if ($gallery->count())
-                            <img id="mainImage" src="{{ $gallery->first() }}"
-                                 class="pd-main-img" alt="{{ $product->name }}">
+                            {{-- Zoom wrap --}}
+                            <div class="pd-img-zoom-wrap" id="pdZoomWrap" title="Di chuột để phóng to">
+                                <img id="mainImage"
+                                     src="{{ $gallery->first() }}"
+                                     class="pd-main-img"
+                                     alt="{{ $product->name }}"
+                                     data-gallery='@json($gallery->values())'>
+                                <div class="pd-zoom-lens" id="pdZoomLens"></div>
+                                <div class="pd-zoom-result" id="pdZoomResult"></div>
+                            </div>
                             @if ($gallery->count() > 1)
                                 <div class="pd-thumbs">
                                     @foreach ($gallery as $i => $src)
@@ -672,13 +801,28 @@
 </div>
 @endsection
 
+{{-- ===== LIGHTBOX ===== --}}
+@push('scripts')
+<div id="pd-lightbox" role="dialog" aria-modal="true" aria-label="Xem ảnh lớn">
+    <button id="pd-lightbox-close" title="Đóng (ESC)"><i class="bi bi-x-lg"></i></button>
+    <button id="pd-lightbox-prev" title="Ảnh trước"><i class="bi bi-chevron-left"></i></button>
+    <img id="pd-lightbox-img" src="" alt="Ảnh phóng to">
+    <button id="pd-lightbox-next" title="Ảnh tiếp theo"><i class="bi bi-chevron-right"></i></button>
+    <div id="pd-lightbox-counter"></div>
+</div>
+@endpush
+
 @push('scripts')
 <script>
 document.querySelectorAll('.pd-thumb').forEach(function (thumb) {
     thumb.addEventListener('click', function () {
         document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
         this.classList.add('active');
-        document.getElementById('mainImage').src = this.dataset.src;
+        const mainImg = document.getElementById('mainImage');
+        mainImg.src = this.dataset.src;
+        // Reset zoom result khi đổi ảnh
+        const zoomResult = document.getElementById('pdZoomResult');
+        if (zoomResult) zoomResult.style.backgroundImage = 'url(' + this.dataset.src + ')';
     });
 });
 
@@ -966,6 +1110,159 @@ document.querySelectorAll('.pd-tab').forEach(function (tab) {
             this.disabled = false;
             this.innerHTML = original;
         });
+    });
+})();
+
+/* ===== ZOOM LENS (desktop only) ===== */
+(function () {
+    const wrap   = document.getElementById('pdZoomWrap');
+    const img    = document.getElementById('mainImage');
+    const lens   = document.getElementById('pdZoomLens');
+    const result = document.getElementById('pdZoomResult');
+    if (!wrap || !img || !lens || !result) return;
+
+    const ZOOM = 2.5; // hệ số phóng to
+    const LENS_W = 120, LENS_H = 120;
+
+    function initZoom() {
+        if (window.innerWidth < 992) return; // chỉ desktop
+        const src = img.src;
+        result.style.backgroundImage = `url('${src}')`;
+        const rw = result.offsetWidth, rh = result.offsetHeight;
+        const iw = img.naturalWidth  || img.offsetWidth  * ZOOM;
+        const ih = img.naturalHeight || img.offsetHeight * ZOOM;
+        result.style.backgroundSize = `${img.offsetWidth * ZOOM}px ${img.offsetHeight * ZOOM}px`;
+    }
+
+    wrap.addEventListener('mouseenter', function () {
+        if (window.innerWidth < 992) return;
+        initZoom();
+        lens.style.display   = 'block';
+        result.style.display = 'block';
+    });
+
+    wrap.addEventListener('mousemove', function (e) {
+        if (window.innerWidth < 992) return;
+        const rect = wrap.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+
+        // Clamp lens inside wrap
+        x = Math.max(LENS_W / 2, Math.min(rect.width  - LENS_W / 2, x));
+        y = Math.max(LENS_H / 2, Math.min(rect.height - LENS_H / 2, y));
+
+        lens.style.left = `${x}px`;
+        lens.style.top  = `${y}px`;
+
+        // Tỷ lệ zoom
+        const ratioX = (img.offsetWidth  * ZOOM) / img.offsetWidth;
+        const ratioY = (img.offsetHeight * ZOOM) / img.offsetHeight;
+
+        const bgX = (x - LENS_W / 2) * ratioX;
+        const bgY = (y - LENS_H / 2) * ratioY;
+
+        result.style.backgroundPosition = `-${bgX}px -${bgY}px`;
+        result.style.backgroundSize = `${img.offsetWidth * ZOOM}px ${img.offsetHeight * ZOOM}px`;
+        result.style.backgroundImage = `url('${img.src}')`;
+    });
+
+    wrap.addEventListener('mouseleave', function () {
+        lens.style.display   = 'none';
+        result.style.display = 'none';
+    });
+})();
+
+/* ===== LIGHTBOX ===== */
+(function () {
+    const lb        = document.getElementById('pd-lightbox');
+    const lbImg     = document.getElementById('pd-lightbox-img');
+    const lbClose   = document.getElementById('pd-lightbox-close');
+    const lbPrev    = document.getElementById('pd-lightbox-prev');
+    const lbNext    = document.getElementById('pd-lightbox-next');
+    const lbCounter = document.getElementById('pd-lightbox-counter');
+    if (!lb || !lbImg) return;
+
+    let gallery = [];
+    let current = 0;
+
+    // Lấy danh sách ảnh từ mainImage data-gallery
+    const mainImg = document.getElementById('mainImage');
+    if (mainImg) {
+        try { gallery = JSON.parse(mainImg.dataset.gallery || '[]'); } catch(e) {}
+    }
+    if (!gallery.length && mainImg) gallery = [mainImg.src];
+
+    function openLightbox(idx) {
+        current = Math.max(0, Math.min(gallery.length - 1, idx));
+        lbImg.src = gallery[current];
+        lb.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        updateCounter();
+        // Ẩn prev/next nếu chỉ có 1 ảnh
+        if (lbPrev) lbPrev.style.display = gallery.length <= 1 ? 'none' : '';
+        if (lbNext) lbNext.style.display = gallery.length <= 1 ? 'none' : '';
+    }
+
+    function closeLightbox() {
+        lb.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function updateCounter() {
+        if (lbCounter) lbCounter.textContent = `${current + 1} / ${gallery.length}`;
+    }
+
+    // Click vào wrap → mở lightbox
+    const wrap = document.getElementById('pdZoomWrap');
+    if (wrap) {
+        wrap.addEventListener('click', function () {
+            const src = document.getElementById('mainImage').src;
+            const idx = gallery.indexOf(src);
+            openLightbox(idx >= 0 ? idx : 0);
+        });
+    }
+
+    // Thumb click → cập nhật gallery index
+    document.querySelectorAll('.pd-thumb').forEach(function (t, i) {
+        t.addEventListener('click', function () { current = i; });
+    });
+
+    if (lbClose) lbClose.addEventListener('click', closeLightbox);
+
+    lb.addEventListener('click', function (e) {
+        if (e.target === lb) closeLightbox();
+    });
+
+    if (lbPrev) lbPrev.addEventListener('click', function (e) {
+        e.stopPropagation();
+        current = (current - 1 + gallery.length) % gallery.length;
+        lbImg.src = gallery[current];
+        updateCounter();
+    });
+
+    if (lbNext) lbNext.addEventListener('click', function (e) {
+        e.stopPropagation();
+        current = (current + 1) % gallery.length;
+        lbImg.src = gallery[current];
+        updateCounter();
+    });
+
+    // ESC
+    document.addEventListener('keydown', function (e) {
+        if (!lb.classList.contains('open')) return;
+        if (e.key === 'Escape')     closeLightbox();
+        if (e.key === 'ArrowLeft')  lbPrev && lbPrev.click();
+        if (e.key === 'ArrowRight') lbNext && lbNext.click();
+    });
+
+    // Touch swipe (mobile)
+    let touchX = null;
+    lb.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener('touchend',   e => {
+        if (touchX === null) return;
+        const dx = e.changedTouches[0].clientX - touchX;
+        if (Math.abs(dx) > 50) { dx < 0 ? lbNext && lbNext.click() : lbPrev && lbPrev.click(); }
+        touchX = null;
     });
 })();
 </script>
