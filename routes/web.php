@@ -157,9 +157,10 @@ Route::prefix('user')->name('user.')->group(function () {
     Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
-    // Áp dụng / Hủy voucher giảm giá
+    // Áp dụng / Hủy voucher giảm giá & lấy danh sách khuyến mãi
     Route::post('/coupon/apply', [CartController::class, 'applyCoupon'])->name('coupon.apply');
     Route::post('/coupon/remove', [CartController::class, 'removeCoupon'])->name('coupon.remove');
+    Route::get('/promotions', [CartController::class, 'promotions'])->name('promotions.index');
 });
 
 /*

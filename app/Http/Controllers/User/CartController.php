@@ -45,7 +45,28 @@ class CartController extends Controller
             session()->save();
         }
 
-        return view('user.cart.index', compact('cart', 'total'));
+        // Lấy danh sách khuyến mãi để hiển thị cho khách hàng xem ngay tại giỏ hàng
+        $allPromotions = Promotion::active()->notExpired()->orderBy('min_order_amount', 'asc')->get();
+        $availablePromotions = collect();
+        $ineligiblePromotions = collect();
+
+        foreach ($allPromotions as $promo) {
+            $info = $promo->getEligibilityInfo($total);
+            $promo->is_eligible = $info['is_eligible'];
+            $promo->ineligible_reason = $info['reason'];
+            $promo->need_more_amount = $info['need_more'];
+            $promo->calculated_discount = $info['discount_amount'];
+
+            if ($promo->is_eligible) {
+                $availablePromotions->push($promo);
+            } else {
+                $ineligiblePromotions->push($promo);
+            }
+        }
+        $availablePromotions = $availablePromotions->sortByDesc('calculated_discount')->values();
+        $coupon = session('coupon');
+
+        return view('user.cart.index', compact('cart', 'total', 'availablePromotions', 'ineligiblePromotions', 'coupon'));
     }
 
     /**
@@ -299,5 +320,68 @@ class CartController extends Controller
         }
 
         return back()->with('success', 'Đã hủy mã giảm giá.');
+    }
+
+    /**
+     * Lấy danh sách khuyến mãi (API cho giỏ hàng / thanh toán).
+     */
+    public function promotions(Request $request)
+    {
+        $cart = session()->get('cart', []);
+        $subtotal = $request->filled('subtotal')
+            ? (float) $request->input('subtotal')
+            : (float) collect($cart)->sum(fn ($item) => ($item['price'] ?? 0) * ($item['quantity'] ?? 0));
+
+        $allPromotions = Promotion::active()
+            ->notExpired()
+            ->orderBy('min_order_amount', 'asc')
+            ->get();
+
+        $available = [];
+        $ineligible = [];
+        $currentCouponCode = session('coupon.code');
+
+        foreach ($allPromotions as $promo) {
+            $info = $promo->getEligibilityInfo($subtotal);
+            $item = [
+                'id'                  => $promo->id,
+                'code'                => $promo->code,
+                'name'                => $promo->name,
+                'description'         => $promo->description,
+                'discount_type'       => $promo->discount_type,
+                'discount_value'      => (float) $promo->discount_value,
+                'discount_display'    => $promo->discount_display,
+                'max_discount_amount' => $promo->max_discount_amount ? (float) $promo->max_discount_amount : null,
+                'min_order_amount'    => (float) $promo->min_order_amount,
+                'min_order_text'      => number_format($promo->min_order_amount, 0, ',', '.') . 'đ',
+                'end_date'            => $promo->end_date ? $promo->end_date->format('d/m/Y') : null,
+                'remaining_uses'      => $promo->remaining_uses,
+                'is_current'          => ($currentCouponCode === $promo->code),
+                'is_eligible'         => $info['is_eligible'],
+                'reason'              => $info['reason'],
+                'need_more'           => $info['need_more'],
+                'need_more_text'      => number_format($info['need_more'], 0, ',', '.') . 'đ',
+                'discount_amount'     => $info['discount_amount'],
+                'discount_text'       => number_format($info['discount_amount'], 0, ',', '.') . 'đ',
+            ];
+
+            if ($info['is_eligible']) {
+                $available[] = $item;
+            } else {
+                $ineligible[] = $item;
+            }
+        }
+
+        // Sắp xếp mã khả dụng theo mức giảm giá cao nhất lên đầu (Đề xuất tốt nhất)
+        usort($available, fn ($a, $b) => $b['discount_amount'] <=> $a['discount_amount']);
+
+        return response()->json([
+            'success'        => true,
+            'subtotal'       => $subtotal,
+            'subtotal_text'  => number_format($subtotal, 0, ',', '.') . 'đ',
+            'available'      => $available,
+            'ineligible'     => $ineligible,
+            'current_coupon' => $currentCouponCode,
+        ]);
     }
 }

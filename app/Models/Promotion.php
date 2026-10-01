@@ -134,6 +134,27 @@ class Promotion extends Model
     }
 
     /**
+     * Kiểm tra điều kiện áp dụng cho đơn hàng và trả về thông tin chi tiết
+     */
+    public function getEligibilityInfo(?float $orderTotal = null): array
+    {
+        $errorMsg = null;
+        $isValid = $this->isValid($orderTotal, $errorMsg);
+        $needMore = 0;
+
+        if (!$isValid && !is_null($orderTotal) && (float) $this->min_order_amount > $orderTotal) {
+            $needMore = (float) $this->min_order_amount - $orderTotal;
+        }
+
+        return [
+            'is_eligible'     => $isValid,
+            'reason'          => $errorMsg,
+            'need_more'       => $needMore,
+            'discount_amount' => ($isValid && !is_null($orderTotal)) ? $this->calculateDiscount($orderTotal) : 0,
+        ];
+    }
+
+    /**
      * Tính toán số tiền được giảm dựa trên tổng tiền hàng
      */
     public function calculateDiscount(float $orderTotal): float

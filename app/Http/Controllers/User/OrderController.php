@@ -46,7 +46,40 @@ class OrderController extends Controller
             }
         }
 
-        return view('user.payment.index', compact('cart', 'totalPrice', 'coupon', 'discountAmount'));
+        // Lấy danh sách khuyến mãi đang hoạt động và còn hạn sử dụng
+        $allPromotions = Promotion::active()
+            ->notExpired()
+            ->orderBy('min_order_amount', 'asc')
+            ->get();
+
+        $availablePromotions = collect();
+        $ineligiblePromotions = collect();
+
+        foreach ($allPromotions as $promo) {
+            $info = $promo->getEligibilityInfo($totalPrice);
+            $promo->is_eligible = $info['is_eligible'];
+            $promo->ineligible_reason = $info['reason'];
+            $promo->need_more_amount = $info['need_more'];
+            $promo->calculated_discount = $info['discount_amount'];
+
+            if ($promo->is_eligible) {
+                $availablePromotions->push($promo);
+            } else {
+                $ineligiblePromotions->push($promo);
+            }
+        }
+
+        // Ưu tiên đề xuất khuyến mãi giảm nhiều nhất lên đầu
+        $availablePromotions = $availablePromotions->sortByDesc('calculated_discount')->values();
+
+        return view('user.payment.index', compact(
+            'cart',
+            'totalPrice',
+            'coupon',
+            'discountAmount',
+            'availablePromotions',
+            'ineligiblePromotions'
+        ));
     }
 
     /**

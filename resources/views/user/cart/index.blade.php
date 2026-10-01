@@ -248,6 +248,89 @@
         .cart-table-head { grid-template-columns: 40px 1fr 100px 120px 100px 40px; }
         .cart-row        { grid-template-columns: 40px 1fr 100px 120px 100px 40px; }
     }
+
+    /* ── Mini Voucher Card (Cart) ── */
+    .cart-voucher-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 0.75rem;
+        margin-top: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    .voucher-mini-card {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.45rem 0.6rem;
+        gap: 0.5rem;
+        transition: all 0.15s ease;
+    }
+    .voucher-mini-card:hover {
+        border-color: #3b82f6;
+        background: #fafbfc;
+    }
+    .voucher-mini-card.is-applied {
+        border-color: #22c55e;
+        background: #f0fdf4;
+    }
+    .voucher-mini-card.is-ineligible {
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        opacity: 0.72;
+    }
+    .voucher-mini-left {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 58px;
+        background: #f1f5f9;
+        border-radius: 6px;
+        padding: 0.2rem 0.35rem;
+        border: 1px solid #e2e8f0;
+    }
+    .voucher-mini-card.is-applied .voucher-mini-left {
+        background: #dcfce7;
+        border-color: #86efac;
+    }
+    .mini-discount {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #2563eb;
+        line-height: 1.1;
+    }
+    .voucher-mini-card.is-applied .mini-discount {
+        color: #15803d;
+    }
+    .mini-code {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: #475569;
+    }
+    .voucher-mini-mid {
+        flex: 1;
+        min-width: 0;
+    }
+    .mini-title {
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.25;
+    }
+    .mini-sub {
+        font-size: 0.7rem;
+        margin-top: 1px;
+    }
+    .voucher-mini-right {
+        flex-shrink: 0;
+    }
+    .btn-voucher-disabled {
+        cursor: not-allowed !important;
+        pointer-events: none;
+    }
 </style>
 
 <div class="cart-page">
@@ -430,6 +513,84 @@
                             <strong style="color:#16a34a;">Miễn phí</strong>
                         </div>
 
+                        {{-- Khối Ưu đãi / Voucher cho giỏ hàng --}}
+                        <div class="cart-voucher-box">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="fw-bold small text-dark d-flex align-items-center gap-1" style="font-size:0.8rem;">
+                                    <i class="bi bi-ticket-perforated-fill text-primary"></i> Khuyến mãi & Voucher
+                                </span>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:0.68rem;">
+                                    {{ isset($availablePromotions) ? $availablePromotions->count() : 0 }} mã khả dụng
+                                </span>
+                            </div>
+
+                            <div style="max-height: 220px; overflow-y: auto; padding-right: 2px;" class="d-flex flex-column gap-1">
+                                {{-- 1. Voucher có thể dùng --}}
+                                @if(isset($availablePromotions) && $availablePromotions->count() > 0)
+                                    @foreach($availablePromotions as $promo)
+                                        @php
+                                            $isApplied = (!empty($coupon['code']) && strtoupper($coupon['code']) === strtoupper($promo->code));
+                                        @endphp
+                                        <div class="voucher-mini-card {{ $isApplied ? 'is-applied' : '' }}" data-code="{{ $promo->code }}">
+                                            <div class="voucher-mini-left">
+                                                <span class="mini-discount">{{ $promo->discount_display }}</span>
+                                                <span class="mini-code font-monospace">{{ $promo->code }}</span>
+                                            </div>
+                                            <div class="voucher-mini-mid">
+                                                <div class="mini-title text-truncate" title="{{ $promo->name }}">{{ $promo->name }}</div>
+                                                <div class="mini-sub text-muted">
+                                                    Đơn từ {{ number_format($promo->min_order_amount, 0, ',', '.') }}đ • Tiết kiệm <strong class="text-success">{{ number_format($promo->calculated_discount, 0, ',', '.') }}đ</strong>
+                                                </div>
+                                            </div>
+                                            <div class="voucher-mini-right">
+                                                @if($isApplied)
+                                                    <span class="badge bg-success py-1 px-2" style="font-size:0.7rem;">
+                                                        <i class="bi bi-check-lg"></i> Đã chọn
+                                                    </span>
+                                                @else
+                                                    <button type="button" class="btn btn-sm btn-primary py-1 px-2 btn-cart-apply-coupon" data-code="{{ $promo->code }}" style="font-size:0.72rem; font-weight:600;">
+                                                        Áp dụng
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @endif
+
+                                {{-- 2. Voucher chưa đủ điều kiện (hiển thị ở dưới, không ấn add được) --}}
+                                @if(isset($ineligiblePromotions) && $ineligiblePromotions->count() > 0)
+                                    <div class="text-muted fw-semibold small mt-1" style="font-size:0.7rem;">
+                                        <i class="bi bi-lock-fill me-1"></i>Chưa đủ điều kiện:
+                                    </div>
+                                    @foreach($ineligiblePromotions as $promo)
+                                        <div class="voucher-mini-card is-ineligible" data-code="{{ $promo->code }}">
+                                            <div class="voucher-mini-left">
+                                                <span class="mini-discount text-muted">{{ $promo->discount_display }}</span>
+                                                <span class="mini-code font-monospace text-muted">{{ $promo->code }}</span>
+                                            </div>
+                                            <div class="voucher-mini-mid">
+                                                <div class="mini-title text-muted text-truncate" title="{{ $promo->name }}">{{ $promo->name }}</div>
+                                                <div class="mini-sub text-danger fw-semibold">
+                                                    @if($promo->need_more_amount > 0)
+                                                        <i class="bi bi-info-circle me-1"></i>Mua thêm {{ number_format($promo->need_more_amount, 0, ',', '.') }}đ để dùng
+                                                    @else
+                                                        <i class="bi bi-info-circle me-1"></i>{{ $promo->ineligible_reason ?? 'Chưa đủ điều kiện' }}
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            <div class="voucher-mini-right">
+                                                {{-- Voucher ko dùng được: ko ấn add được --}}
+                                                <button type="button" class="btn btn-sm btn-light border text-muted py-1 px-2 btn-voucher-disabled"
+                                                        disabled style="font-size:0.72rem; cursor: not-allowed; opacity: 0.6;" title="Chưa đủ điều kiện">
+                                                    Áp dụng
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @endif
+                            </div>
+                        </div>
+
                         <hr class="summary-divider">
 
                         <div class="summary-total-row">
@@ -596,6 +757,44 @@ document.addEventListener('DOMContentLoaded', function () {
         if (document.querySelectorAll('.item-check:checked').length === 0) {
             e.preventDefault();
         }
+    });
+
+    // ── Apply Coupon from Cart ──
+    document.querySelectorAll('.btn-cart-apply-coupon').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const code = this.dataset.code;
+            const originalText = this.innerHTML;
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+
+            fetch('{{ route("user.coupon.apply") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ code: code }),
+            })
+            .then(r => r.json().then(data => ({ ok: r.ok, body: data })))
+            .then(({ ok, body }) => {
+                if (ok && body.success) {
+                    if (window.showCartToast) {
+                        window.showCartToast(body.message || 'Áp dụng mã thành công!');
+                    }
+                    setTimeout(() => location.reload(), 500);
+                } else {
+                    this.disabled = false;
+                    this.innerHTML = originalText;
+                    alert(body.message || 'Mã giảm giá không hợp lệ.');
+                }
+            })
+            .catch(() => {
+                this.disabled = false;
+                this.innerHTML = originalText;
+                alert('Không thể kết nối máy chủ.');
+            });
+        });
     });
 });
 </script>
