@@ -133,18 +133,113 @@
     text-decoration: none;
     transition: background .4s var(--ease), transform .4s var(--ease), box-shadow .4s var(--ease);
     align-self: flex-start;
+    position: relative;
+    overflow: hidden;
   }
+  .hero__btn span, .hero__btn svg { position: relative; z-index: 1; }
   .hero__btn svg { transition: transform .4s var(--ease); }
   .hero__btn:hover,
   .hero__btn:focus-visible {
     background: var(--brown-dark);
     color: #fff;
     transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(63, 47, 36, .25);
+    box-shadow: 0 12px 28px rgba(63, 47, 36, .28);
   }
   .hero__btn:hover svg,
   .hero__btn:focus-visible svg { transform: translateX(6px); }
   .hero__btn:focus-visible { outline: 2px solid var(--brown); outline-offset: 4px; }
+
+  /* Vệt sáng lướt qua nút bấm định kỳ */
+  .hero__btn-shimmer {
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .25), transparent);
+    transform: skewX(-25deg);
+    animation: btnShimmer 5s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes btnShimmer {
+    0%, 70% { left: -100%; }
+    100% { left: 200%; }
+  }
+
+  /* Badge nổi sang trọng với hiệu ứng nhấp nhô mềm mại */
+  .hero__badge {
+    margin-top: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 18px;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(184, 150, 122, 0.35);
+    border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(90, 69, 54, 0.08);
+    align-self: flex-start;
+    animation: floatBadge 3.6s ease-in-out infinite alternate;
+  }
+  .hero__badge-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #8b5e3c;
+    box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.2);
+    animation: pulseDot 2s ease-in-out infinite;
+  }
+  .hero__badge-text {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--brown-dark);
+    letter-spacing: 0.06em;
+  }
+  @keyframes floatBadge {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-6px); }
+  }
+  @keyframes pulseDot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+  }
+
+  /* Các đốm sáng mờ ảo ambient particles lơ lửng */
+  .hero__particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+  }
+  .hero__particle {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 245, 225, 0.7) 0%, rgba(255, 245, 225, 0) 70%);
+    pointer-events: none;
+    animation: particleFloat 12s ease-in-out infinite alternate;
+  }
+  .hero__particle.p1 {
+    width: 140px; height: 140px;
+    top: 25%; left: 15%;
+    animation-duration: 11s;
+  }
+  .hero__particle.p2 {
+    width: 220px; height: 220px;
+    top: 55%; left: 45%;
+    animation-duration: 15s;
+    animation-delay: -4s;
+  }
+  .hero__particle.p3 {
+    width: 100px; height: 100px;
+    top: 15%; left: 65%;
+    animation-duration: 9s;
+    animation-delay: -2s;
+  }
+  @keyframes particleFloat {
+    0% { transform: translate3d(0, 0, 0) scale(0.9); opacity: 0.25; }
+    50% { transform: translate3d(20px, -25px, 0) scale(1.15); opacity: 0.55; }
+    100% { transform: translate3d(-15px, 18px, 0) scale(1); opacity: 0.3; }
+  }
 
   /* ---------- Hiệu ứng vào trang: chữ lần lượt hiện lên ---------- */
   .hero .reveal {
@@ -202,12 +297,26 @@
     </p>
 
     <a href="#product-section" class="hero__btn reveal" style="--i:5">
-      XEM MẪU BÀN
+      <span>XEM MẪU BÀN</span>
       <svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
         <path d="M0 5h20M16 1l4 4-4 4"/>
       </svg>
+      <div class="hero__btn-shimmer"></div>
     </a>
+
+    {{-- Badge nổi với animation nhấp nhô nhẹ nhàng & ánh sáng viền tinh tế --}}
+    <div class="hero__badge reveal" style="--i:6">
+      <div class="hero__badge-dot"></div>
+      <span class="hero__badge-text">Gỗ Tự Nhiên Tuyển Chọn &bull; May Đo Chuẩn Tỉ Lệ Tinh Hoa</span>
     </div>
+    </div>
+  </div>
+
+  {{-- Các đốm sáng lơ lửng ambient particles mộc mạc --}}
+  <div class="hero__particles" aria-hidden="true">
+    <span class="hero__particle p1"></span>
+    <span class="hero__particle p2"></span>
+    <span class="hero__particle p3"></span>
   </div>
 </section>
 
