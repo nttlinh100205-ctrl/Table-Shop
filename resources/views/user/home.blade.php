@@ -154,12 +154,9 @@
                 </button>
             </div>
 
-            {{-- Thanh chỉ báo trang & hướng dẫn --}}
+            {{-- Thanh chấm chỉ báo trang --}}
             <div class="nth-slider-footer">
                 <div class="nth-slider-dots" id="nth-slider-dots"></div>
-                <div class="nth-slider-helper">
-                    <span>Bấm nút <strong style="color: #5A4536;">&lt;</strong> và <strong style="color: #5A4536;">&gt;</strong> để xem thêm các mẫu bàn khác trong bộ sưu tập ({{ $products->count() }} mẫu)</span>
-                </div>
             </div>
         @else
             <div class="nth-empty-state">

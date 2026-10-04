@@ -12,13 +12,13 @@
             {{-- Cụm bên trái: Nút Menu Drawer chi tiết + Logo thương hiệu --}}
             <div class="nth-navbar__left">
                 {{-- Nút Menu Bên Trái — Bấm để mở toàn bộ Danh Mục Chi Tiết --}}
-                <button type="button" class="nth-sidebar-toggle" id="nth-sidebar-toggle" aria-label="Mở menu danh mục chi tiết bên trái" title="Xem toàn bộ danh mục chi tiết">
+                <button type="button" class="nth-sidebar-toggle" id="nth-sidebar-toggle" aria-label="Mở danh mục bên trái" title="Xem danh mục">
                     <span class="nth-hamburger">
                         <span class="nth-bar"></span>
                         <span class="nth-bar"></span>
                         <span class="nth-bar"></span>
                     </span>
-                    <span class="nth-sidebar-toggle__label">Danh mục chi tiết</span>
+                    <span class="nth-sidebar-toggle__label">Danh mục</span>
                 </button>
 
                 {{-- Logo chữ Serif Nội Thất Tinh Hoa (Được ngăn cách bằng vạch dọc thanh lịch) --}}
@@ -28,7 +28,7 @@
                 </a>
             </div>
 
-            {{-- Menu ngang chung trên cùng — Chỉ hiển thị các chuyên mục & dịch vụ theo yêu cầu --}}
+            {{-- Menu ngang chung trên cùng — Font chữ Garamond đồng điệu, rút gọn đầy đủ nghĩa không mất chữ --}}
             <nav class="nth-nav" aria-label="Menu chính">
                 <ul class="nth-nav__list">
                     <li class="nth-nav__item">
@@ -48,16 +48,16 @@
                             <a href="{{ route('admin.products.index') }}" class="nth-nav__link">Products</a>
                         </li>
                     @else
-                        {{-- 4 Chuyên mục & Dịch vụ chính theo đúng yêu cầu --}}
+                        {{-- 4 Chuyên mục & Dịch vụ chính rút gọn thanh tao, không bao giờ bị tràn/cắt chữ --}}
                         <li class="nth-nav__item">
                             <a href="{{ route('user.home') }}#khong-gian" class="nth-nav__link">
-                                Không Gian Nội Thất
+                                Không Gian Sống
                             </a>
                         </li>
 
                         <li class="nth-nav__item">
                             <a href="{{ route('user.home') }}#triet-ly" class="nth-nav__link">
-                                Triết Lý Nội Thất Tinh Hoa
+                                Triết Lý Tinh Hoa
                             </a>
                         </li>
 
@@ -69,7 +69,7 @@
 
                         <li class="nth-nav__item">
                             <a href="{{ route('user.home') }}#tu-van" class="nth-nav__link">
-                                Tư Vấn May Đo Theo Yêu Cầu
+                                Tư Vấn May Đo
                             </a>
                         </li>
                     @endif
@@ -334,6 +334,10 @@
     margin: 0 auto;
     padding: 0 clamp(16px, 2.5vw, 40px);
 }
+.nth-navbar .nth-container {
+    max-width: 100%;
+    padding: 0 clamp(8px, 1.4vw, 24px); /* Đặt sát mép bên trái */
+}
 
 /* Navbar Container */
 .nth-navbar__inner {
@@ -342,25 +346,26 @@
     justify-content: space-between;
     height: 72px;
     position: relative;
-    gap: 20px;
+    gap: 16px;
+    width: 100%;
 }
 
-/* Cụm bên trái: Nút Menu Chi Tiết + Logo Thương hiệu */
+/* Cụm bên trái: Nút Menu Chi Tiết + Logo Thương hiệu (Đặt sát mép trái) */
 .nth-navbar__left {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     flex-shrink: 0;
-    padding-right: 20px;
+    padding-right: 18px;
     border-right: 1px solid #E6D8C8; /* Vạch ngăn cách rõ rệt giữa Logo và Trang chủ */
 }
 
-/* Nút mở Menu bên trái (Nổi bật, sang trọng với tông nâu gỗ, hoạt động cả Desktop lẫn Mobile) */
+/* Nút mở Menu bên trái (Đặt sát mép trái, nổi bật tông nâu gỗ) */
 .nth-sidebar-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 7px 14px;
+    gap: 7px;
+    padding: 7px 12px;
     background: #5A4536;
     border: 1px solid #5A4536;
     border-radius: 2px;
@@ -427,33 +432,28 @@
     margin-top: 2px;
 }
 
-/* Menu ngang kiểu cũ (Desktop Navbar — Giữ trọn vẹn, căn chỉnh mượt mà) */
+/* Menu ngang chính (Desktop Navbar — Dùng font Cormorant Garamond đồng điệu Logo, hiển thị trọn vẹn không mất chữ) */
 .nth-nav {
     flex: 1;
     min-width: 0;
     display: flex;
     align-items: center;
-    margin-left: 20px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-.nth-nav::-webkit-scrollbar {
-    display: none;
+    margin-left: 18px;
 }
 .nth-nav__list {
     display: flex;
     align-items: center;
-    gap: clamp(10px, 1.3vw, 18px);
+    gap: clamp(14px, 1.8vw, 26px);
     list-style: none;
     margin: 0;
     padding: 0;
     flex-wrap: nowrap;
 }
 .nth-nav__link {
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.02em;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 17.5px;
+    font-weight: 600;
+    letter-spacing: 0.025em;
     color: #3A2E26;
     text-decoration: none;
     padding: 24px 2px;
