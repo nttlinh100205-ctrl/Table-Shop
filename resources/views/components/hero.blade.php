@@ -1,6 +1,11 @@
 {{-- resources/views/components/hero.blade.php --}}
-{{-- Dùng: <x-hero /> --}}
+{{-- Dùng: <x-hero />  hoặc  <x-hero image="images/hero-ban-go-2.jpg" /> --}}
 {{-- Ảnh nền: public/images/hero-ban-go.jpg (nên là bản KHÔNG có chữ) --}}
+@props(['image' => 'images/hero-ban-go.jpg'])
+@php
+  $heroImgPath = public_path($image);
+  $heroImgUrl  = asset($image) . (file_exists($heroImgPath) ? '?v=' . filemtime($heroImgPath) : '');
+@endphp
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,7 +32,7 @@
   .hero__bg {
     position: absolute;
     inset: -30px;                       /* chừa chỗ cho parallax */
-    background: url('{{ asset('images/hero-ban-go.jpg') }}') center / cover no-repeat;
+    background: url('{{ $heroImgUrl }}') center / cover no-repeat;
     will-change: transform;
     animation: kenburns 2.4s var(--ease) both;
   }
@@ -69,18 +74,22 @@
     position: relative;
     z-index: 2;
     min-height: var(--hero-h);
-    padding: 0 clamp(24px, 7vw, 134px);
+    padding: clamp(32px, 7vh, 72px) clamp(24px, 7vw, 134px) clamp(48px, 8vh, 90px);
     display: flex;
     flex-direction: column;
-    justify-content: center;
   }
+  /* Brand nằm trong luồng bình thường -> không bao giờ đè lên nội dung */
   .hero__brand {
-    position: absolute;
-    top: clamp(36px, 9vh, 90px);
-    left: clamp(24px, 7vw, 134px);
     font-size: 14px;
     letter-spacing: .18em;
     line-height: 1.6;
+    margin-bottom: clamp(32px, 6vh, 64px);
+  }
+  /* Khối nội dung tự căn giữa phần không gian còn lại */
+  .hero__content {
+    margin: auto 0;
+    display: flex;
+    flex-direction: column;
   }
   .hero__brand small {
     display: block;
@@ -153,7 +162,7 @@
     .hero__glow {
       background: linear-gradient(180deg, rgba(255, 248, 236, .85) 0%, rgba(255, 248, 236, .5) 55%, rgba(255, 248, 236, 0) 100%);
     }
-    .hero__inner { justify-content: flex-start; padding-top: 24vh; }
+    .hero__content { margin: 6vh 0 auto; }
     .hero__bg { background-position: 70% center; }
   }
 
@@ -178,6 +187,7 @@
       <small>GỖ ĐẸP CHO NHÀ</small>
     </div>
 
+    <div class="hero__content">
     <p class="hero__kicker reveal" style="--i:1">BÀN GỖ CHO MỖI NGÀY</p>
 
     <h1 class="hero__title">
@@ -197,6 +207,7 @@
         <path d="M0 5h20M16 1l4 4-4 4"/>
       </svg>
     </a>
+    </div>
   </div>
 </section>
 
