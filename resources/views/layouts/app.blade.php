@@ -24,6 +24,10 @@
             --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
         }
         *, *::before, *::after { box-sizing: border-box; }
+        html, body {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
         body {
             font-family: var(--font-sans);
             background-color: var(--bg-paper);

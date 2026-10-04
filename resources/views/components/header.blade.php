@@ -56,8 +56,13 @@
     </div>
 
     {{-- Thanh điều hướng chính --}}
-    <div class="nth-navbar">
         <div class="nth-container nth-navbar__inner">
+            {{-- Nút menu mobile đặt bên TRÁI --}}
+            <button type="button" class="nth-mobile-toggle" id="nth-mobile-toggle" aria-label="Mở menu">
+                <span class="nth-bar"></span>
+                <span class="nth-bar"></span>
+            </button>
+
             {{-- Logo chữ Serif --}}
             <a href="{{ route('user.home') }}" class="nth-brand">
                 <span class="nth-brand__title">Nội Thất Tinh Hoa</span>
@@ -197,11 +202,6 @@
                     </span>
                 </a>
 
-                {{-- Nút menu mobile --}}
-                <button type="button" class="nth-mobile-toggle" id="nth-mobile-toggle" aria-label="Mở menu">
-                    <span class="nth-bar"></span>
-                    <span class="nth-bar"></span>
-                </button>
             </div>
         </div>
     </div>
@@ -648,35 +648,45 @@
     transition: all 0.3s;
 }
 
-/* Mobile Drawer */
+/* Mobile Drawer — Đặt bên TRÁI, ẩn hoàn toàn khi đóng, không làm lệch trang */
 .nth-mobile-drawer {
     position: fixed;
     top: 0;
-    right: -320px;
-    width: 300px;
+    left: 0;
+    width: min(320px, 85vw);
     height: 100vh;
+    height: 100dvh;
     background: #FAF6F0;
-    box-shadow: -8px 0 32px rgba(58, 46, 38, 0.15);
+    box-shadow: 12px 0 36px rgba(58, 46, 38, 0.2);
     z-index: 2000;
-    transition: right 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+    transform: translateX(-100%);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1),
+                visibility 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
     display: flex;
     flex-direction: column;
 }
 .nth-mobile-drawer.is-open {
-    right: 0;
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
 }
 .nth-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(58, 46, 38, 0.35);
+    background: rgba(58, 46, 38, 0.4);
+    backdrop-filter: blur(2px);
     z-index: 1999;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.3s;
+    pointer-events: none;
+    transition: all 0.3s ease;
 }
 .nth-backdrop.is-open {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
 }
 .nth-mobile-drawer__head {
     display: flex;
@@ -741,12 +751,29 @@
 .nth-mobile-contact a { color: #5A4536; text-decoration: none; }
 
 /* Responsive */
+@media (min-width: 992px) {
+    .nth-mobile-drawer,
+    .nth-backdrop,
+    .nth-mobile-toggle {
+        display: none !important;
+    }
+}
 @media (max-width: 991px) {
     .nth-topbar { display: none; }
     .nth-nav { display: none; }
     .nth-search { display: none; }
-    .nth-mobile-toggle { display: flex; }
-    .nth-navbar__inner { height: 64px; }
+    .nth-mobile-toggle {
+        display: flex;
+        margin-right: 10px;
+    }
+    .nth-navbar__inner {
+        height: 64px;
+        justify-content: flex-start;
+        gap: 8px;
+    }
+    .nth-actions {
+        margin-left: auto;
+    }
     .nth-brand__title { font-size: 21px; }
 }
 </style>
