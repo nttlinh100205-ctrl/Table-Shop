@@ -216,6 +216,7 @@
 
 {{-- 5. KHỐI CÂU CHUYỆN XƯỞNG GỖ & CHẤT LIỆU --}}
 <section class="nth-section nth-story" id="xuong-go">
+    <div id="triet-ly" style="position: relative; top: -80px; visibility: hidden;"></div>
     <div class="nth-container">
         <div class="nth-story__grid">
             {{-- Cột ảnh xưởng --}}
@@ -275,6 +276,7 @@
 
 {{-- 6. KHỐI ĐÁNH GIÁ KHÁCH HÀNG (Testimonials) --}}
 <section class="nth-section nth-testimonials" id="danh-gia">
+    <div id="trai-nghiem" style="position: relative; top: -80px; visibility: hidden;"></div>
     <div class="nth-container">
         <div class="nth-section-head nth-section-head--center">
             <span class="nth-section-kicker">TRẢI NGHIỆM KHÁCH HÀNG</span>

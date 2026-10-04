@@ -28,7 +28,7 @@
                 </a>
             </div>
 
-            {{-- Menu ngang kiểu cũ (Desktop Navbar) — Giữ trọn vẹn và tạo khoảng cách chuẩn đẹp --}}
+            {{-- Menu ngang chung trên cùng — Chỉ hiển thị các chuyên mục & dịch vụ theo yêu cầu --}}
             <nav class="nth-nav" aria-label="Menu chính">
                 <ul class="nth-nav__list">
                     <li class="nth-nav__item">
@@ -48,66 +48,31 @@
                             <a href="{{ route('admin.products.index') }}" class="nth-nav__link">Products</a>
                         </li>
                     @else
-                        {{-- Danh mục chính trên thanh ngang kiểu cũ --}}
-                        @foreach($categories as $root)
-                            <li class="nth-nav__item {{ $root->subCategories->count() ? 'nth-has-dropdown' : '' }}">
-                                <a href="{{ route('user.home', ['category' => $root->id]) }}#product-section"
-                                   class="nth-nav__link {{ request('category') == $root->id ? 'is-active' : '' }}">
-                                    <span>{{ $root->name }}</span>
-                                    @if($root->subCategories->count())
-                                        <svg class="nth-caret" width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.3">
-                                            <path d="M1 1L4 4L7 1"/>
-                                        </svg>
-                                    @endif
-                                </a>
+                        {{-- 4 Chuyên mục & Dịch vụ chính theo đúng yêu cầu --}}
+                        <li class="nth-nav__item">
+                            <a href="{{ route('user.home') }}#khong-gian" class="nth-nav__link">
+                                Không Gian Nội Thất
+                            </a>
+                        </li>
 
-                                @if($root->subCategories->count())
-                                    <div class="nth-dropdown">
-                                        <ul class="nth-dropdown__list">
-                                            @foreach($root->subCategories as $child)
-                                                <li class="nth-dropdown__item {{ $child->subSubCategories->count() ? 'has-sub' : '' }}">
-                                                    <a href="{{ route('user.home', ['sub_category' => $child->id]) }}#product-section"
-                                                       class="nth-dropdown__link {{ request('sub_category') == $child->id ? 'is-active' : '' }}">
-                                                        <span>{{ $child->name }}</span>
-                                                        @if($child->subSubCategories->count())
-                                                            <svg width="6" height="8" viewBox="0 0 6 8" fill="none" stroke="currentColor" stroke-width="1.2">
-                                                                <path d="M1 1L4 4L1 7"/>
-                                                            </svg>
-                                                        @endif
-                                                    </a>
+                        <li class="nth-nav__item">
+                            <a href="{{ route('user.home') }}#triet-ly" class="nth-nav__link">
+                                Triết Lý Nội Thất Tinh Hoa
+                            </a>
+                        </li>
 
-                                                    @if($child->subSubCategories->count())
-                                                        <ul class="nth-subdropdown">
-                                                            @foreach($child->subSubCategories as $grand)
-                                                                <li>
-                                                                    <a href="{{ route('user.home', ['sub_sub_category' => $grand->id]) }}#product-section"
-                                                                       class="nth-subdropdown__link {{ request('sub_sub_category') == $grand->id ? 'is-active' : '' }}">
-                                                                        {{ $grand->name }}
-                                                                    </a>
-                                                                </li>
-                                                            @endforeach
-                                                        </ul>
-                                                    @endif
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                @endif
-                            </li>
-                        @endforeach
+                        <li class="nth-nav__item">
+                            <a href="{{ route('user.home') }}#trai-nghiem" class="nth-nav__link">
+                                Trải Nghiệm Khách Hàng
+                            </a>
+                        </li>
+
+                        <li class="nth-nav__item">
+                            <a href="{{ route('user.home') }}#tu-van" class="nth-nav__link">
+                                Tư Vấn May Đo Theo Yêu Cầu
+                            </a>
+                        </li>
                     @endif
-
-                    <li class="nth-nav__item">
-                        <a href="{{ route('user.home') }}#xuong-go" class="nth-nav__link">
-                            Xưởng gỗ
-                        </a>
-                    </li>
-
-                    <li class="nth-nav__item">
-                        <a href="{{ route('user.home') }}#tu-van" class="nth-nav__link">
-                            Tư vấn may đo
-                        </a>
-                    </li>
                 </ul>
             </nav>
 
@@ -281,15 +246,23 @@
 
                 <div class="nth-sidebar-divider"></div>
 
-                {{-- Chuyên mục & Hỗ trợ --}}
+                {{-- Chuyên mục & Dịch vụ --}}
                 <div class="nth-sidebar-section-title">CHUYÊN MỤC &amp; DỊCH VỤ</div>
-                <a href="{{ route('user.home') }}#xuong-go" class="nth-sidebar-link">
+                <a href="{{ route('user.home') }}#khong-gian" class="nth-sidebar-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    <span>Không gian nội thất</span>
+                </a>
+                <a href="{{ route('user.home') }}#triet-ly" class="nth-sidebar-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
-                    <span>Câu chuyện xưởng mộc thủ công</span>
+                    <span>Triết lý Nội Thất Tinh Hoa</span>
+                </a>
+                <a href="{{ route('user.home') }}#trai-nghiem" class="nth-sidebar-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <span>Trải nghiệm khách hàng</span>
                 </a>
                 <a href="{{ route('user.home') }}#tu-van" class="nth-sidebar-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    <span>Dịch vụ tư vấn may đo theo kích thước</span>
+                    <span>Tư vấn may đo theo yêu cầu</span>
                 </a>
 
                 <div class="nth-sidebar-divider"></div>
