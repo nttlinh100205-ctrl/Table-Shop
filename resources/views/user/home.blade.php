@@ -301,7 +301,7 @@
      Nội dung: 'Manrope', sans-serif
    ======================================================== */
 .nth-section {
-    padding: 88px 0;
+    padding: 60px 0;
     background: #FAF6F0;
     color: #3A2E26;
     font-family: 'Manrope', sans-serif;
@@ -315,9 +315,9 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-bottom: 48px;
+    margin-bottom: 32px;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 16px;
 }
 .nth-section-head--center {
     flex-direction: column;
@@ -329,39 +329,39 @@
 }
 .nth-section-kicker {
     display: block;
-    font-size: 11.5px;
-    letter-spacing: 0.22em;
+    font-size: 11px;
+    letter-spacing: 0.2em;
     color: #7E7065;
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 .nth-section-title {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: clamp(30px, 4vw, 44px);
+    font-size: clamp(26px, 3.2vw, 36px);
     font-weight: 400;
     color: #3A2E26;
     margin: 0;
     line-height: 1.15;
 }
 .nth-section-desc {
-    font-size: 15px;
-    line-height: 1.75;
+    font-size: 14px;
+    line-height: 1.7;
     color: #7E7065;
-    margin-top: 14px;
+    margin-top: 10px;
 }
 .nth-btn-clear-filter {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 18px;
+    gap: 6px;
+    padding: 8px 14px;
     background: #FAF6F0;
     border: 1px solid #E6D8C8;
     border-radius: 2px;
     color: #5A4536;
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 600;
     text-decoration: none;
-    transition: all 0.25s ease;
+    transition: all 0.2s ease;
 }
 .nth-btn-clear-filter:hover {
     background: #5A4536;
@@ -370,12 +370,12 @@
 }
 .nth-section-head__filter {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
 }
 .nth-filter-tag {
-    padding: 7px 16px;
-    font-size: 12.5px;
+    padding: 6px 14px;
+    font-size: 12px;
     border-radius: 2px;
     border: 1px solid #E6D8C8;
     background: #FAF6F0;
@@ -390,11 +390,13 @@
     border-color: #5A4536;
 }
 
-/* Lưới 4 cột Desktop / 2 cột Mobile */
+/* Lưới 4 cột Desktop / 2 cột Mobile (Gọn gàng, dễ nhìn, thanh thoát) */
 .nth-product-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 28px;
+    gap: 16px;
+    max-width: 1120px;
+    margin: 0 auto;
 }
 .nth-product-grid__col {
     display: flex;

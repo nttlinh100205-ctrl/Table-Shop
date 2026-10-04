@@ -2,60 +2,11 @@
 @php
     $categories = \App\Models\Category::with(['subCategories.subSubCategories'])->orderBy('name')->get();
     $cartCount = collect(session('cart', []))->sum('quantity');
-
-    // 4 không gian cho mega menu
-    $spaces = [
-        [
-            'name' => 'Phòng Ăn Gia Đình',
-            'desc' => 'Bàn ăn oval, chữ nhật, bàn mở rộng',
-            'cat_id' => 59,
-            'image' => asset('images/home/phong-an.jpg'),
-            'url' => route('user.home', ['category' => 59]),
-        ],
-        [
-            'name' => 'Không Gian Làm Việc',
-            'desc' => 'Bàn giám đốc, bàn làm việc chân sắt',
-            'cat_id' => 55,
-            'image' => asset('images/home/van-phong.jpg'),
-            'url' => route('user.home', ['category' => 55]),
-        ],
-        [
-            'name' => 'Phòng Khách Sang Trọng',
-            'desc' => 'Bàn trà sofa, bàn góc, bàn decor',
-            'cat_id' => 57,
-            'image' => asset('images/home/phong-khach.jpg'),
-            'url' => route('user.home', ['category' => 57]),
-        ],
-        [
-            'name' => 'Cafe & Sân Vườn',
-            'desc' => 'Bàn cafe ngoài trời, bàn ban công',
-            'cat_id' => 58,
-            'image' => asset('images/home/cafe-san-vuon.jpg'),
-            'url' => route('user.home', ['category' => 58]),
-        ],
-    ];
 @endphp
 
 <header class="nth-header" id="site-header">
-    {{-- Thanh thông báo trên cùng (rất mảnh, sang trọng) --}}
-    <div class="nth-topbar">
-        <div class="nth-container nth-topbar__inner">
-            <span class="nth-topbar__text">
-                Xưởng mộc chế tác thủ công · Gỗ óc chó &amp; sồi tự nhiên tuyển chọn
-            </span>
-            <div class="nth-topbar__links">
-                <a href="tel:{{ str_replace(' ', '', config('shop.hotline', '0123456789')) }}">
-                    Hotline: {{ config('shop.hotline', '0123 456 789') }}
-                </a>
-                <span class="nth-topbar__divider">·</span>
-                <a href="https://zalo.me/{{ config('shop.zalo', '0123456789') }}" target="_blank" rel="noopener">
-                    Zalo tư vấn
-                </a>
-            </div>
-        </div>
-    </div>
-
-    {{-- Thanh điều hướng chính --}}
+    {{-- Thanh điều hướng chính (Đã bỏ thanh header trên cùng theo yêu cầu) --}}
+    <div class="nth-navbar">
         <div class="nth-container nth-navbar__inner">
             {{-- Nút menu mobile đặt bên TRÁI --}}
             <button type="button" class="nth-mobile-toggle" id="nth-mobile-toggle" aria-label="Mở menu">
@@ -69,60 +20,74 @@
                 <span class="nth-brand__sub">GỖ ĐẸP CHO NHÀ</span>
             </a>
 
-            {{-- Menu chính (Desktop) --}}
+            {{-- Menu chính (Desktop) — Thống nhất 100% với Database --}}
             <nav class="nth-nav" aria-label="Menu chính">
                 <ul class="nth-nav__list">
                     <li class="nth-nav__item">
-                        <a href="{{ route('user.home') }}" class="nth-nav__link {{ request()->routeIs('user.home') && !request()->hasAny(['category','q','sub_category']) ? 'is-active' : '' }}">
+                        <a href="{{ route('user.home') }}" class="nth-nav__link {{ request()->routeIs('user.home') && !request()->hasAny(['category','q','sub_category','sub_sub_category']) ? 'is-active' : '' }}">
                             Trang chủ
                         </a>
                     </li>
 
-                    {{-- Mega menu theo Không gian sống & Danh mục --}}
-                    <li class="nth-nav__item nth-has-mega">
-                        <a href="#product-section" class="nth-nav__link">
-                            Bộ sưu tập
-                            <svg class="nth-caret" width="9" height="6" viewBox="0 0 9 6" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <path d="M1 1.5L4.5 4.5L8 1.5"/>
-                            </svg>
-                        </a>
-
-                        {{-- Mega dropdown --}}
-                        <div class="nth-mega">
-                            <div class="nth-mega__inner">
-                                <div class="nth-mega__head">
-                                    <span class="nth-mega__kicker">KHÔNG GIAN NỘI THẤT</span>
-                                    <a href="{{ route('user.home') }}#product-section" class="nth-mega__all">
-                                        Xem tất cả sản phẩm
-                                        <svg width="14" height="8" viewBox="0 0 14 8" fill="none" stroke="currentColor" stroke-width="1.2">
-                                            <path d="M1 4h12M9 1l4 3-4 3"/>
+                    @if(auth()->check() && auth()->user()->isAdmin())
+                        <li class="nth-nav__item">
+                            <a href="{{ route('admin.dashboard') }}" class="nth-nav__link">Dashboard Admin</a>
+                        </li>
+                        <li class="nth-nav__item">
+                            <a href="{{ route('admin.categories.index') }}" class="nth-nav__link">Categories</a>
+                        </li>
+                        <li class="nth-nav__item">
+                            <a href="{{ route('admin.products.index') }}" class="nth-nav__link">Products</a>
+                        </li>
+                    @else
+                        {{-- Danh mục tải trực tiếp từ Database --}}
+                        @foreach($categories as $root)
+                            <li class="nth-nav__item {{ $root->subCategories->count() ? 'nth-has-dropdown' : '' }}">
+                                <a href="{{ route('user.home', ['category' => $root->id]) }}#product-section"
+                                   class="nth-nav__link {{ request('category') == $root->id ? 'is-active' : '' }}">
+                                    {{ $root->name }}
+                                    @if($root->subCategories->count())
+                                        <svg class="nth-caret" width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.3">
+                                            <path d="M1 1L4 4L7 1"/>
                                         </svg>
-                                    </a>
-                                </div>
+                                    @endif
+                                </a>
 
-                                <div class="nth-mega__grid">
-                                    @foreach($spaces as $space)
-                                        <a href="{{ $space['url'] }}" class="nth-mega-card">
-                                            <div class="nth-mega-card__img-wrap">
-                                                <img src="{{ $space['image'] }}" alt="{{ $space['name'] }}" loading="lazy">
-                                            </div>
-                                            <div class="nth-mega-card__body">
-                                                <h4 class="nth-mega-card__title">{{ $space['name'] }}</h4>
-                                                <p class="nth-mega-card__desc">{{ $space['desc'] }}</p>
-                                                <span class="nth-mega-card__cta">Khám phá</span>
-                                            </div>
-                                        </a>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    </li>
+                                @if($root->subCategories->count())
+                                    <div class="nth-dropdown">
+                                        <ul class="nth-dropdown__list">
+                                            @foreach($root->subCategories as $child)
+                                                <li class="nth-dropdown__item {{ $child->subSubCategories->count() ? 'has-sub' : '' }}">
+                                                    <a href="{{ route('user.home', ['sub_category' => $child->id]) }}#product-section"
+                                                       class="nth-dropdown__link {{ request('sub_category') == $child->id ? 'is-active' : '' }}">
+                                                        <span>{{ $child->name }}</span>
+                                                        @if($child->subSubCategories->count())
+                                                            <svg width="6" height="8" viewBox="0 0 6 8" fill="none" stroke="currentColor" stroke-width="1.2">
+                                                                <path d="M1 1L4 4L1 7"/>
+                                                            </svg>
+                                                        @endif
+                                                    </a>
 
-                    <li class="nth-nav__item">
-                        <a href="{{ route('user.home') }}#khong-gian" class="nth-nav__link">
-                            Không gian
-                        </a>
-                    </li>
+                                                    @if($child->subSubCategories->count())
+                                                        <ul class="nth-subdropdown">
+                                                            @foreach($child->subSubCategories as $grand)
+                                                                <li>
+                                                                    <a href="{{ route('user.home', ['sub_sub_category' => $grand->id]) }}#product-section"
+                                                                       class="nth-subdropdown__link {{ request('sub_sub_category') == $grand->id ? 'is-active' : '' }}">
+                                                                        {{ $grand->name }}
+                                                                    </a>
+                                                                </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    @endif
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+                            </li>
+                        @endforeach
+                    @endif
 
                     <li class="nth-nav__item">
                         <a href="{{ route('user.home') }}#xuong-go" class="nth-nav__link">
@@ -149,7 +114,7 @@
                            value="{{ request('q') }}"
                            aria-label="Tìm mẫu bàn">
                     <button type="submit" class="nth-search__btn" aria-label="Tìm kiếm">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
                             <circle cx="11" cy="11" r="7"/>
                             <path d="M21 21l-4.35-4.35"/>
                         </svg>
@@ -201,12 +166,11 @@
                         {{ $cartCount }}
                     </span>
                 </a>
-
             </div>
         </div>
     </div>
 
-    {{-- Drawer Menu Mobile --}}
+    {{-- Drawer Menu Mobile — Đặt bên TRÁI, ẩn hoàn toàn trên Desktop --}}
     <div class="nth-mobile-drawer" id="nth-mobile-drawer">
         <div class="nth-mobile-drawer__head">
             <span class="nth-brand__title" style="font-size: 20px;">Nội Thất Tinh Hoa</span>
@@ -215,20 +179,29 @@
         <div class="nth-mobile-drawer__body">
             <nav class="nth-mobile-nav">
                 <a href="{{ route('user.home') }}" class="nth-mobile-link">Trang chủ</a>
-                <a href="{{ route('user.home') }}#product-section" class="nth-mobile-link">Tất cả sản phẩm</a>
 
                 <div class="nth-mobile-cat-group">
-                    <span class="nth-mobile-kicker">KHÔNG GIAN BÀN GỖ</span>
-                    @foreach($spaces as $space)
-                        <a href="{{ $space['url'] }}" class="nth-mobile-sublink">
-                            {{ $space['name'] }}
-                        </a>
+                    <span class="nth-mobile-kicker">DANH MỤC SẢN PHẨM</span>
+                    @foreach($categories as $root)
+                        <div class="nth-mobile-cat-item">
+                            <a href="{{ route('user.home', ['category' => $root->id]) }}#product-section" class="nth-mobile-sublink font-weight-bold">
+                                {{ $root->name }}
+                            </a>
+                            @if($root->subCategories->count())
+                                <div class="nth-mobile-child-list">
+                                    @foreach($root->subCategories as $child)
+                                        <a href="{{ route('user.home', ['sub_category' => $child->id]) }}#product-section" class="nth-mobile-subchild">
+                                            · {{ $child->name }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
                     @endforeach
                 </div>
 
-                <a href="{{ route('user.home') }}#khong-gian" class="nth-mobile-link">Không gian sống</a>
-                <a href="{{ route('user.home') }}#xuong-go" class="nth-mobile-link">Câu chuyện xưởng mộc</a>
-                <a href="{{ route('user.home') }}#tu-van" class="nth-mobile-link">Tư vấn trực tiếp</a>
+                <a href="{{ route('user.home') }}#xuong-go" class="nth-mobile-link">Xưởng gỗ</a>
+                <a href="{{ route('user.home') }}#tu-van" class="nth-mobile-link">Tư vấn may đo</a>
 
                 <div class="nth-mobile-divider"></div>
 
@@ -255,8 +228,7 @@
 
 <style>
 /* ========================================================
-   HEADER STYLES — NỘI THẤT TINH HOA
-   Palette: #F3E9DC, #5A4536, #3F2F24, #3A2E26
+   HEADER STYLES — NỘI THẤT TINH HOA (Đồng bộ chuẩn Database)
    ======================================================== */
 .nth-header {
     background: #FAF6F0;
@@ -269,48 +241,23 @@
     transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 .nth-header.is-scrolled {
-    background: rgba(250, 246, 240, 0.96);
+    background: rgba(250, 246, 240, 0.98);
     backdrop-filter: blur(8px);
-    box-shadow: 0 4px 20px rgba(58, 46, 38, 0.05);
+    box-shadow: 0 4px 18px rgba(58, 46, 38, 0.05);
 }
 
 .nth-container {
     max-width: 1320px;
     margin: 0 auto;
-    padding: 0 clamp(20px, 4vw, 48px);
+    padding: 0 clamp(16px, 3.5vw, 40px);
 }
-
-/* Topbar */
-.nth-topbar {
-    background: #3F2F24;
-    color: #F3E9DC;
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    padding: 7px 0;
-}
-.nth-topbar__inner {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.nth-topbar__text {
-    opacity: 0.9;
-}
-.nth-topbar__links a {
-    color: #F3E9DC;
-    text-decoration: none;
-    opacity: 0.85;
-    transition: opacity 0.2s;
-}
-.nth-topbar__links a:hover { opacity: 1; text-decoration: underline; }
-.nth-topbar__divider { margin: 0 8px; opacity: 0.5; }
 
 /* Navbar */
 .nth-navbar__inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 76px;
+    height: 70px;
     position: relative;
 }
 
@@ -321,17 +268,18 @@
     display: flex;
     flex-direction: column;
     line-height: 1.15;
+    flex-shrink: 0;
 }
 .nth-brand__title {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 24px;
+    font-size: 23px;
     font-weight: 500;
     letter-spacing: 0.04em;
     color: #3A2E26;
 }
 .nth-brand__sub {
-    font-size: 8.5px;
-    letter-spacing: 0.26em;
+    font-size: 8px;
+    letter-spacing: 0.24em;
     color: #7E7065;
     margin-top: 2px;
 }
@@ -340,23 +288,24 @@
 .nth-nav__list {
     display: flex;
     align-items: center;
-    gap: 32px;
+    gap: 24px;
     list-style: none;
     margin: 0;
     padding: 0;
 }
 .nth-nav__link {
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 500;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     color: #3A2E26;
     text-decoration: none;
-    padding: 26px 0;
+    padding: 24px 0;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     position: relative;
-    transition: color 0.25s ease;
+    transition: color 0.2s ease;
+    white-space: nowrap;
 }
 .nth-nav__link:hover,
 .nth-nav__link.is-active {
@@ -365,10 +314,10 @@
 .nth-nav__link::after {
     content: '';
     position: absolute;
-    bottom: 20px;
+    bottom: 18px;
     left: 0;
     width: 0;
-    height: 1px;
+    height: 1.5px;
     background: #5A4536;
     transition: width 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
@@ -377,128 +326,110 @@
     width: 100%;
 }
 .nth-caret {
-    transition: transform 0.3s ease;
+    transition: transform 0.25s ease;
 }
-.nth-has-mega:hover .nth-caret {
+.nth-has-dropdown:hover .nth-caret {
     transform: rotate(180deg);
 }
 
-/* Mega menu */
-.nth-has-mega {
-    position: static;
+/* Dropdown Menu (Database driven) */
+.nth-has-dropdown {
+    position: relative;
 }
-.nth-mega {
+.nth-dropdown {
     position: absolute;
     top: 100%;
     left: 0;
-    right: 0;
-    width: 100%;
+    min-width: 220px;
     background: #FAF6F0;
-    border-bottom: 1px solid #E6D8C8;
-    box-shadow: 0 16px 36px rgba(58, 46, 38, 0.08);
+    border: 1px solid #E6D8C8;
+    border-radius: 2px;
+    box-shadow: 0 12px 32px rgba(58, 46, 38, 0.1);
     opacity: 0;
     visibility: hidden;
-    transform: translateY(8px);
-    transition: all 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+    transform: translateY(6px);
+    transition: all 0.25s ease;
     pointer-events: none;
+    padding: 6px 0;
+    z-index: 1050;
 }
-.nth-has-mega:hover .nth-mega,
-.nth-has-mega:focus-within .nth-mega {
+.nth-has-dropdown:hover > .nth-dropdown,
+.nth-has-dropdown:focus-within > .nth-dropdown {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
     pointer-events: auto;
 }
-.nth-mega__inner {
-    max-width: 1320px;
-    margin: 0 auto;
-    padding: 32px clamp(20px, 4vw, 48px) 40px;
+.nth-dropdown__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
-.nth-mega__head {
+.nth-dropdown__item {
+    position: relative;
+}
+.nth-dropdown__link {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
-    padding-bottom: 16px;
-    margin-bottom: 24px;
-    border-bottom: 1px solid #E6D8C8;
-}
-.nth-mega__kicker {
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    color: #7E7065;
-    font-weight: 600;
-}
-.nth-mega__all {
-    font-size: 12.5px;
-    color: #5A4536;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-    transition: gap 0.25s ease;
-}
-.nth-mega__all:hover {
-    gap: 12px;
-}
-.nth-mega__grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-}
-.nth-mega-card {
-    text-decoration: none;
-    color: inherit;
-    display: flex;
-    flex-direction: column;
-    group: hover;
-}
-.nth-mega-card__img-wrap {
-    aspect-ratio: 4 / 3;
-    overflow: hidden;
-    background: #EFE3D3;
-    border-radius: 2px;
-    margin-bottom: 12px;
-}
-.nth-mega-card__img-wrap img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-.nth-mega-card:hover .nth-mega-card__img-wrap img {
-    transform: scale(1.05);
-}
-.nth-mega-card__title {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 19px;
-    font-weight: 500;
-    margin: 0 0 4px;
+    padding: 8px 16px;
+    font-size: 13px;
     color: #3A2E26;
-    transition: color 0.2s;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
 }
-.nth-mega-card:hover .nth-mega-card__title {
+.nth-dropdown__link:hover,
+.nth-dropdown__link.is-active {
+    background: #F3E9DC;
     color: #5A4536;
+    padding-left: 19px;
 }
-.nth-mega-card__desc {
-    font-size: 12px;
-    color: #7E7065;
-    line-height: 1.5;
-    margin: 0 0 8px;
+
+/* Sub-dropdown (Cấp 3) */
+.nth-subdropdown {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    min-width: 200px;
+    background: #FAF6F0;
+    border: 1px solid #E6D8C8;
+    border-radius: 2px;
+    box-shadow: 0 12px 32px rgba(58, 46, 38, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(6px);
+    transition: all 0.25s ease;
+    pointer-events: none;
+    padding: 6px 0;
+    list-style: none;
+    margin: 0;
 }
-.nth-mega-card__cta {
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+.nth-dropdown__item.has-sub:hover > .nth-subdropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+.nth-subdropdown__link {
+    display: block;
+    padding: 7px 16px;
+    font-size: 12.5px;
+    color: #3A2E26;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+.nth-subdropdown__link:hover,
+.nth-subdropdown__link.is-active {
+    background: #F3E9DC;
     color: #5A4536;
-    font-weight: 600;
 }
 
 /* Actions */
 .nth-actions {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
 }
 .nth-search {
     position: relative;
@@ -506,20 +437,20 @@
     align-items: center;
 }
 .nth-search__input {
-    width: 170px;
-    height: 36px;
+    width: 160px;
+    height: 35px;
     background: #F3E9DC;
     border: 1px solid #E6D8C8;
     border-radius: 2px;
-    padding: 0 32px 0 12px;
-    font-size: 12.5px;
+    padding: 0 30px 0 10px;
+    font-size: 12px;
     font-family: inherit;
     color: #3A2E26;
     outline: none;
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
 }
 .nth-search__input:focus {
-    width: 220px;
+    width: 200px;
     background: #fff;
     border-color: #5A4536;
 }
@@ -534,11 +465,9 @@
     display: flex;
     align-items: center;
 }
-.nth-search__btn:hover { color: #3A2E26; }
-
 .nth-action-btn {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -548,7 +477,7 @@
     border-radius: 2px;
     text-decoration: none;
     position: relative;
-    transition: all 0.25s ease;
+    transition: all 0.2s ease;
     cursor: pointer;
 }
 .nth-action-btn:hover {
@@ -560,12 +489,12 @@
     position: absolute;
     top: 4px;
     right: 4px;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 4px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
     background: #5A4536;
     color: #fff;
-    font-size: 9.5px;
+    font-size: 9px;
     font-weight: 600;
     border-radius: 99px;
     display: inline-flex;
@@ -581,16 +510,16 @@
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    min-width: 200px;
+    min-width: 190px;
     background: #FAF6F0;
     border: 1px solid #E6D8C8;
     border-radius: 2px;
     box-shadow: 0 10px 24px rgba(58, 46, 38, 0.08);
-    padding: 10px 0;
+    padding: 8px 0;
     opacity: 0;
     visibility: hidden;
     transform: translateY(6px);
-    transition: all 0.25s ease;
+    transition: all 0.2s ease;
     z-index: 1020;
 }
 .nth-account-dropdown:hover .nth-account-menu,
@@ -600,60 +529,58 @@
     transform: translateY(0);
 }
 .nth-account-menu__header {
-    padding: 6px 16px 10px;
+    padding: 6px 14px 8px;
     border-bottom: 1px solid #E6D8C8;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
-.nth-account-menu__header strong { display: block; font-size: 13px; color: #3A2E26; }
-.nth-account-menu__header small { font-size: 11px; color: #7E7065; }
+.nth-account-menu__header strong { display: block; font-size: 12.5px; color: #3A2E26; }
+.nth-account-menu__header small { font-size: 10.5px; color: #7E7065; }
 .nth-account-menu__item {
     display: block;
-    padding: 7px 16px;
-    font-size: 12.5px;
+    padding: 6px 14px;
+    font-size: 12px;
     color: #3A2E26;
     text-decoration: none;
-    transition: background 0.2s;
 }
 .nth-account-menu__item:hover { background: #F3E9DC; }
-.nth-account-menu__logout { border-top: 1px solid #E6D8C8; margin-top: 6px; padding-top: 4px; }
+.nth-account-menu__logout { border-top: 1px solid #E6D8C8; margin-top: 4px; padding-top: 4px; }
 .nth-account-menu__logout button {
     width: 100%;
     text-align: left;
-    padding: 7px 16px;
+    padding: 6px 14px;
     background: none;
     border: none;
-    font-size: 12.5px;
+    font-size: 12px;
     color: #9b3327;
     cursor: pointer;
 }
-.nth-account-menu__logout button:hover { background: #F3E9DC; }
 
-/* Mobile toggler */
+/* Mobile Toggler (ở mép TRÁI) */
 .nth-mobile-toggle {
     display: none;
     flex-direction: column;
     justify-content: center;
-    gap: 6px;
-    width: 36px;
-    height: 36px;
+    gap: 5px;
+    width: 32px;
+    height: 32px;
     background: none;
     border: none;
-    padding: 4px;
+    padding: 3px;
     cursor: pointer;
 }
 .nth-bar {
-    width: 22px;
+    width: 20px;
     height: 1.5px;
     background: #3A2E26;
     transition: all 0.3s;
 }
 
-/* Mobile Drawer — Đặt bên TRÁI, ẩn hoàn toàn khi đóng, không làm lệch trang */
+/* Mobile Drawer — BÊN TRÁI, KHÔNG LỆCH TRANG */
 .nth-mobile-drawer {
     position: fixed;
     top: 0;
     left: 0;
-    width: min(320px, 85vw);
+    width: min(300px, 85vw);
     height: 100vh;
     height: 100dvh;
     background: #FAF6F0;
@@ -692,7 +619,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px;
+    padding: 20px;
     border-bottom: 1px solid #E6D8C8;
 }
 .nth-mobile-close {
@@ -705,26 +632,26 @@
 .nth-mobile-drawer__body {
     flex: 1;
     overflow-y: auto;
-    padding: 24px;
+    padding: 20px;
 }
 .nth-mobile-nav {
     display: flex;
     flex-direction: column;
 }
 .nth-mobile-link {
-    padding: 12px 0;
+    padding: 10px 0;
     color: #3A2E26;
     text-decoration: none;
-    font-size: 14.5px;
+    font-size: 14px;
     font-weight: 500;
     border-bottom: 1px solid #EFE3D3;
 }
 .nth-mobile-cat-group {
-    padding: 14px 0 6px;
+    padding: 12px 0 6px;
 }
 .nth-mobile-kicker {
     display: block;
-    font-size: 10.5px;
+    font-size: 10px;
     letter-spacing: 0.16em;
     color: #7E7065;
     margin-bottom: 8px;
@@ -732,25 +659,37 @@
 }
 .nth-mobile-sublink {
     display: block;
-    padding: 8px 12px;
+    padding: 6px 8px;
     font-size: 13px;
     color: #5A4536;
+    font-weight: 600;
+    text-decoration: none;
+}
+.nth-mobile-child-list {
+    padding-left: 12px;
+    margin-bottom: 6px;
+}
+.nth-mobile-subchild {
+    display: block;
+    padding: 4px 6px;
+    font-size: 12px;
+    color: #7E7065;
     text-decoration: none;
 }
 .nth-mobile-divider {
     height: 1px;
     background: #E6D8C8;
-    margin: 16px 0;
+    margin: 14px 0;
 }
 .nth-mobile-contact {
-    margin-top: 24px;
-    font-size: 12px;
+    margin-top: 20px;
+    font-size: 11.5px;
     color: #7E7065;
-    line-height: 1.6;
+    line-height: 1.5;
 }
 .nth-mobile-contact a { color: #5A4536; text-decoration: none; }
 
-/* Responsive */
+/* Responsive Rules */
 @media (min-width: 992px) {
     .nth-mobile-drawer,
     .nth-backdrop,
@@ -759,7 +698,6 @@
     }
 }
 @media (max-width: 991px) {
-    .nth-topbar { display: none; }
     .nth-nav { display: none; }
     .nth-search { display: none; }
     .nth-mobile-toggle {
@@ -767,14 +705,14 @@
         margin-right: 10px;
     }
     .nth-navbar__inner {
-        height: 64px;
+        height: 60px;
         justify-content: flex-start;
         gap: 8px;
     }
     .nth-actions {
         margin-left: auto;
     }
-    .nth-brand__title { font-size: 21px; }
+    .nth-brand__title { font-size: 20px; }
 }
 </style>
 

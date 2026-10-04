@@ -5,85 +5,91 @@
 @section('content')
 <style>
     :root {
-        --pd-primary: #0f172a;
-        --pd-accent: #dc2626;
-        --pd-ocean: #0284c7;
-        --pd-ocean-dark: #0369a1;
-        --pd-ocean-soft: #e0f2fe;
-        --pd-muted: #64748b;
-        --pd-border: #e2e8f0;
-        --pd-bg: #f1f5f9;
+        --pd-primary: #3A2E26;
+        --pd-accent: #5A4536;
+        --pd-ocean: #5A4536;
+        --pd-ocean-dark: #3F2F24;
+        --pd-ocean-soft: #F3E9DC;
+        --pd-muted: #7E7065;
+        --pd-border: #E6D8C8;
+        --pd-bg: #FAF6F0;
     }
 
-    .pd-page { background: var(--pd-bg); min-height: 70vh; padding: 8px 0 48px; }
+    .pd-page { background: var(--pd-bg); min-height: 70vh; padding: 20px 0 60px; font-family: 'Manrope', sans-serif; color: var(--pd-primary); }
 
-    .pd-breadcrumb { font-size: 0.84rem; color: var(--pd-muted); margin-bottom: 16px; }
-    .pd-breadcrumb a { color: var(--pd-muted); text-decoration: none; }
+    .pd-breadcrumb { font-size: 0.82rem; color: var(--pd-muted); margin-bottom: 20px; }
+    .pd-breadcrumb a { color: var(--pd-muted); text-decoration: none; transition: color 0.15s; }
     .pd-breadcrumb a:hover { color: var(--pd-ocean); }
 
     .pd-card {
         background: #fff;
-        border-radius: 14px;
-        box-shadow: 0 2px 16px rgba(15, 23, 42, 0.05);
+        border-radius: 2px;
+        box-shadow: 0 4px 20px rgba(90, 69, 54, 0.04);
         border: 1px solid var(--pd-border);
         overflow: hidden;
         margin-bottom: 24px;
     }
 
-    .pd-gallery-wrap { padding: 24px 24px 16px; background: #fafbfc; }
+    .pd-gallery-wrap { padding: 24px; background: #fff; border-right: 1px solid var(--pd-border); }
     .pd-main-img {
         width: 100%; height: 380px; object-fit: contain;
-        border-radius: 10px; background: #fff; display: block; margin: 0 auto;
+        border-radius: 2px; background: #fff; display: block; margin: 0 auto;
     }
     .pd-no-img {
         height: 300px; display: flex; align-items: center; justify-content: center;
-        color: var(--pd-muted); background: #f1f5f9; border-radius: 10px;
+        color: var(--pd-muted); background: var(--pd-bg); border-radius: 2px; border: 1px dashed var(--pd-border);
     }
     .pd-thumbs { display: flex; gap: 10px; margin-top: 14px; overflow-x: auto; padding-bottom: 6px; }
     .pd-thumb {
-        flex: 0 0 88px; width: 88px; height: 72px; object-fit: cover;
-        border-radius: 8px; border: 2px solid transparent; cursor: pointer;
-        background: #fff; opacity: 0.85; transition: all 0.2s;
+        flex: 0 0 84px; width: 84px; height: 68px; object-fit: cover;
+        border-radius: 2px; border: 1px solid var(--pd-border); cursor: pointer;
+        background: #fff; opacity: 0.8; transition: all 0.2s;
     }
-    .pd-thumb:hover { opacity: 1; border-color: #94a3b8; }
+    .pd-thumb:hover { opacity: 1; border-color: var(--pd-muted); }
     .pd-thumb.active { border-color: var(--pd-ocean); opacity: 1; box-shadow: 0 0 0 1px var(--pd-ocean); }
 
-    .pd-info { padding: 28px 32px; }
+    .pd-info { padding: 32px 36px; }
     .pd-title {
-        font-size: 1.5rem; font-weight: 700; color: var(--pd-primary);
-        line-height: 1.35; margin-bottom: 6px;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 2rem; font-weight: 600; color: var(--pd-primary);
+        line-height: 1.3; margin-bottom: 8px; letter-spacing: -0.01em;
     }
     .pd-sku {
-        display: inline-block; font-size: 0.8rem; color: var(--pd-ocean-dark);
-        background: var(--pd-ocean-soft); padding: 2px 10px; border-radius: 20px;
-        margin-bottom: 18px; font-weight: 600;
+        display: inline-block; font-size: 0.75rem; color: var(--pd-ocean);
+        background: var(--pd-ocean-soft); padding: 3px 10px; border-radius: 2px;
+        margin-bottom: 18px; font-weight: 600; border: 1px solid var(--pd-border);
+        letter-spacing: 0.04em; text-transform: uppercase;
     }
 
-    .pd-attr { display: flex; padding: 9px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.92rem; }
+    .pd-attr { display: flex; padding: 10px 0; border-bottom: 1px solid #FAF6F0; font-size: 0.88rem; }
     .pd-attr:last-of-type { border-bottom: none; }
-    .pd-attr-label { flex: 0 0 110px; color: var(--pd-ocean); font-weight: 600; }
-    .pd-attr-value { flex: 1; color: #334155; line-height: 1.5; }
+    .pd-attr-label { flex: 0 0 110px; color: var(--pd-muted); font-weight: 500; }
+    .pd-attr-value { flex: 1; color: var(--pd-primary); line-height: 1.5; }
 
     .pd-color-chip {
-        display: inline-block; background: var(--pd-ocean-soft); color: var(--pd-ocean-dark);
-        font-size: 0.8rem; padding: 2px 10px; border-radius: 12px; margin: 1px 3px 1px 0;
-        border: 1px solid #7dd3fc;
+        display: inline-block; background: var(--pd-ocean-soft); color: var(--pd-ocean);
+        font-size: 0.78rem; padding: 2px 10px; border-radius: 2px; margin: 1px 3px 1px 0;
+        border: 1px solid var(--pd-border); font-weight: 500;
     }
 
-    .pd-price-wrap { margin: 12px 0 22px; }
+    .pd-price-wrap { margin: 14px 0 24px; padding: 14px 0; border-top: 1px solid #FAF6F0; border-bottom: 1px solid #FAF6F0; }
     .pd-discount {
-        display: inline-block; background: var(--pd-accent); color: #fff;
-        font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-bottom: 4px;
+        display: inline-block; background: #5A4536; color: #FAF6F0;
+        font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 2px; margin-bottom: 6px;
+        letter-spacing: 0.04em;
     }
-    .pd-price-current { font-size: 1.9rem; font-weight: 800; color: var(--pd-accent); letter-spacing: -0.5px; }
-    .pd-price-old { font-size: 1.05rem; color: #94a3b8; text-decoration: line-through; margin-left: 10px; font-weight: 500; }
+    .pd-price-current {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 2.2rem; font-weight: 700; color: var(--pd-accent); letter-spacing: -0.5px;
+    }
+    .pd-price-old { font-size: 1.05rem; color: #A69282; text-decoration: line-through; margin-left: 10px; font-weight: 400; font-family: 'Manrope', sans-serif; }
 
-    .pd-size-label { font-size: 0.88rem; font-weight: 600; color: var(--pd-primary); margin-bottom: 10px; }
+    .pd-size-label { font-size: 0.84rem; font-weight: 600; color: var(--pd-primary); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.03em; }
     .pd-sizes { display: flex; flex-wrap: wrap; gap: 8px; }
     .pd-size-btn {
-        border: 1.5px solid #cbd5e1; background: #fff; color: #334155;
-        padding: 8px 14px; border-radius: 8px; font-size: 0.84rem; font-weight: 500;
-        cursor: pointer; transition: all 0.15s;
+        border: 1px solid var(--pd-border); background: #fff; color: var(--pd-primary);
+        padding: 8px 16px; border-radius: 2px; font-size: 0.82rem; font-weight: 500;
+        cursor: pointer; transition: all 0.15s; font-family: 'Manrope', sans-serif;
     }
     .pd-size-btn:hover:not(.disabled) { border-color: var(--pd-ocean); color: var(--pd-ocean); }
     .pd-size-btn.active {
@@ -91,16 +97,17 @@
     }
     .pd-size-btn.disabled {
         opacity: 0.35; cursor: not-allowed; pointer-events: none;
-        text-decoration: line-through; background: #f8fafc; color: #94a3b8;
-        border-color: #e2e8f0;
+        text-decoration: line-through; background: #FAF6F0; color: #A69282;
+        border-color: var(--pd-border);
     }
 
     .pd-color-label {
-        font-size: 0.95rem; font-weight: 600; color: var(--pd-primary);
-        margin: 18px 0 12px; display: flex; align-items: baseline; gap: 6px;
+        font-size: 0.84rem; font-weight: 600; color: var(--pd-primary);
+        margin: 20px 0 12px; display: flex; align-items: baseline; gap: 6px;
+        text-transform: uppercase; letter-spacing: 0.03em;
     }
     .pd-color-label .pd-color-selected-code {
-        color: var(--pd-ocean-dark); font-weight: 700;
+        color: var(--pd-ocean); font-weight: 700;
     }
     .pd-colors {
         display: grid;
@@ -115,70 +122,67 @@
         width: 100%;
     }
     .pd-color-btn .pd-color-swatch {
-        width: 56px; height: 56px; border-radius: 6px;
-        border: 2px solid #e2e8f0;
-        box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+        width: 52px; height: 52px; border-radius: 2px;
+        border: 1px solid var(--pd-border);
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,.04);
         position: relative;
         transition: border-color .15s, box-shadow .15s;
         background-size: cover; background-position: center;
     }
     .pd-color-btn .pd-color-swatch.is-empty {
-        background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 10px 10px;
+        background: repeating-conic-gradient(#FAF6F0 0% 25%, #fff 0% 50%) 50% / 10px 10px;
     }
     .pd-color-btn:hover:not(.disabled) .pd-color-swatch {
-        border-color: #94a3b8;
+        border-color: var(--pd-muted);
     }
     .pd-color-btn.active .pd-color-swatch {
-        border-color: #0f172a;
-        box-shadow: 0 0 0 2px #0f172a, inset 0 0 0 1px rgba(255,255,255,.25);
+        border-color: var(--pd-ocean);
+        box-shadow: 0 0 0 2px var(--pd-ocean), inset 0 0 0 1px rgba(255,255,255,.3);
     }
     .pd-color-btn.active .pd-color-swatch::after {
         content: '✓';
         position: absolute; right: 3px; bottom: 2px;
-        width: 16px; height: 16px; border-radius: 50%;
-        background: #0f172a; color: #fff;
-        font-size: 10px; font-weight: 700; line-height: 16px; text-align: center;
+        width: 15px; height: 15px; border-radius: 50%;
+        background: var(--pd-ocean); color: #fff;
+        font-size: 9px; font-weight: 700; line-height: 15px; text-align: center;
     }
     .pd-color-btn.disabled {
         opacity: 0.35; cursor: not-allowed; pointer-events: none;
     }
     .pd-color-btn .pd-color-meta {
         margin-top: 4px; text-align: center; line-height: 1.2;
-        font-size: 0.68rem; color: #64748b; width: 100%;
+        font-size: 0.68rem; color: var(--pd-muted); width: 100%;
     }
     .pd-color-btn .pd-color-meta .pd-color-status {
-        display: block; font-weight: 600; color: #475569;
+        display: block; font-weight: 600; color: var(--pd-primary);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .pd-color-btn .pd-color-meta .pd-color-stock {
-        display: block; color: #94a3b8;
+        display: block; color: var(--pd-muted);
     }
     .pd-color-btn .pd-color-meta .pd-color-stock.is-out {
-        color: #dc2626;
+        color: #A65236;
     }
 
-    .pd-actions { margin-top: 26px; display: flex; gap: 10px; }
-    .pd-btn-back {
-        background: #fff; border: 1.5px solid #cbd5e1; color: var(--pd-primary);
-        padding: 9px 18px; border-radius: 8px; font-size: 0.88rem; text-decoration: none; font-weight: 500;
-    }
-    .pd-btn-back:hover { background: #f8fafc; color: var(--pd-primary); }
+    .pd-actions { margin-top: 26px; }
 
     .pd-tabs {
-        display: flex; gap: 0; border-bottom: 2px solid var(--pd-border); margin-bottom: 0;
+        display: flex; gap: 0; border-bottom: 1px solid var(--pd-border); margin-bottom: 0;
+        background: #fff;
     }
     .pd-tab {
-        padding: 14px 24px; font-size: 0.95rem; font-weight: 600; color: var(--pd-muted);
+        padding: 16px 28px; font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.15rem; font-weight: 600; color: var(--pd-muted);
         background: transparent; border: none; border-bottom: 2px solid transparent;
-        margin-bottom: -2px; cursor: pointer; transition: all 0.2s;
+        margin-bottom: -1px; cursor: pointer; transition: all 0.2s;
     }
     .pd-tab:hover { color: var(--pd-ocean); }
     .pd-tab.active {
         color: var(--pd-ocean); border-bottom-color: var(--pd-ocean);
     }
     .pd-tab-content {
-        padding: 24px 28px;
-        font-size: 0.95rem; line-height: 1.8; color: #475569;
+        padding: 28px 32px;
+        font-size: 0.92rem; line-height: 1.85; color: #53453a;
         display: none;
     }
     .pd-tab-content.active { display: block; }
@@ -186,55 +190,59 @@
     .pd-tab-content li { margin-bottom: 6px; }
 
     .pd-specs-title {
-        font-size: 1.05rem; font-weight: 700; color: var(--pd-primary);
-        padding: 18px 28px 0; margin: 0;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.35rem; font-weight: 600; color: var(--pd-primary);
+        padding: 24px 32px 10px; margin: 0;
     }
     .pd-specs-table {
         width: 100%; border-collapse: collapse; margin: 12px 0 8px;
-        font-size: 0.92rem;
+        font-size: 0.88rem;
     }
     .pd-specs-table th {
-        text-align: left; width: 160px; padding: 10px 28px;
-        color: var(--pd-muted); font-weight: 600; border-bottom: 1px solid #f1f5f9;
+        text-align: left; width: 170px; padding: 12px 32px;
+        color: var(--pd-muted); font-weight: 600; border-bottom: 1px solid #FAF6F0;
         vertical-align: top;
     }
     .pd-specs-table td {
-        padding: 10px 28px 10px 0; color: #334155;
-        border-bottom: 1px solid #f1f5f9;
+        padding: 12px 32px 12px 0; color: var(--pd-primary);
+        border-bottom: 1px solid #FAF6F0;
     }
     .pd-specs-table tr:last-child th,
     .pd-specs-table tr:last-child td { border-bottom: none; }
 
     .pd-variant-table-wrap {
-        padding: 8px 28px 24px;
+        padding: 12px 32px 28px;
     }
     .pd-variant-table-title {
-        font-size: 0.95rem; font-weight: 600; color: var(--pd-primary);
-        margin: 8px 0 12px;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.15rem; font-weight: 600; color: var(--pd-primary);
+        margin: 8px 0 14px;
     }
     .pd-variant-spec-table {
         width: 100%; max-width: 640px; border-collapse: collapse;
-        font-size: 0.88rem; background: #fff;
+        font-size: 0.85rem; background: #fff; border: 1px solid var(--pd-border);
     }
     .pd-variant-spec-table th {
-        background: #f8fafc; color: #475569; font-weight: 600;
-        text-align: left; padding: 8px 12px;
-        border: 1px solid #e2e8f0; width: auto;
+        background: #FAF6F0; color: var(--pd-primary); font-weight: 600;
+        text-align: left; padding: 10px 14px;
+        border: 1px solid var(--pd-border); width: auto;
     }
     .pd-variant-spec-table td {
-        padding: 8px 12px; border: 1px solid #e2e8f0; color: #334155;
+        padding: 10px 14px; border: 1px solid var(--pd-border); color: var(--pd-primary);
     }
-    .pd-variant-spec-table tr:nth-child(even) td { background: #fafbfc; }
+    .pd-variant-spec-table tr:nth-child(even) td { background: #FCFAF7; }
 
     @media (max-width: 767px) {
+        .pd-gallery-wrap { border-right: none; border-bottom: 1px solid var(--pd-border); padding: 16px; }
         .pd-main-img { height: 260px; }
-        .pd-info { padding: 20px 18px; }
-        .pd-title { font-size: 1.25rem; }
-        .pd-price-current { font-size: 1.5rem; }
-        .pd-tab { padding: 12px 14px; font-size: 0.88rem; }
+        .pd-info { padding: 22px 18px; }
+        .pd-title { font-size: 1.5rem; }
+        .pd-price-current { font-size: 1.8rem; }
+        .pd-tab { padding: 12px 16px; font-size: 1rem; }
         .pd-specs-table th { width: 120px; padding: 10px 16px; }
         .pd-specs-table td { padding: 10px 16px 10px 0; }
         .pd-specs-title { padding: 16px 16px 0; }
+        .pd-variant-table-wrap { padding: 12px 16px 20px; }
     }
 
     /* ===== PRODUCT IMAGE INNER ZOOM (Auto zoom on hover) ===== */
@@ -628,58 +636,59 @@
 
                         {{-- Actions: Qty + Add to cart --}}
                         <div class="pd-actions" style="margin-top:1.5rem;">
-                            <div style="display:flex;gap:0.625rem;align-items:center;flex-wrap:wrap;">
+                            <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
                                 {{-- Qty control --}}
-                                <div style="display:inline-flex;align-items:center;border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden;background:#fff;">
+                                <div style="display:inline-flex;align-items:center;border:1px solid #E6D8C8;border-radius:2px;overflow:hidden;background:#fff;">
                                     <button type="button" id="qty-minus"
-                                            style="width:38px;height:44px;border:none;background:transparent;font-size:1.15rem;color:#475569;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.12s;"
-                                            onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">−</button>
+                                            style="width:40px;height:44px;border:none;background:transparent;font-size:1.1rem;color:#5A4536;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.12s;"
+                                            onmouseover="this.style.background='#FAF6F0'" onmouseout="this.style.background='transparent'">−</button>
                                     <input type="number" id="cart-qty" value="1" min="1" max="99"
-                                           style="width:44px;height:44px;border:none;border-left:1px solid #f1f5f9;border-right:1px solid #f1f5f9;text-align:center;font-size:0.9rem;font-weight:700;color:#0f172a;background:transparent;outline:none;-moz-appearance:textfield;">
+                                           style="width:48px;height:44px;border:none;border-left:1px solid #E6D8C8;border-right:1px solid #E6D8C8;text-align:center;font-size:0.92rem;font-weight:700;color:#3A2E26;background:transparent;outline:none;-moz-appearance:textfield;">
                                     <button type="button" id="qty-plus"
-                                            style="width:38px;height:44px;border:none;background:transparent;font-size:1.15rem;color:#475569;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.12s;"
-                                            onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">+</button>
+                                            style="width:40px;height:44px;border:none;background:transparent;font-size:1.1rem;color:#5A4536;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.12s;"
+                                            onmouseover="this.style.background='#FAF6F0'" onmouseout="this.style.background='transparent'">+</button>
                                 </div>
 
                                 {{-- Add to cart button --}}
                                 <button type="button" id="btn-add-to-cart"
                                         data-id="{{ $product->id }}" data-name="{{ $product->name }}"
-                                        style="flex:1;min-width:160px;height:44px;padding:0 1.5rem;
-                                               background:linear-gradient(135deg,#2563eb,#7c3aed);
-                                               color:#fff;border:none;border-radius:10px;
-                                               font-size:0.9rem;font-weight:700;
+                                        style="flex:1;min-width:180px;height:44px;padding:0 1.5rem;
+                                               background:#5A4536;
+                                               color:#FAF6F0;border:none;border-radius:2px;
+                                               font-size:0.85rem;font-weight:600;font-family:'Manrope',sans-serif;
                                                display:flex;align-items:center;justify-content:center;gap:0.5rem;
-                                               cursor:pointer;transition:opacity 0.15s,transform 0.15s;
-                                               letter-spacing:0.01em;"
-                                        onmouseover="this.style.opacity='0.9';this.style.transform='translateY(-1px)';"
-                                        onmouseout="this.style.opacity='1';this.style.transform='translateY(0)';"
-                                        onfocus="this.style.boxShadow='0 0 0 3px rgba(37,99,235,0.25)'"
+                                               cursor:pointer;transition:background 0.2s,transform 0.15s;
+                                               letter-spacing:0.04em;text-transform:uppercase;"
+                                        onmouseover="this.style.background='#3F2F24';this.style.transform='translateY(-1px)';"
+                                        onmouseout="this.style.background='#5A4536';this.style.transform='translateY(0)';"
+                                        onfocus="this.style.boxShadow='0 0 0 3px rgba(90,69,54,0.2)'"
                                         onblur="this.style.boxShadow='none'">
-                                    <i class="bi bi-cart-plus"></i>
+                                    <i class="bi bi-bag-plus"></i>
                                     Thêm vào giỏ
                                 </button>
                             </div>
 
                             {{-- Back link --}}
-                            <div style="margin-top:0.875rem;">
+                            <div style="margin-top:1rem;">
                                 <a href="{{ route('user.home') }}"
-                                   style="font-size:0.82rem;color:#64748b;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;font-weight:600;"
-                                   onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#64748b'">
-                                    <i class="bi bi-arrow-left" style="font-size:0.75rem;"></i> Quay lại cửa hàng
+                                   style="font-size:0.82rem;color:#7E7065;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;font-weight:500;"
+                                   onmouseover="this.style.color='#5A4536'" onmouseout="this.style.color='#7E7065'">
+                                    <i class="bi bi-arrow-left" style="font-size:0.8rem;"></i> Quay lại danh mục sản phẩm
                                 </a>
                             </div>
 
                             {{-- Trust badges --}}
-                            <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #f1f5f9;display:flex;gap:1rem;flex-wrap:wrap;">
-                                <span style="font-size:0.75rem;color:#64748b;display:flex;align-items:center;gap:0.3rem;">
-                                    <i class="bi bi-truck" style="color:#22c55e;"></i> Giao hàng miễn phí
+                            <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #FAF6F0;display:flex;gap:1.25rem;flex-wrap:wrap;">
+                                <span style="font-size:0.75rem;color:#7E7065;display:flex;align-items:center;gap:0.4rem;">
+                                    <i class="bi bi-truck" style="color:#5A4536;"></i> Vận chuyển tận nơi
                                 </span>
-                                <span style="font-size:0.75rem;color:#64748b;display:flex;align-items:center;gap:0.3rem;">
-                                    <i class="bi bi-shield-check" style="color:#2563eb;"></i> Bảo hành chính hãng
+                                <span style="font-size:0.75rem;color:#7E7065;display:flex;align-items:center;gap:0.4rem;">
+                                    <i class="bi bi-shield-check" style="color:#5A4536;"></i> Bảo hành chính hãng
                                 </span>
-                                <span style="font-size:0.75rem;color:#64748b;display:flex;align-items:center;gap:0.3rem;">
-                                    <i class="bi bi-arrow-counterclockwise" style="color:#f59e0b;"></i> Đổi trả 30 ngày
+                                <span style="font-size:0.75rem;color:#7E7065;display:flex;align-items:center;gap:0.4rem;">
+                                    <i class="bi bi-gem" style="color:#C29D62;"></i> Gỗ tuyển chọn thủ công
                                 </span>
+                            </div>
                             </div>
                         </div>
                     </div>

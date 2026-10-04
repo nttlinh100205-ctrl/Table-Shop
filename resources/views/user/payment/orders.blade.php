@@ -52,143 +52,148 @@
 @endphp
 
 <style>
-    .orders-page { padding: 1.5rem 0 4rem; background: #f1f5f9; min-height: 60vh; }
+    .orders-page { padding: 2rem 0 5rem; background: #FAF6F0; min-height: 60vh; font-family: 'Manrope', sans-serif; color: #3A2E26; }
 
     /* Page header */
     .orders-page-header {
         display: flex; align-items: flex-start; justify-content: space-between;
-        flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;
+        flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem;
     }
-    .orders-heading { font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0; }
-    .orders-sub { font-size: 0.82rem; color: #64748b; margin: 0.15rem 0 0; }
+    .orders-heading {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 2rem; font-weight: 600; color: #3A2E26; margin: 0;
+        letter-spacing: -0.01em;
+    }
+    .orders-sub { font-size: 0.84rem; color: #7E7065; margin: 0.25rem 0 0; }
     .btn-shop-more {
         display: inline-flex; align-items: center; gap: 0.4rem;
-        padding: 0.5rem 1rem; border-radius: 9px;
-        background: linear-gradient(135deg,#2563eb,#7c3aed);
-        color: #fff; font-size: 0.82rem; font-weight: 700;
-        text-decoration: none; transition: opacity .15s, transform .15s;
-        white-space: nowrap;
+        padding: 0.6rem 1.15rem; border-radius: 2px;
+        background: #5A4536;
+        color: #FAF6F0; font-size: 0.82rem; font-weight: 600;
+        text-decoration: none; transition: background .15s, transform .15s;
+        white-space: nowrap; letter-spacing: 0.03em;
     }
-    .btn-shop-more:hover { opacity: 0.9; transform: translateY(-1px); color: #fff; }
+    .btn-shop-more:hover { background: #3F2F24; transform: translateY(-1px); color: #fff; }
 
     /* Tabs */
     .orders-tabs {
-        display: flex; gap: 0.35rem; overflow-x: auto;
-        padding-bottom: 0.5rem; margin-bottom: 1.25rem;
+        display: flex; gap: 0.4rem; overflow-x: auto;
+        padding-bottom: 0.5rem; margin-bottom: 1.5rem;
         scrollbar-width: none;
     }
     .orders-tabs::-webkit-scrollbar { display: none; }
     .orders-tab {
-        display: inline-flex; align-items: center; gap: 0.35rem;
-        padding: 0.45rem 0.9rem; border-radius: 8px;
-        font-size: 0.8rem; font-weight: 600; text-decoration: none;
-        transition: all .15s; white-space: nowrap; border: 1.5px solid transparent;
-        color: #64748b; background: #fff;
-        border-color: #e2e8f0;
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.5rem 1rem; border-radius: 2px;
+        font-size: 0.82rem; font-weight: 500; text-decoration: none;
+        transition: all .15s; white-space: nowrap;
+        color: #7E7065; background: #fff;
+        border: 1px solid #E6D8C8;
     }
-    .orders-tab:hover { border-color: #3b82f6; color: #2563eb; }
+    .orders-tab:hover { border-color: #5A4536; color: #5A4536; }
     .orders-tab.active {
-        background: #eff6ff; border-color: #3b82f6;
-        color: #2563eb;
+        background: #F3E9DC; border-color: #5A4536;
+        color: #5A4536; font-weight: 600;
     }
     .tab-count {
         display: inline-flex; align-items: center; justify-content: center;
-        min-width: 18px; height: 18px; border-radius: 10px; padding: 0 4px;
+        min-width: 18px; height: 18px; border-radius: 2px; padding: 0 4px;
         font-size: 0.68rem; font-weight: 700;
-        background: #e2e8f0; color: #64748b;
+        background: #FAF6F0; color: #7E7065;
     }
-    .orders-tab.active .tab-count { background: #2563eb; color: #fff; }
+    .orders-tab.active .tab-count { background: #5A4536; color: #FAF6F0; }
 
     /* Order cards */
     .order-card {
-        background: #fff; border-radius: 14px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
+        background: #fff; border-radius: 2px;
+        border: 1px solid #E6D8C8;
+        box-shadow: 0 4px 20px rgba(90, 69, 54, 0.04);
         overflow: hidden; transition: box-shadow .15s;
     }
-    .order-card:hover { box-shadow: 0 4px 24px rgba(0,0,0,0.09); }
+    .order-card:hover { box-shadow: 0 6px 24px rgba(90, 69, 54, 0.08); }
     .order-card.needs-payment {
-        border-color: #fca5a5;
-        box-shadow: 0 0 0 2px rgba(239,68,68,0.12), 0 4px 12px rgba(0,0,0,0.04);
+        border-color: #C29D62;
+        box-shadow: 0 0 0 1px #C29D62, 0 4px 16px rgba(90, 69, 54, 0.06);
     }
 
     /* Card header */
     .order-card-header {
         display: flex; align-items: center; justify-content: space-between;
         flex-wrap: wrap; gap: 0.5rem;
-        padding: 0.875rem 1.25rem;
-        border-bottom: 1px solid #f8fafc;
-        background: #fafbfc;
+        padding: 0.9rem 1.25rem;
+        border-bottom: 1px solid #E6D8C8;
+        background: #FAF6F0;
     }
     .order-id {
-        font-size: 0.82rem; font-weight: 800; color: #0f172a;
+        font-size: 0.82rem; font-weight: 700; color: #3A2E26;
         display: flex; align-items: center; gap: 0.4rem;
     }
     .order-id .order-num {
-        background: #0f172a; color: #fff;
-        padding: 0.15rem 0.6rem; border-radius: 6px;
-        font-size: 0.75rem;
+        background: #5A4536; color: #FAF6F0;
+        padding: 0.2rem 0.6rem; border-radius: 2px;
+        font-size: 0.75rem; letter-spacing: 0.03em;
     }
-    .order-date { font-size: 0.75rem; color: #94a3b8; font-weight: 400; }
+    .order-date { font-size: 0.75rem; color: #7E7065; font-weight: 400; }
     .order-total {
-        font-size: 1rem; font-weight: 900; color: #dc2626;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.25rem; font-weight: 700; color: #5A4536;
     }
-    .order-ship-fee { font-size: 0.72rem; color: #94a3b8; }
+    .order-ship-fee { font-size: 0.72rem; color: #7E7065; }
 
     /* Card body */
-    .order-card-body { padding: 1rem 1.25rem; }
+    .order-card-body { padding: 1.2rem 1.25rem; }
     .order-product-summary {
-        font-size: 0.85rem; color: #334155; font-weight: 500;
+        font-size: 0.88rem; color: #3A2E26; font-weight: 500;
         margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;
     }
     .order-more-badge {
         display: inline-flex; align-items: center;
-        font-size: 0.72rem; background: #f1f5f9; color: #64748b;
-        padding: 0.1rem 0.45rem; border-radius: 6px; font-weight: 600;
+        font-size: 0.72rem; background: #F3E9DC; color: #5A4536;
+        padding: 0.15rem 0.45rem; border-radius: 2px; font-weight: 600;
     }
 
     /* Badges */
     .status-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.875rem; }
     .status-group { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; }
-    .status-group-label { color: #64748b; font-size: 0.65rem; font-weight: 700; }
+    .status-group-label { color: #7E7065; font-size: 0.65rem; font-weight: 700; }
     .status-chip {
         display: inline-flex; align-items: center; gap: 0.3rem;
-        font-size: 0.72rem; font-weight: 700;
-        padding: 0.25rem 0.65rem; border-radius: 20px;
+        font-size: 0.72rem; font-weight: 600;
+        padding: 0.25rem 0.65rem; border-radius: 2px;
         border: 1px solid transparent;
     }
-    .status-chip-warning { background: #fef3c7; color: #92400e; border-color: #f59e0b; }
-    .status-chip-success { background: #dcfce7; color: #166534; border-color: #22c55e; }
-    .status-chip-primary { background: #dbeafe; color: #1e40af; border-color: #3b82f6; }
-    .status-chip-info { background: #e0f2fe; color: #0c4a6e; border-color: #0ea5e9; }
-    .status-chip-secondary { background: #f1f5f9; color: #475569; border-color: #94a3b8; }
-    .status-chip-danger { background: #fee2e2; color: #991b1b; border-color: #ef4444; }
+    .status-chip-warning { background: #FEF8ED; color: #9A6513; border-color: #EED7A1; }
+    .status-chip-success { background: #F0FDF4; color: #166534; border-color: #BBF7D0; }
+    .status-chip-primary { background: #F3E9DC; color: #5A4536; border-color: #E6D8C8; }
+    .status-chip-info { background: #FAF6F0; color: #5A4536; border-color: #E6D8C8; }
+    .status-chip-secondary { background: #FAF6F0; color: #7E7065; border-color: #E6D8C8; }
+    .status-chip-danger { background: #FDF2F2; color: #991B1B; border-color: #FECACA; }
 
     /* Card footer */
     .order-card-footer {
         display: flex; align-items: center; justify-content: space-between;
         flex-wrap: wrap; gap: 0.5rem;
-        padding: 0.75rem 1.25rem;
-        border-top: 1px solid #f1f5f9;
+        padding: 0.85rem 1.25rem;
+        border-top: 1px solid #FAF6F0;
     }
     .order-recipient {
         display: flex; align-items: center; gap: 0.4rem;
-        font-size: 0.78rem; color: #64748b; font-weight: 500;
+        font-size: 0.78rem; color: #7E7065; font-weight: 500;
     }
     .order-actions { display: flex; gap: 0.5rem; }
     .btn-detail {
-        padding: 0.4rem 0.9rem; border-radius: 8px;
-        font-size: 0.78rem; font-weight: 700;
-        background: #fff; color: #0f172a;
-        border: 1.5px solid #e2e8f0; text-decoration: none;
+        padding: 0.45rem 1rem; border-radius: 2px;
+        font-size: 0.78rem; font-weight: 600;
+        background: transparent; color: #5A4536;
+        border: 1px solid #5A4536; text-decoration: none;
         transition: all .15s;
         display: inline-flex; align-items: center; gap: 0.3rem;
     }
-    .btn-detail:hover { border-color: #3b82f6; color: #2563eb; }
+    .btn-detail:hover { background: #F3E9DC; color: #3F2F24; border-color: #3F2F24; }
     .btn-pay-momo {
-        padding: 0.4rem 0.9rem; border-radius: 8px;
+        padding: 0.45rem 1rem; border-radius: 2px;
         font-size: 0.78rem; font-weight: 700;
-        background: linear-gradient(135deg,#dc2626,#b91c1c);
+        background: #A50064;
         color: #fff; border: none; text-decoration: none;
         transition: opacity .15s;
         display: inline-flex; align-items: center; gap: 0.35rem;
@@ -199,39 +204,43 @@
     .ghn-code {
         display: inline-flex; align-items: center; gap: 0.3rem;
         font-size: 0.7rem; font-weight: 700;
-        padding: 0.22rem 0.55rem; border-radius: 6px;
-        background: #0f172a; color: #e4cd92;
+        padding: 0.22rem 0.55rem; border-radius: 2px;
+        background: #5A4536; color: #F3E9DC;
         font-family: monospace;
     }
 
     /* Needs payment banner */
     .needs-payment-banner {
-        background: #fef2f2; border-bottom: 1px solid #fca5a5;
-        padding: 0.45rem 1.25rem;
+        background: #FDF8ED; border-bottom: 1px solid #EED7A1;
+        padding: 0.5rem 1.25rem;
         display: flex; align-items: center; gap: 0.5rem;
-        font-size: 0.78rem; color: #dc2626; font-weight: 700;
+        font-size: 0.78rem; color: #9A6513; font-weight: 600;
     }
 
     /* Empty state */
     .orders-empty {
-        background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+        background: #fff; border-radius: 2px; border: 1px solid #E6D8C8;
+        box-shadow: 0 4px 20px rgba(90, 69, 54, 0.04);
         padding: 4rem 1.5rem; text-align: center;
     }
     .orders-empty-icon {
         width: 80px; height: 80px; border-radius: 50%;
-        background: #f1f5f9; margin: 0 auto 1.25rem;
+        background: #FAF6F0; margin: 0 auto 1.25rem;
         display: flex; align-items: center; justify-content: center;
-        font-size: 2rem; color: #94a3b8;
+        font-size: 2rem; color: #5A4536;
     }
-    .orders-empty h4 { font-size: 1.05rem; font-weight: 800; color: #0f172a; margin-bottom: 0.4rem; }
-    .orders-empty p { font-size: 0.82rem; color: #64748b; margin-bottom: 1.25rem; }
+    .orders-empty h4 {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.35rem; font-weight: 600; color: #3A2E26; margin-bottom: 0.4rem;
+    }
+    .orders-empty p { font-size: 0.84rem; color: #7E7065; margin-bottom: 1.25rem; }
 
     /* Flash alerts */
     .flash-alert {
-        border-radius: 10px; padding: 0.65rem 1rem;
-        margin-bottom: 0.875rem; font-size: 0.85rem;
+        border-radius: 2px; padding: 0.75rem 1.25rem;
+        margin-bottom: 1rem; font-size: 0.85rem;
         display: flex; align-items: center; gap: 0.5rem;
-        border: none; border-left: 4px solid;
+        border: 1px solid #E6D8C8; background: #fff;
     }
     .flash-success { background: #f0fdf4; color: #166534; border-color: #22c55e; }
     .flash-danger  { background: #fef2f2; color: #991b1b; border-color: #ef4444; }

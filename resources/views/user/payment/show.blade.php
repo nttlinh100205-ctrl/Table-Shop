@@ -66,8 +66,10 @@
 <style>
     .order-detail-page {
         min-height: 60vh;
-        padding: 1.5rem 0 3.5rem;
-        background: #f1f5f9;
+        padding: 2rem 0 4.5rem;
+        background: #FAF6F0;
+        font-family: 'Manrope', sans-serif;
+        color: #3A2E26;
     }
     .order-detail-container { max-width: 1120px; }
     .order-detail-header {
@@ -75,50 +77,58 @@
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
-        margin-bottom: 1.25rem;
+        margin-bottom: 1.5rem;
     }
     .order-back-link {
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
-        color: #475569;
+        color: #7E7065;
         font-size: 0.85rem;
-        font-weight: 700;
+        font-weight: 600;
         text-decoration: none;
         white-space: nowrap;
+        transition: color 0.15s;
     }
-    .order-back-link:hover { color: #1d4ed8; }
+    .order-back-link:hover { color: #5A4536; }
     .order-detail-kicker {
         margin: 0 0 0.2rem;
-        color: #64748b;
-        font-size: 0.68rem;
-        font-weight: 700;
+        color: #7E7065;
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
     }
     .order-detail-title {
         margin: 0;
-        color: #0f172a;
-        font-size: 1.45rem;
-        font-weight: 800;
+        color: #3A2E26;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 2rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
     }
-    .order-detail-date { margin: 0.25rem 0 0; color: #64748b; font-size: 0.8rem; }
+    .order-detail-date { margin: 0.25rem 0 0; color: #7E7065; font-size: 0.82rem; }
     .order-detail-page .card {
         overflow: hidden;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 8px;
+        border: 1px solid #E6D8C8 !important;
+        border-radius: 2px;
         background: #fff;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+        box-shadow: 0 4px 20px rgba(90, 69, 54, 0.04) !important;
     }
     .order-detail-page .card-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 0.75rem;
-        padding: 1rem 1.25rem 0.75rem;
-        color: #0f172a;
-        font-size: 0.92rem;
-        font-weight: 750;
+        padding: 1rem 1.25rem 0.85rem;
+        color: #3A2E26;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.15rem;
+        font-weight: 600;
+        background: #FAF6F0;
+        border-bottom: 1px solid #E6D8C8;
     }
-    .order-detail-page .card-body:not(.p-0) { padding: 1rem 1.25rem 1.2rem; }
+    .order-detail-page .card-body:not(.p-0) { padding: 1.2rem 1.25rem; }
     .detail-info-list { display: grid; gap: 0.9rem; margin: 0; }
     .detail-info-row { display: flex; align-items: flex-start; gap: 0.7rem; }
     .detail-info-icon {
@@ -127,45 +137,46 @@
         width: 2rem;
         height: 2rem;
         place-items: center;
-        border-radius: 6px;
-        background: #eff6ff;
-        color: #2563eb;
+        border-radius: 2px;
+        background: #F3E9DC;
+        color: #5A4536;
+        border: 1px solid #E6D8C8;
     }
-    .detail-info-label { display: block; margin-bottom: 0.1rem; color: #64748b; font-size: 0.72rem; }
-    .detail-info-value { color: #0f172a; font-size: 0.87rem; font-weight: 600; overflow-wrap: anywhere; }
+    .detail-info-label { display: block; margin-bottom: 0.1rem; color: #7E7065; font-size: 0.72rem; }
+    .detail-info-value { color: #3A2E26; font-size: 0.88rem; font-weight: 600; overflow-wrap: anywhere; }
     .detail-status-list { display: grid; gap: 0.65rem; margin-bottom: 0.9rem; }
     .detail-status-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
-    .detail-status-label { color: #64748b; font-size: 0.78rem; }
+    .detail-status-label { color: #7E7065; font-size: 0.78rem; }
     .detail-status-meta {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.65rem;
         margin-top: 1rem;
         padding-top: 0.85rem;
-        border-top: 1px solid #e2e8f0;
+        border-top: 1px solid #E6D8C8;
     }
     .detail-meta-box { min-width: 0; }
-    .detail-meta-value { display: block; color: #0f172a; font-size: 0.82rem; font-weight: 700; overflow-wrap: anywhere; }
+    .detail-meta-value { display: block; color: #3A2E26; font-size: 0.84rem; font-weight: 700; overflow-wrap: anywhere; }
     .detail-section-gap { margin-top: 1rem; }
-    .detail-section-count { color: #64748b; font-size: 0.75rem; font-weight: 600; }
+    .detail-section-count { color: #7E7065; font-size: 0.75rem; font-weight: 600; }
     .order-items-table { min-width: 560px; }
     .order-items-table thead th {
-        padding: 0.75rem 1rem;
-        color: #64748b;
-        font-size: 0.7rem;
+        padding: 0.85rem 1rem;
+        color: #7E7065;
+        font-size: 0.72rem;
         font-weight: 700;
         text-transform: uppercase;
-        background: #f8fafc;
-        border-bottom-color: #e2e8f0;
+        background: #FAF6F0;
+        border-bottom: 1px solid #E6D8C8;
     }
-    .order-items-table tbody td { padding: 0.9rem 1rem; color: #334155; font-size: 0.84rem; }
-    .order-items-table tfoot th { padding: 1rem; border-top: 1px solid #e2e8f0; }
+    .order-items-table tbody td { padding: 1rem; color: #3A2E26; font-size: 0.86rem; border-bottom: 1px solid #FAF6F0; }
+    .order-items-table tfoot th { padding: 1rem; border-top: 1px solid #E6D8C8; font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: #3A2E26; }
     .order-actions-panel { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
-    .order-actions-panel .btn { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; }
-    .inspection-note { border-left: 4px solid #0ea5e9 !important; background: #f0f9ff; color: #075985; }
+    .order-actions-panel .btn { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; border-radius: 2px; }
+    .inspection-note { border-left: 4px solid #5A4536 !important; background: #FAF6F0; color: #5A4536; }
     .momo-help {
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        border: 1px solid #E6D8C8;
+        border-radius: 2px;
         background: #fff;
     }
     .momo-help summary { padding: 0.9rem 1rem; color: #334155; font-size: 0.85rem; font-weight: 700; cursor: pointer; }

@@ -217,28 +217,28 @@
 /* Nhãn giảm giá tinh tế */
 .nth-badge-discount {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 8px;
+    left: 8px;
     z-index: 3;
     background: #3F2F24;
     color: #F3E9DC;
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    padding: 3px 7px;
+    letter-spacing: 0.03em;
+    padding: 2px 6px;
     border-radius: 2px;
 }
 
 /* Nút thêm giỏ hàng chỉ hiện khi hover */
 .nth-card__action-wrap {
     position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
     z-index: 4;
     opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+    transform: translateY(6px);
+    transition: all 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
     pointer-events: none;
 }
 .nth-card:hover .nth-card__action-wrap {
@@ -248,21 +248,21 @@
 }
 .nth-btn-quick-add {
     width: 100%;
-    height: 40px;
+    height: 34px;
     background: #5A4536;
     color: #FAF6F0;
     border: none;
     border-radius: 2px;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(63, 47, 36, 0.2);
-    transition: background 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 12px rgba(63, 47, 36, 0.18);
+    transition: background 0.25s ease;
 }
 .nth-btn-quick-add:hover {
     background: #3F2F24;
@@ -272,14 +272,14 @@
 .nth-size-popup {
     display: none;
     position: absolute;
-    bottom: calc(100% + 8px);
+    bottom: calc(100% + 6px);
     left: 0;
     right: 0;
     background: #FAF6F0;
     border: 1px solid #E6D8C8;
     border-radius: 2px;
-    box-shadow: 0 10px 24px rgba(58, 46, 38, 0.12);
-    padding: 6px 0;
+    box-shadow: 0 8px 20px rgba(58, 46, 38, 0.12);
+    padding: 4px 0;
     list-style: none;
     margin: 0;
     z-index: 20;
@@ -288,19 +288,19 @@
     display: block;
 }
 .nth-size-hint {
-    padding: 6px 14px 4px;
-    font-size: 10.5px;
-    letter-spacing: 0.12em;
+    padding: 5px 12px 3px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
     color: #7E7065;
     text-transform: uppercase;
     font-weight: 600;
 }
 .nth-size-option {
-    padding: 8px 14px;
-    font-size: 12.5px;
+    padding: 6px 12px;
+    font-size: 12px;
     color: #3A2E26;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.15s, color 0.15s;
 }
 .nth-size-option:hover {
     background: #F3E9DC;
@@ -313,7 +313,7 @@
 
 /* Body */
 .nth-card__body {
-    padding: 16px 16px 20px;
+    padding: 10px 12px 14px;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -324,15 +324,15 @@
 }
 .nth-card__title {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 19px;
-    font-weight: 500;
+    font-size: 16px;
+    font-weight: 600;
     color: #3A2E26;
-    margin: 0 0 8px;
+    margin: 0 0 6px;
     line-height: 1.3;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    transition: color 0.25s;
+    transition: color 0.2s;
 }
 .nth-card:hover .nth-card__title {
     color: #5A4536;
@@ -342,13 +342,13 @@
 .nth-swatches {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 12px;
+    gap: 5px;
+    margin-bottom: 8px;
 }
 .nth-swatch {
     background: none;
     border: none;
-    padding: 2px;
+    padding: 1px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -362,8 +362,8 @@
     border-color: #5A4536;
 }
 .nth-swatch__circle {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     display: block;
     background-size: cover;
@@ -371,10 +371,10 @@
     border: 1px solid rgba(58, 46, 38, 0.15);
 }
 .nth-swatch__circle.is-empty {
-    background: repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 6px 6px;
+    background: repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 5px 5px;
 }
 .nth-swatch.out-of-stock {
-    opacity: 0.45;
+    opacity: 0.4;
 }
 
 /* Giá */
@@ -382,19 +382,19 @@
     margin-top: auto;
     display: flex;
     align-items: baseline;
-    gap: 8px;
+    gap: 6px;
 }
 .nth-card__price {
     font-family: 'Manrope', sans-serif;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     color: #5A4536;
 }
 .nth-card__price-old {
-    font-size: 12.5px;
+    font-size: 11.5px;
     color: #7E7065;
     text-decoration: line-through;
-    opacity: 0.8;
+    opacity: 0.75;
 }
 
 /* Mobile: luôn hiển thị nút thêm giỏ hàng để dễ chạm */

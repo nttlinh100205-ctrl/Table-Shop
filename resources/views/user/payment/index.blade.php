@@ -5,9 +5,11 @@
 @section('content')
 <style>
     .checkout-page {
-        padding: 2rem 0 4rem;
-        background: #f8fafc;
+        padding: 2rem 0 5rem;
+        background: #FAF6F0;
         min-height: 80vh;
+        font-family: 'Manrope', sans-serif;
+        color: #3A2E26;
     }
 
     /* ── Progress Stepper ── */
@@ -24,64 +26,67 @@
         gap: 0.5rem;
         font-size: 0.85rem;
         font-weight: 600;
-        color: #94a3b8;
+        color: #7E7065;
         text-decoration: none;
         transition: color 0.15s;
     }
     .step-item.active {
-        color: #0f172a;
+        color: #3A2E26;
         font-weight: 700;
     }
     .step-item.completed {
-        color: #10b981;
+        color: #5A4536;
     }
     .step-item.completed:hover {
-        color: #059669;
+        color: #3F2F24;
     }
     .step-badge {
         width: 26px;
         height: 26px;
-        border-radius: 50%;
+        border-radius: 2px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 0.78rem;
         font-weight: 700;
-        background: #e2e8f0;
-        color: #64748b;
+        background: #F3E9DC;
+        color: #7E7065;
+        border: 1px solid #E6D8C8;
         transition: all 0.15s;
     }
     .step-item.active .step-badge {
-        background: #2563eb;
-        color: #fff;
-        box-shadow: 0 0 0 4px rgba(37,99,235,0.15);
+        background: #5A4536;
+        color: #FAF6F0;
+        border-color: #5A4536;
+        box-shadow: 0 0 0 3px rgba(90,69,54,0.15);
     }
     .step-item.completed .step-badge {
-        background: #10b981;
-        color: #fff;
+        background: #5A4536;
+        color: #FAF6F0;
+        border-color: #5A4536;
     }
     .step-line {
         width: 48px;
-        height: 2px;
-        background: #e2e8f0;
+        height: 1px;
+        background: #E6D8C8;
     }
     .step-line.completed {
-        background: #10b981;
+        background: #5A4536;
     }
 
     /* ── Cards ── */
     .checkout-card {
         background: #fff;
-        border-radius: 16px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.03), 0 6px 18px rgba(0,0,0,0.04);
+        border-radius: 2px;
+        border: 1px solid #E6D8C8;
+        box-shadow: 0 4px 20px rgba(90, 69, 54, 0.04);
         margin-bottom: 1.5rem;
         overflow: hidden;
     }
     .checkout-card-header {
         padding: 1.1rem 1.5rem;
-        border-bottom: 1px solid #f1f5f9;
-        background: #ffffff;
+        border-bottom: 1px solid #E6D8C8;
+        background: #FAF6F0;
         display: flex;
         align-items: center;
         gap: 0.65rem;
@@ -89,9 +94,10 @@
     .card-header-icon {
         width: 32px;
         height: 32px;
-        border-radius: 8px;
-        background: #eff6ff;
-        color: #2563eb;
+        border-radius: 2px;
+        background: #F3E9DC;
+        color: #5A4536;
+        border: 1px solid #E6D8C8;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -99,13 +105,14 @@
         flex-shrink: 0;
     }
     .card-header-icon.payment-icon {
-        background: #fdf2f8;
-        color: #db2777;
+        background: #F3E9DC;
+        color: #5A4536;
     }
     .card-header-title {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #0f172a;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #3A2E26;
         margin: 0;
     }
     .checkout-card-body {
