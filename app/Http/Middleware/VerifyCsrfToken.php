@@ -14,6 +14,7 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         'payment/momo/ipn',
         'ghn/webhook',
+        'logout',
     ];
 
 }

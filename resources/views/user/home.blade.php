@@ -91,33 +91,75 @@
                 </h2>
             </div>
 
-            @if(request('q') || request('category') || request('sub_category') || request('sub_sub_category'))
-                <a href="{{ route('user.home') }}#product-section" class="nth-btn-clear-filter">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                    <span>Xem tất cả mẫu</span>
-                </a>
-            @else
-                <div class="nth-section-head__filter">
-                    <a href="{{ route('user.home') }}#product-section" class="nth-filter-tag {{ !request('category') ? 'is-active' : '' }}">Tất cả</a>
-                    <a href="{{ route('user.home', ['category' => 59]) }}#product-section" class="nth-filter-tag {{ request('category') == 59 ? 'is-active' : '' }}">Bàn ăn</a>
-                    <a href="{{ route('user.home', ['category' => 55]) }}#product-section" class="nth-filter-tag {{ request('category') == 55 ? 'is-active' : '' }}">Bàn làm việc</a>
-                    <a href="{{ route('user.home', ['category' => 57]) }}#product-section" class="nth-filter-tag {{ request('category') == 57 ? 'is-active' : '' }}">Bàn trà sofa</a>
-                    <a href="{{ route('user.home', ['category' => 58]) }}#product-section" class="nth-filter-tag {{ request('category') == 58 ? 'is-active' : '' }}">Bàn cafe</a>
+            <div class="nth-section-head__right">
+                @if(request('q') || request('category') || request('sub_category') || request('sub_sub_category'))
+                    <a href="{{ route('user.home') }}#product-section" class="nth-btn-clear-filter">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                        <span>Xem tất cả mẫu</span>
+                    </a>
+                @else
+                    <div class="nth-section-head__filter">
+                        <a href="{{ route('user.home') }}#product-section" class="nth-filter-tag {{ !request('category') ? 'is-active' : '' }}">Tất cả</a>
+                        <a href="{{ route('user.home', ['category' => 59]) }}#product-section" class="nth-filter-tag {{ request('category') == 59 ? 'is-active' : '' }}">Bàn ăn</a>
+                        <a href="{{ route('user.home', ['category' => 55]) }}#product-section" class="nth-filter-tag {{ request('category') == 55 ? 'is-active' : '' }}">Bàn làm việc</a>
+                        <a href="{{ route('user.home', ['category' => 57]) }}#product-section" class="nth-filter-tag {{ request('category') == 57 ? 'is-active' : '' }}">Bàn trà sofa</a>
+                        <a href="{{ route('user.home', ['category' => 58]) }}#product-section" class="nth-filter-tag {{ request('category') == 58 ? 'is-active' : '' }}">Bàn cafe</a>
+                    </div>
+                @endif
+
+                {{-- Cụm icon < và > chuyển sản phẩm khác --}}
+                <div class="nth-slider-head-nav">
+                    <button type="button" class="nth-head-arrow nth-head-arrow--prev" id="nth-prod-prev" aria-label="Xem sản phẩm trước" title="Sản phẩm trước">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <span class="nth-head-counter" id="nth-prod-counter">1 / 6</span>
+                    <button type="button" class="nth-head-arrow nth-head-arrow--next" id="nth-prod-next" aria-label="Xem sản phẩm kế tiếp" title="Sản phẩm kế tiếp">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
                 </div>
-            @endif
+            </div>
         </div>
 
-        {{-- Lưới 4 cột / 2 cột --}}
-        @if($gridProducts->count() > 0)
-            <div class="nth-product-grid">
-                @foreach($gridProducts as $product)
-                    <div class="nth-product-grid__col">
-                        <x-product-card :product="$product" :colorMap="$colorMap" />
-                    </div>
-                @endforeach
+        {{-- Dải trượt sản phẩm mượt mà với icon < và > chuyển sản phẩm khác --}}
+        @if($products->count() > 0)
+            <div class="nth-slider-wrapper">
+                {{-- Nút mũi tên nổi bên trái < --}}
+                <button type="button" class="nth-slider-floating-btn nth-slider-floating-btn--prev" id="nth-float-prev" aria-label="Xem sản phẩm trước" title="Sản phẩm trước">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+
+                {{-- Khung cuộn sản phẩm mượt mà, không bị cắt xén lơ lửng --}}
+                <div class="nth-product-slider" id="nth-product-slider">
+                    @foreach($products as $product)
+                        <div class="nth-product-slide">
+                            <x-product-card :product="$product" :colorMap="$colorMap" />
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Nút mũi tên nổi bên phải > --}}
+                <button type="button" class="nth-slider-floating-btn nth-slider-floating-btn--next" id="nth-float-next" aria-label="Xem sản phẩm kế tiếp" title="Sản phẩm kế tiếp">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Thanh chỉ báo trang & hướng dẫn --}}
+            <div class="nth-slider-footer">
+                <div class="nth-slider-dots" id="nth-slider-dots"></div>
+                <div class="nth-slider-helper">
+                    <span>Bấm nút <strong style="color: #5A4536;">&lt;</strong> và <strong style="color: #5A4536;">&gt;</strong> để xem thêm các mẫu bàn khác trong bộ sưu tập ({{ $products->count() }} mẫu)</span>
+                </div>
             </div>
         @else
             <div class="nth-empty-state">
@@ -390,19 +432,186 @@
     border-color: #5A4536;
 }
 
-/* Lưới 4 cột Desktop / 2 cột Mobile (Gọn gàng, dễ nhìn, thanh thoát) */
-.nth-product-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    max-width: 1120px;
+/* ========================================================
+   PRODUCT SLIDER & CAROUSEL NAVIGATION (<, >)
+   ======================================================== */
+.nth-section-head__right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+/* Cụm nút icon < và > ở đầu section */
+.nth-slider-head-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #FAF6F0;
+    border: 1px solid #E6D8C8;
+    border-radius: 2px;
+    padding: 3px 6px;
+}
+.nth-head-arrow {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 2px;
+    color: #5A4536;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.nth-head-arrow:hover:not(:disabled) {
+    background: #5A4536;
+    color: #FAF6F0;
+}
+.nth-head-arrow:disabled,
+.nth-head-arrow.is-disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+.nth-head-counter {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #7E7065;
+    padding: 0 6px;
+    letter-spacing: 0.05em;
+    min-width: 48px;
+    text-align: center;
+    user-select: none;
+}
+
+/* Container Slider bao bọc */
+.nth-slider-wrapper {
+    position: relative;
+    max-width: 1240px;
     margin: 0 auto;
 }
-.nth-product-grid__col {
+
+/* Dải trượt ngang sản phẩm mượt mà */
+.nth-product-slider {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 8px 4px 16px;
+}
+.nth-product-slider::-webkit-scrollbar {
+    display: none;
+}
+
+/* Mỗi thẻ sản phẩm căn tỉ lệ chuẩn xác, không bị cắt xén lơ lửng */
+.nth-product-slide {
+    flex: 0 0 calc((100% - 3 * 16px) / 4);
+    min-width: 0;
+    scroll-snap-align: start;
     display: flex;
 }
-.nth-product-grid__col .nth-card {
+.nth-product-slide .nth-card {
     width: 100%;
+}
+
+@media (max-width: 1199px) {
+    .nth-product-slide {
+        flex: 0 0 calc((100% - 2 * 16px) / 3);
+    }
+}
+@media (max-width: 820px) {
+    .nth-product-slide {
+        flex: 0 0 calc((100% - 1 * 14px) / 2);
+    }
+}
+@media (max-width: 520px) {
+    .nth-product-slide {
+        flex: 0 0 calc(100% - 28px);
+    }
+}
+
+/* Nút mũi tên nổi 2 bên < và > */
+.nth-slider-floating-btn {
+    position: absolute;
+    top: 40%;
+    transform: translateY(-50%);
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #FAF6F0;
+    border: 1px solid #E6D8C8;
+    color: #5A4536;
+    box-shadow: 0 6px 20px rgba(58, 46, 38, 0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 20;
+    transition: all 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.nth-slider-floating-btn--prev {
+    left: -22px;
+}
+.nth-slider-floating-btn--next {
+    right: -22px;
+}
+.nth-slider-floating-btn:hover:not(:disabled) {
+    background: #5A4536;
+    color: #FAF6F0;
+    border-color: #5A4536;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 8px 24px rgba(90, 69, 54, 0.28);
+}
+.nth-slider-floating-btn:disabled,
+.nth-slider-floating-btn.is-disabled {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-50%) scale(0.9);
+}
+
+@media (max-width: 1024px) {
+    .nth-slider-floating-btn--prev { left: 4px; }
+    .nth-slider-floating-btn--next { right: 4px; }
+}
+@media (max-width: 768px) {
+    .nth-slider-floating-btn { display: none; }
+}
+
+/* Thanh chỉ báo bên dưới slider */
+.nth-slider-footer {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+.nth-slider-dots {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.nth-slider-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #E6D8C8;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.nth-slider-dot.is-active {
+    width: 24px;
+    border-radius: 4px;
+    background: #5A4536;
+}
+.nth-slider-helper {
+    font-size: 12px;
+    color: #7E7065;
 }
 
 /* Empty State */
@@ -998,6 +1207,98 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
+
+    // ========================================================
+    // BỘ ĐIỀU KHIỂN DẢI TRƯỢT SẢN PHẨM (NÚT < VÀ > CHUYỂN MẪU)
+    // ========================================================
+    (function initProductSlider() {
+        const slider = document.getElementById('nth-product-slider');
+        if (!slider) return;
+
+        const prevBtns = [document.getElementById('nth-prod-prev'), document.getElementById('nth-float-prev')].filter(Boolean);
+        const nextBtns = [document.getElementById('nth-prod-next'), document.getElementById('nth-float-next')].filter(Boolean);
+        const counter = document.getElementById('nth-prod-counter');
+        const dotsContainer = document.getElementById('nth-slider-dots');
+
+        function getScrollStep() {
+            const slide = slider.querySelector('.nth-product-slide');
+            if (!slide) return slider.clientWidth;
+            const slideWidth = slide.offsetWidth + 16;
+            const visibleSlides = Math.max(1, Math.floor(slider.clientWidth / slideWidth));
+            return slideWidth * visibleSlides;
+        }
+
+        function createDots() {
+            if (!dotsContainer) return;
+            dotsContainer.innerHTML = '';
+            const step = getScrollStep();
+            const totalPages = Math.max(1, Math.ceil(slider.scrollWidth / step));
+            if (totalPages <= 1) return;
+
+            for (let i = 0; i < totalPages; i++) {
+                const dot = document.createElement('button');
+                dot.type = 'button';
+                dot.className = 'nth-slider-dot' + (i === 0 ? ' is-active' : '');
+                dot.setAttribute('aria-label', 'Đến trang ' + (i + 1));
+                dot.addEventListener('click', function () {
+                    slider.scrollTo({ left: i * step, behavior: 'smooth' });
+                });
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        function updateSliderState() {
+            const scrollLeft = slider.scrollLeft;
+            const maxScroll = slider.scrollWidth - slider.clientWidth;
+            const isStart = scrollLeft <= 8;
+            const isEnd = maxScroll > 0 ? scrollLeft >= maxScroll - 8 : true;
+
+            prevBtns.forEach(b => {
+                b.disabled = isStart;
+                b.classList.toggle('is-disabled', isStart);
+            });
+            nextBtns.forEach(b => {
+                b.disabled = isEnd;
+                b.classList.toggle('is-disabled', isEnd);
+            });
+
+            const step = getScrollStep();
+            const totalPages = Math.max(1, Math.ceil(slider.scrollWidth / step));
+            const currentPage = Math.min(totalPages, Math.max(1, Math.round(scrollLeft / step) + 1));
+
+            if (counter) {
+                counter.textContent = currentPage + ' / ' + totalPages;
+            }
+
+            if (dotsContainer) {
+                const dots = dotsContainer.querySelectorAll('.nth-slider-dot');
+                dots.forEach((d, idx) => {
+                    d.classList.toggle('is-active', idx === currentPage - 1);
+                });
+            }
+        }
+
+        prevBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                slider.scrollBy({ left: -getScrollStep(), behavior: 'smooth' });
+            });
+        });
+
+        nextBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                slider.scrollBy({ left: getScrollStep(), behavior: 'smooth' });
+            });
+        });
+
+        slider.addEventListener('scroll', updateSliderState, { passive: true });
+        window.addEventListener('resize', function () {
+            createDots();
+            updateSliderState();
+        });
+
+        createDots();
+        updateSliderState();
+    })();
 });
 </script>
 @endpush
