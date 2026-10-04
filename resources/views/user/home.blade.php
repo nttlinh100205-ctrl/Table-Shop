@@ -1,520 +1,897 @@
+{{-- resources/views/user/home.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Trang chủ')
+@section('title', 'Nội Thất Tinh Hoa — Bàn Gỗ Tự Nhiên Cao Cấp Cho Mọi Không Gian')
 
 @section('content')
-<style>
-    /* Hero banner: xem resources/views/components/hero.blade.php */
-
-    /* Feature strip */
-    .feature-strip {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0.75rem;
-        margin-top: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    @media (max-width: 991px) { .feature-strip { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 575px) { .feature-strip { grid-template-columns: 1fr; margin-top: 1rem; } }
-    .feature-item {
-        background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 1rem 1.1rem;
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        transition: box-shadow .15s, transform .15s, border-color .15s;
-    }
-    .feature-item:hover {
-        border-color: #bae6fd;
-        box-shadow: 0 6px 20px rgba(14,165,233,.1);
-        transform: translateY(-2px);
-    }
-    .feature-icon {
-        width: 42px; height: 42px; border-radius: 11px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.15rem; flex-shrink: 0;
-        color: #fff;
-    }
-    .feature-icon.fi-1 { background: linear-gradient(135deg,#0ea5e9,#2563eb); }
-    .feature-icon.fi-2 { background: linear-gradient(135deg,#8b5cf6,#7c3aed); }
-    .feature-icon.fi-3 { background: linear-gradient(135deg,#10b981,#059669); }
-    .feature-icon.fi-4 { background: linear-gradient(135deg,#f59e0b,#d97706); }
-    .feature-item strong { display: block; font-size: 0.875rem; font-weight: 700; color: #0f172a; margin-bottom: 0.15rem; }
-    .feature-item span { font-size: 0.76rem; color: #64748b; line-height: 1.4; }
-
-    /* Section heading */
-    .section-title {
-        font-size: 1.1rem; font-weight: 800; color: #0f172a;
-        margin-bottom: 1.25rem;
-        display: flex; align-items: center; justify-content: space-between;
-        flex-wrap: wrap; gap: 0.75rem;
-    }
-    .section-title-left {
-        display: flex; align-items: center; gap: 0.6rem;
-    }
-    .section-title-left::before {
-        content: ''; display: block;
-        width: 4px; height: 20px; border-radius: 2px;
-        background: linear-gradient(180deg,#2563eb,#7c3aed);
-    }
-    .section-title .section-line {
-        flex: 1; height: 1px; background: #e2e8f0; min-width: 40px;
-    }
-    .btn-clear-filter {
-        font-size: 0.75rem; font-weight: 600; color: #64748b;
-        background: #fff; border: 1px solid #e2e8f0;
-        padding: 0.3rem 0.75rem; border-radius: 8px; text-decoration: none;
-        transition: all .15s; display: inline-flex; align-items: center; gap: 0.3rem;
-    }
-    .btn-clear-filter:hover { border-color: #ef4444; color: #ef4444; }
-
-    /* Product cards */
-    .product-card {
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        overflow: hidden;
-        transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-        height: 100%;
-        position: relative;
-        background: #fff;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-    .product-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 32px rgba(0,0,0,0.12) !important;
-        border-color: #bae6fd;
-        z-index: 5;
-    }
-    .product-card .img-wrap {
-        position: relative; overflow: hidden;
-        background: #f8fafc;
-    }
-    .product-card .card-img-top {
-        height: 200px; width: 100%;
-        object-fit: cover; display: block;
-        transition: transform .4s ease;
-    }
-    .product-card:hover .card-img-top { transform: scale(1.05); }
-
-    .price-tag { color: #dc2626; font-weight: 800; font-size: 0.95rem; }
-    .price-old { color: #94a3b8; text-decoration: line-through; font-size: 0.78rem; margin-left: 0.3rem; }
-    .sale-badge {
-        position: absolute; top: 10px; left: 10px; z-index: 2;
-        background: linear-gradient(135deg,#ef4444,#dc2626);
-        color: #fff; font-size: 0.68rem; font-weight: 800;
-        padding: 0.2rem 0.55rem; border-radius: 6px;
-        letter-spacing: 0.02em;
-    }
-    .price-row {
-        display: flex; align-items: center; justify-content: space-between;
-        gap: 8px; margin-top: 8px; position: relative;
-    }
-    .btn-bag {
-        width: 34px; height: 34px; border-radius: 50%;
-        background: linear-gradient(135deg,#2563eb,#7c3aed);
-        color: #fff; border: none;
-        display: inline-flex; align-items: center; justify-content: center;
-        font-size: 0.9rem; cursor: pointer; flex-shrink: 0;
-        box-shadow: 0 2px 8px rgba(37,99,235,.3);
-        transition: transform .15s, box-shadow .15s;
-    }
-    .btn-bag:hover { transform: scale(1.1); box-shadow: 0 4px 14px rgba(37,99,235,.4); }
-
-    .size-popup {
-        display: none;
-        position: absolute;
-        bottom: 42px;
-        right: 0;
-        min-width: 120px;
-        max-width: 200px;
-        background: #fff;
-        border-radius: 10px;
-        box-shadow: 0 8px 28px rgba(15,23,42,.18);
-        border: 1px solid #e2e8f0;
-        padding: 6px 0;
-        z-index: 20;
-        list-style: none;
-        margin: 0;
-    }
-    .size-popup.open { display: block; }
-    .size-popup li {
-        padding: 8px 14px;
-        font-size: 0.84rem;
-        cursor: pointer;
-        color: #1e293b;
-        list-style: none;
-    }
-    .size-popup li:hover { background: #f1f5f9; color: #0284c7; }
-    .size-popup li.out-of-stock,
-    .size-popup li.hidden-by-color {
-        display: none;
-    }
-    .size-popup .size-hint {
-        font-size: 0.72rem;
-        font-weight: 600;
-        color: #94a3b8;
-        cursor: default;
-        padding: 4px 14px 2px;
-    }
-    .size-popup .size-hint:hover { background: transparent; color: #94a3b8; }
-    .size-popup .size-empty {
-        font-size: 0.8rem;
-        color: #94a3b8;
-        cursor: default;
-        display: none;
-        padding: 8px 14px;
-    }
-
-    .color-dots {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 6px;
-    }
-    .color-dot {
-        display: inline-flex; align-items: center; gap: 5px;
-        max-width: 100%; padding: 3px 6px 3px 4px;
-        border: 1px solid #e2e8f0; border-radius: 999px;
-        background: #fff; color: #475569;
-        cursor: pointer;
-        font-size: 0.65rem; line-height: 1.2;
-    }
-    .color-dot:hover, .color-dot.active {
-        border-color: #0284c7; color: #075985;
-        box-shadow: 0 0 0 1px #0284c7;
-    }
-    .color-dot-swatch {
-        width: 15px; height: 15px; border-radius: 50%; flex: 0 0 15px;
-        border: 1px solid rgba(15,23,42,.16);
-        background-size: cover; background-position: center;
-    }
-    .color-dot-swatch.is-empty {
-        background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 8px 8px;
-    }
-    .color-dot-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .color-dot.out-of-stock { opacity: .65; }
-    .card-body-inner { padding: 0.875rem 1rem 1rem; }
-    .product-card .card-title {
-        font-size: 0.875rem; font-weight: 700; color: #1e293b;
-        margin: 0; line-height: 1.35;
-    }
-
-    /* Product empty state */
-    .products-empty {
-        background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
-        padding: 3rem 1.5rem; text-align: center;
-    }
-    .products-empty-icon {
-        width: 64px; height: 64px; border-radius: 50%;
-        background: #f1f5f9; margin: 0 auto 1rem;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.5rem; color: #94a3b8;
-    }
-</style>
 
 @php
     $colorMap = \App\Models\Color::query()->get()->keyBy('name');
+
+    // Đảm bảo số sản phẩm chia hết cho số cột (4 cột desktop, 2 cột mobile)
+    $totalCount = $products->count();
+    if ($totalCount >= 4) {
+        $displayCount = intdiv($totalCount, 4) * 4;
+        $gridProducts = $products->take($displayCount);
+    } else {
+        $gridProducts = $products;
+    }
+
+    $spaces = [
+        [
+            'title'    => 'Phòng Ăn Gia Đình',
+            'subtitle' => 'Nơi ấm lửa bữa cơm sum vầy',
+            'desc'     => 'Mặt bàn oval và chữ nhật từ gỗ óc chó nguyên khối, cạnh bo tròn êm dịu, an toàn cho trẻ nhỏ.',
+            'category' => 59,
+            'image'    => asset('images/home/phong-an.jpg'),
+        ],
+        [
+            'title'    => 'Không Gian Làm Việc',
+            'subtitle' => 'Kiến tạo sự tập trung & vị thế',
+            'desc'     => 'Bàn giám đốc, bàn làm việc chân sắt tối giản với thớ vân gỗ cuốn hút, khơi nguồn cảm hứng mỗi ngày.',
+            'category' => 55,
+            'image'    => asset('images/home/van-phong.jpg'),
+        ],
+        [
+            'title'    => 'Phòng Khách Sang Trọng',
+            'subtitle' => 'Điểm nhấn nghệ thuật trung tâm',
+            'desc'     => 'Bàn trà sofa dáng tròn, chân tiện điêu khắc kinh điển nâng tầm không gian tiếp khách thanh tao.',
+            'category' => 57,
+            'image'    => asset('images/home/phong-khach.jpg'),
+        ],
+        [
+            'title'    => 'Cafe & Sân Vườn',
+            'subtitle' => 'Góc trà thư thái đón nắng trời',
+            'desc'     => 'Gỗ tếch và sồi ngoài trời qua xử lý dầu khoáng chống ẩm, giữ nét mộc mạc bên hiên xanh mát.',
+            'category' => 58,
+            'image'    => asset('images/home/cafe-san-vuon.jpg'),
+        ],
+    ];
+
+    $testimonials = config('shop.testimonials', [
+        [
+            'quote' => 'Mặt bàn óc chó vân rất đẹp, cạnh bo mềm tay. Xưởng tư vấn kích thước kỹ nên đặt vào phòng ăn vừa khít.',
+            'name'  => 'Chị Thu Hà',
+            'meta'  => 'Bàn ăn oval · Quận 7',
+        ],
+        [
+            'quote' => 'Đặt bàn làm việc theo kích thước góc phòng, giao đúng hẹn và lắp đặt gọn gàng. Gỗ chắc, không mùi sơn nồng.',
+            'name'  => 'Anh Minh Khoa',
+            'meta'  => 'Bàn làm việc · Thủ Đức',
+        ],
+        [
+            'quote' => 'Quán mình dùng bàn tròn gỗ tự nhiên cho cả sân vườn, sau nhiều tháng vẫn giữ màu đẹp, khách khen hoài.',
+            'name'  => 'Chị Ngọc Lan',
+            'meta'  => 'Bàn cafe · Bình Thạnh',
+        ],
+    ]);
 @endphp
 
-{{-- Banner full-width có animation (Ken Burns, vệt nắng, parallax chuột/cuộn, chữ hiện dần) --}}
+{{-- 1. HERO BANNER CÓ ANIMATION --}}
 <x-hero />
 
-<div class="container pb-4" style="padding-top: 0.25rem;">
+{{-- 2. THANH CAM KẾT 4 Ý PHONG CÁCH SANG TRỌNG --}}
+<x-commitments />
 
-    {{-- 4 lợi ích (ý giống trang mẫu) --}}
-    <div class="feature-strip">
-        <div class="feature-item">
-            <div class="feature-icon fi-1"><i class="bi bi-building"></i></div>
-            <div>
-                <strong>Xưởng sản xuất trực tiếp</strong>
-                <span>Rẻ hơn 10–30% thị trường</span>
+{{-- 3. BỘ SƯU TẬP SẢN PHẨM (Lưới 4 cột Desktop / 2 cột Mobile) --}}
+<section class="nth-section" id="product-section">
+    <div class="nth-container">
+        {{-- Tiêu đề phần sản phẩm --}}
+        <div class="nth-section-head">
+            <div class="nth-section-head__left">
+                <span class="nth-section-kicker">BỘ SƯU TẬP CHẾ TÁC</span>
+                <h2 class="nth-section-title">
+                    @if(request('q'))
+                        Kết quả tìm kiếm cho "{{ request('q') }}"
+                    @elseif(!empty($currentCategory))
+                        {{ $currentCategory->name }}
+                    @else
+                        Những Mẫu Bàn Được Tuyển Chọn
+                    @endif
+                </h2>
             </div>
-        </div>
-        <div class="feature-item">
-            <div class="feature-icon fi-2"><i class="bi bi-palette2"></i></div>
-            <div>
-                <strong>Mẫu mã đa dạng</strong>
-                <span>Thiết kế theo yêu cầu</span>
-            </div>
-        </div>
-        <div class="feature-item">
-            <div class="feature-icon fi-3"><i class="bi bi-truck"></i></div>
-            <div>
-                <strong>Giao hàng nhanh</strong>
-                <span>Trong ngày · Hỗ trợ lắp đặt</span>
-            </div>
-        </div>
-        <div class="feature-item">
-            <div class="feature-icon fi-4"><i class="bi bi-shield-check"></i></div>
-            <div>
-                <strong>Bảo hành lâu dài</strong>
-                <span>Đổi trả dễ dàng</span>
-            </div>
-        </div>
-    </div>
 
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
-    <div class="section-title" id="product-section">
-        <div class="section-title-left">
-            @if(request('q'))
-                Kết quả tìm: "{{ request('q') }}"
-            @elseif(!empty($currentCategory))
-                {{ $currentCategory->name }}
+            @if(request('q') || request('category') || request('sub_category') || request('sub_sub_category'))
+                <a href="{{ route('user.home') }}#product-section" class="nth-btn-clear-filter">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    <span>Xem tất cả mẫu</span>
+                </a>
             @else
-                Sản phẩm nổi bật
+                <div class="nth-section-head__filter">
+                    <a href="{{ route('user.home') }}#product-section" class="nth-filter-tag {{ !request('category') ? 'is-active' : '' }}">Tất cả</a>
+                    <a href="{{ route('user.home', ['category' => 59]) }}#product-section" class="nth-filter-tag {{ request('category') == 59 ? 'is-active' : '' }}">Bàn ăn</a>
+                    <a href="{{ route('user.home', ['category' => 55]) }}#product-section" class="nth-filter-tag {{ request('category') == 55 ? 'is-active' : '' }}">Bàn làm việc</a>
+                    <a href="{{ route('user.home', ['category' => 57]) }}#product-section" class="nth-filter-tag {{ request('category') == 57 ? 'is-active' : '' }}">Bàn trà sofa</a>
+                    <a href="{{ route('user.home', ['category' => 58]) }}#product-section" class="nth-filter-tag {{ request('category') == 58 ? 'is-active' : '' }}">Bàn cafe</a>
+                </div>
             @endif
         </div>
-        <span class="section-line"></span>
-        @if(request('q') || request('category') || request('sub_category') || request('sub_sub_category'))
-            <a href="{{ route('user.home') }}" class="btn-clear-filter">
-                <i class="bi bi-x-circle" style="font-size:0.75rem;"></i> Xóa bộ lọc
-            </a>
+
+        {{-- Lưới 4 cột / 2 cột --}}
+        @if($gridProducts->count() > 0)
+            <div class="nth-product-grid">
+                @foreach($gridProducts as $product)
+                    <div class="nth-product-grid__col">
+                        <x-product-card :product="$product" :colorMap="$colorMap" />
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="nth-empty-state">
+                <div class="nth-empty-state__icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </div>
+                <h3 class="nth-empty-state__title">Chưa tìm thấy mẫu bàn phù hợp</h3>
+                <p class="nth-empty-state__desc">Quý khách vui lòng thử tìm với từ khóa khác hoặc liên hệ để được xưởng may đo theo yêu cầu.</p>
+                <a href="{{ route('user.home') }}#product-section" class="nth-btn-primary">
+                    Xem toàn bộ bộ sưu tập
+                </a>
+            </div>
         @endif
     </div>
+</section>
 
-    <div class="row g-3">
-        @forelse($products as $product)
-            @php
-                if ($product->image) {
-                    $src = asset('storage/' . $product->image);
-                } elseif ($product->images->first()) {
-                    $src = asset('storage/' . $product->images->first()->path);
-                } else {
-                    $src = null; // handled inline
-                }
+{{-- 4. KHỐI CHIA THEO KHÔNG GIAN SỐNG (4 Ảnh lớn Portrait) --}}
+<section class="nth-section nth-section--alt" id="khong-gian">
+    <div class="nth-container">
+        <div class="nth-section-head nth-section-head--center">
+            <span class="nth-section-kicker">KHÔNG GIAN NỘI THẤT</span>
+            <h2 class="nth-section-title">Chọn Chiếc Bàn Hoàn Hảo Cho Từng Góc Nhà</h2>
+            <p class="nth-section-desc">
+                Mỗi không gian sống đều có nhịp điệu và công năng riêng. Chúng tôi thiết kế các mẫu bàn tương thích trọn vẹn với trải nghiệm sinh hoạt của gia đình.
+            </p>
+        </div>
 
-                $displayPrice = $product->price;
-                $displayOld = $product->price_old;
-                if ((!$displayPrice || $displayPrice <= 0) && $product->variants->isNotEmpty()) {
-                    $displayPrice = $product->variants->min('price');
-                    $cheapest = $product->variants->sortBy('price')->first();
-                    $displayOld = $cheapest->price_old ?? null;
-                }
-
-                $sizeGroups = [];
-                foreach ($product->variants as $v) {
-                    $sizeKey = $v->size_label ?: $v->dimensions ?: ('#' . $v->id);
-                    if (!isset($sizeGroups[$sizeKey])) {
-                        $sizeGroups[$sizeKey] = [
-                            'label' => $v->size_button_label ?: $sizeKey,
-                            'variants' => [],
-                        ];
-                    }
-                    $sizeGroups[$sizeKey]['variants'][] = $v;
-                }
-
-                $colors = $product->variants->pluck('color')->filter()->unique()->values();
-
-                $variantsJson = $product->variants->map(fn ($v) => [
-                    'id' => $v->id,
-                    'size_key' => $v->size_label ?: $v->dimensions ?: ('#' . $v->id),
-                    'color' => $v->color,
-                    'price' => (float) $v->price,
-                    'stock' => (int) ($v->stock ?? 0),
-                ])->values();
-            @endphp
-
-            <div class="col-6 col-md-4 col-lg-3">
-                <div class="card product-card shadow-sm h-100"
-                     data-product-id="{{ $product->id }}"
-                     data-product-name="{{ $product->name }}"
-                     data-variants='@json($variantsJson)'>
-
-                    <div class="img-wrap">
-                        @if($displayOld && $displayOld > $displayPrice && $displayPrice > 0)
-                            @php $pct = round((1 - $displayPrice / $displayOld) * 100); @endphp
-                            <span class="sale-badge">-{{ $pct }}%</span>
-                        @endif
-                        <a href="{{ route('user.products.show', $product->id) }}">
-                            @if($src)
-                                <img src="{{ $src }}" class="card-img-top" alt="{{ $product->name }}">
-                            @else
-                                <div class="card-img-top d-flex align-items-center justify-content-center"
-                                     style="background:#f1f5f9;color:#94a3b8;font-size:2rem;">
-                                    <i class="bi bi-image"></i>
-                                </div>
-                            @endif
-                        </a>
+        <div class="nth-spaces-grid">
+            @foreach($spaces as $space)
+                <a href="{{ route('user.home', ['category' => $space['category']]) }}#product-section" class="nth-space-card">
+                    <div class="nth-space-card__img-wrap">
+                        <img src="{{ $space['image'] }}" alt="{{ $space['title'] }}" loading="lazy">
+                        <div class="nth-space-card__overlay"></div>
                     </div>
+                    <div class="nth-space-card__content">
+                        <span class="nth-space-card__sub">{{ $space['subtitle'] }}</span>
+                        <h3 class="nth-space-card__title">{{ $space['title'] }}</h3>
+                        <p class="nth-space-card__desc">{{ $space['desc'] }}</p>
+                        <span class="nth-space-card__link">
+                            Khám phá bộ sưu tập
+                            <svg width="18" height="8" viewBox="0 0 18 8" fill="none" stroke="currentColor" stroke-width="1.2">
+                                <path d="M0 4h16M12 1l4 3-4 3"/>
+                            </svg>
+                        </span>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+    </div>
+</section>
 
-                    <div class="card-body-inner">
-                        <a href="{{ route('user.products.show', $product->id) }}" class="text-decoration-none">
-                            <h6 class="card-title text-truncate" title="{{ $product->name }}">
-                                {{ $product->name }}
-                            </h6>
-                        </a>
+{{-- 5. KHỐI CÂU CHUYỆN XƯỞNG GỖ & CHẤT LIỆU --}}
+<section class="nth-section nth-story" id="xuong-go">
+    <div class="nth-container">
+        <div class="nth-story__grid">
+            {{-- Cột ảnh xưởng --}}
+            <div class="nth-story__media">
+                <div class="nth-story__img-wrap">
+                    <img src="{{ asset('images/home/xuong-go.jpg') }}"
+                         alt="Xưởng mộc chế tác thủ công Nội Thất Tinh Hoa"
+                         loading="lazy">
+                    <div class="nth-story__badge">
+                        <span class="nth-story__badge-yr">TỪ 2012</span>
+                        <span class="nth-story__badge-txt">Nghệ nhân mộc truyền thống</span>
+                    </div>
+                </div>
+            </div>
 
-                        {{-- Chấm màu --}}
-                        @if($colors->count())
-                            <div class="color-dots">
-                                @foreach($colors as $colorName)
-                                    @php
-                                        $colorModel = $colorMap[$colorName] ?? null;
-                                        $colorCode = $colorModel->code ?? $colorName;
-                                    @endphp
-                                    <button type="button" class="color-dot {{ $loop->first ? 'active' : '' }}"
-                                            data-color="{{ $colorName }}" title="{{ $colorName }}"
-                                            aria-label="Màu {{ $colorName }}">
-                                        <span class="color-dot-swatch {{ $colorModel && ($colorModel->image_url || $colorModel->hex) ? '' : 'is-empty' }}"
-                                              @if($colorModel) style="{{ $colorModel->swatch_style }}" @endif></span>
-                                        <span class="color-dot-label">{{ $colorCode }}</span>
-                                    </button>
-                                @endforeach
-                            </div>
-                        @endif
+            {{-- Cột nội dung câu chuyện --}}
+            <div class="nth-story__content">
+                <span class="nth-section-kicker">TRIẾT LÝ NỘI THẤT TINH HOA</span>
+                <h2 class="nth-story__title">
+                    Mỗi thớ gỗ mang một linh hồn,<br>
+                    Mỗi chiếc bàn là một tác phẩm.
+                </h2>
+                <p class="nth-story__p">
+                    Tại xưởng mộc <strong>Nội Thất Tinh Hoa</strong>, chúng tôi không xem chiếc bàn là một món hàng công nghiệp vô cảm. Đó là nơi cả gia đình quây quần sau một ngày dài, là nơi khởi sinh những ý tưởng tâm huyết và là chứng nhân cho bao khoảnh khắc gắn kết thiêng liêng.
+                </p>
+                <p class="nth-story__p">
+                    Từng tấm gỗ óc chó, sồi tự nhiên đều được tuyển chọn kỹ lưỡng theo thớ vân, trải qua quá trình tẩm sấy tự nhiên và hoàn thiện bằng dầu khoáng thực vật không hóa chất độc hại — an toàn tuyệt đối cho bàn ăn gia đình và trẻ nhỏ.
+                </p>
 
-                        {{-- Giá + nút túi (dưới) --}}
-                        <div class="price-row">
-                            <div>
-                                <span class="price-tag">
-                                    @if($displayPrice)
-                                        {{ number_format($displayPrice, 0, ',', '.') }} đ
-                                    @else
-                                        Liên hệ
-                                    @endif
-                                </span>
-                                @if($displayOld && $displayOld > $displayPrice)
-                                    <span class="price-old">
-                                        {{ number_format($displayOld, 0, ',', '.') }} đ
-                                    </span>
-                                @endif
-                            </div>
-
-                            <div class="position-relative">
-                                <button type="button" class="btn-bag" title="Thêm vào giỏ" aria-label="Thêm vào giỏ">
-                                    <i class="bi bi-bag"></i>
-                                </button>
-
-                                @if(count($sizeGroups) > 0)
-                                    <ul class="size-popup">
-                                        <li class="size-hint">Chọn size</li>
-                                        @foreach($sizeGroups as $sizeKey => $group)
-                                            @php
-                                                // Màu nào có size này (và còn hàng)
-                                                $colorsForSize = collect($group['variants'])
-                                                    ->filter(fn ($v) => ($v->stock ?? 0) > 0)
-                                                    ->pluck('color')
-                                                    ->filter()
-                                                    ->unique()
-                                                    ->values()
-                                                    ->all();
-                                                $hasAnyStock = collect($group['variants'])->contains(fn ($v) => ($v->stock ?? 0) > 0);
-                                            @endphp
-                                            <li class="size-option {{ $hasAnyStock ? '' : 'out-of-stock' }}"
-                                                data-size-key="{{ $sizeKey }}"
-                                                data-colors='@json($colorsForSize)'>
-                                                {{ $group['label'] }}
-                                            </li>
-                                        @endforeach
-                                        <li class="size-empty">Không có size cho màu này</li>
-                                    </ul>
-                                @endif
-                            </div>
+                <div class="nth-story__features">
+                    <div class="nth-story-feat">
+                        <span class="nth-story-feat__num">01</span>
+                        <div>
+                            <strong class="nth-story-feat__title">Gỗ tự nhiên loại 1</strong>
+                            <p class="nth-story-feat__desc">Óc chó Bắc Mỹ &amp; sồi tuyển lọc, vân gỗ lượn sóng tự nhiên độc bản.</p>
+                        </div>
+                    </div>
+                    <div class="nth-story-feat">
+                        <span class="nth-story-feat__num">02</span>
+                        <div>
+                            <strong class="nth-story-feat__title">Ghép mộng âm dương</strong>
+                            <p class="nth-story-feat__desc">Kết cấu vững chãi chống võng võng và chịu tải trọng bền bỉ hàng chục năm.</p>
+                        </div>
+                    </div>
+                    <div class="nth-story-feat">
+                        <span class="nth-story-feat__num">03</span>
+                        <div>
+                            <strong class="nth-story-feat__title">Dầu lau sinh học an toàn</strong>
+                            <p class="nth-story-feat__desc">Tôn vinh chất gỗ mộc, không mùi sơn khó chịu, an toàn tuyệt đối cho bữa ăn.</p>
                         </div>
                     </div>
                 </div>
             </div>
-        @empty
-            <div class="col-12">
-                <div class="products-empty">
-                    <div class="products-empty-icon">
-                        <i class="bi bi-search"></i>
-                    </div>
-                    <p style="font-size:0.875rem;font-weight:700;color:#0f172a;margin-bottom:0.35rem;">Không tìm thấy sản phẩm</p>
-                    <p style="font-size:0.8rem;color:#64748b;margin-bottom:1rem;">Hãy thử từ khóa khác hoặc xóa bộ lọc.</p>
-                    <a href="{{ route('user.home') }}"
-                       style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.8rem;font-weight:700;color:#2563eb;text-decoration:none;">
-                        <i class="bi bi-x-circle"></i> Xóa bộ lọc
-                    </a>
-                </div>
-            </div>
-        @endforelse
+        </div>
     </div>
-</div>
+</section>
 
-</div>
+{{-- 6. KHỐI ĐÁNH GIÁ KHÁCH HÀNG (Testimonials) --}}
+<section class="nth-section nth-testimonials" id="danh-gia">
+    <div class="nth-container">
+        <div class="nth-section-head nth-section-head--center">
+            <span class="nth-section-kicker">TRẢI NGHIỆM KHÁCH HÀNG</span>
+            <h2 class="nth-section-title">Những Câu Chuyện Bên Chiếc Bàn Gỗ</h2>
+            <p class="nth-section-desc">
+                Sự tin yêu của quý khách hàng chính là động lực quý báu để chúng tôi tiếp tục mài dũa từng chi tiết mộc.
+            </p>
+        </div>
+
+        <div class="nth-testimonials__grid">
+            @foreach($testimonials as $t)
+                <div class="nth-testimonial-card">
+                    <div class="nth-testimonial-card__quote-mark">“</div>
+                    <p class="nth-testimonial-card__quote">{{ $t['quote'] }}</p>
+                    <div class="nth-testimonial-card__author">
+                        <strong class="nth-testimonial-card__name">{{ $t['name'] }}</strong>
+                        <span class="nth-testimonial-card__meta">{{ $t['meta'] }}</span>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+{{-- 7. BANNER MỜI TƯ VẤN TRỰC TIẾP QUA ZALO / HOTLINE --}}
+<section class="nth-cta-banner" id="tu-van">
+    <div class="nth-container">
+        <div class="nth-cta-banner__box">
+            <div class="nth-cta-banner__content">
+                <span class="nth-cta-banner__kicker">TƯ VẤN MAY ĐO THEO YÊU CẦU</span>
+                <h2 class="nth-cta-banner__title">Cùng Kiến Tạo Chiếc Bàn Riêng Cho Không Gian Bạn</h2>
+                <p class="nth-cta-banner__desc">
+                    Quý khách đang băn khoăn về kích thước mặt bàn, loại vân gỗ hay kiểu chân phù hợp với thiết kế tổng thể? Hãy nhắn gửi thông tin hoặc bản vẽ phối cảnh cho xưởng để được tư vấn 1-1 nhanh chóng.
+                </p>
+            </div>
+            <div class="nth-cta-banner__actions">
+                <a href="https://zalo.me/{{ config('shop.zalo', '0123456789') }}" target="_blank" rel="noopener" class="nth-btn-zalo">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.04 2 11.02c0 2.87 1.48 5.43 3.8 7.08L5 22l4.13-1.85c.91.26 1.87.4 2.87.4 5.52 0 10-4.04 10-9.02S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/>
+                    </svg>
+                    <span>Nhắn Zalo Tư Vấn</span>
+                </a>
+                <a href="tel:{{ str_replace(' ', '', config('shop.hotline', '0123456789')) }}" class="nth-btn-hotline">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                    </svg>
+                    <span>Hotline: {{ config('shop.hotline', '0123 456 789') }}</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* ========================================================
+   HOME PAGE STYLES — NỘI THẤT TINH HOA
+   Palette:
+     Kem:      #F3E9DC
+     Nền phụ:  #FAF6F0
+     Nâu gỗ:   #5A4536
+     Nâu đậm:  #3F2F24
+     Chữ:      #3A2E26
+     Viền:     #E6D8C8
+   Fonts:
+     Tiêu đề:  'Cormorant Garamond', Georgia, serif
+     Nội dung: 'Manrope', sans-serif
+   ======================================================== */
+.nth-section {
+    padding: 88px 0;
+    background: #FAF6F0;
+    color: #3A2E26;
+    font-family: 'Manrope', sans-serif;
+}
+.nth-section--alt {
+    background: #F3E9DC;
+}
+
+/* Head */
+.nth-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.nth-section-head--center {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.nth-section-kicker {
+    display: block;
+    font-size: 11.5px;
+    letter-spacing: 0.22em;
+    color: #7E7065;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+.nth-section-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(30px, 4vw, 44px);
+    font-weight: 400;
+    color: #3A2E26;
+    margin: 0;
+    line-height: 1.15;
+}
+.nth-section-desc {
+    font-size: 15px;
+    line-height: 1.75;
+    color: #7E7065;
+    margin-top: 14px;
+}
+.nth-btn-clear-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: #FAF6F0;
+    border: 1px solid #E6D8C8;
+    border-radius: 2px;
+    color: #5A4536;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+.nth-btn-clear-filter:hover {
+    background: #5A4536;
+    color: #FAF6F0;
+    border-color: #5A4536;
+}
+.nth-section-head__filter {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.nth-filter-tag {
+    padding: 7px 16px;
+    font-size: 12.5px;
+    border-radius: 2px;
+    border: 1px solid #E6D8C8;
+    background: #FAF6F0;
+    color: #3A2E26;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.nth-filter-tag:hover,
+.nth-filter-tag.is-active {
+    background: #5A4536;
+    color: #FAF6F0;
+    border-color: #5A4536;
+}
+
+/* Lưới 4 cột Desktop / 2 cột Mobile */
+.nth-product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+}
+.nth-product-grid__col {
+    display: flex;
+}
+.nth-product-grid__col .nth-card {
+    width: 100%;
+}
+
+/* Empty State */
+.nth-empty-state {
+    padding: 64px 24px;
+    text-align: center;
+    background: #FAF6F0;
+    border: 1px solid #E6D8C8;
+    border-radius: 2px;
+}
+.nth-empty-state__icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: #F3E9DC;
+    color: #7E7065;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.nth-empty-state__title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 26px;
+    font-weight: 500;
+    margin: 0 0 8px;
+}
+.nth-empty-state__desc {
+    font-size: 13.5px;
+    color: #7E7065;
+    margin: 0 0 24px;
+}
+.nth-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: #5A4536;
+    color: #FAF6F0;
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    border-radius: 2px;
+    transition: background 0.3s;
+}
+.nth-btn-primary:hover { background: #3F2F24; }
+
+/* 4 Không Gian Sống */
+.nth-spaces-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+.nth-space-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    background: #FAF6F0;
+    border: 1px solid #E6D8C8;
+    border-radius: 2px;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1),
+                box-shadow 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.nth-space-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 36px rgba(58, 46, 38, 0.1);
+}
+.nth-space-card__img-wrap {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: #EFE3D3;
+}
+.nth-space-card__img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.nth-space-card:hover .nth-space-card__img-wrap img {
+    transform: scale(1.06);
+}
+.nth-space-card__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(63, 47, 36, 0.55) 100%);
+}
+.nth-space-card__content {
+    padding: 22px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+.nth-space-card__sub {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: #7E7065;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+.nth-space-card__title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 23px;
+    font-weight: 500;
+    color: #3A2E26;
+    margin: 0 0 8px;
+    line-height: 1.25;
+}
+.nth-space-card__desc {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #7E7065;
+    margin: 0 0 16px;
+}
+.nth-space-card__link {
+    margin-top: auto;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #5A4536;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: gap 0.25s;
+}
+.nth-space-card:hover .nth-space-card__link {
+    gap: 12px;
+}
+
+/* Xưởng Gỗ Story */
+.nth-story {
+    background: #FAF6F0;
+}
+.nth-story__grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 64px;
+    align-items: center;
+}
+.nth-story__img-wrap {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    border-radius: 2px;
+    border: 1px solid #E6D8C8;
+    background: #EFE3D3;
+}
+.nth-story__img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.nth-story__badge {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    background: rgba(63, 47, 36, 0.92);
+    color: #F3E9DC;
+    padding: 12px 18px;
+    border-radius: 2px;
+    display: flex;
+    flex-direction: column;
+}
+.nth-story__badge-yr {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    font-weight: 700;
+}
+.nth-story__badge-txt {
+    font-size: 12px;
+    opacity: 0.85;
+}
+.nth-story__title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(32px, 4vw, 44px);
+    font-weight: 400;
+    line-height: 1.2;
+    color: #3A2E26;
+    margin: 12px 0 24px;
+}
+.nth-story__p {
+    font-size: 14.5px;
+    line-height: 1.85;
+    color: #5C4F44;
+    margin: 0 0 16px;
+}
+.nth-story__features {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #E6D8C8;
+}
+.nth-story-feat {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+}
+.nth-story-feat__num {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 22px;
+    font-weight: 500;
+    color: #5A4536;
+    line-height: 1;
+}
+.nth-story-feat__title {
+    display: block;
+    font-size: 14px;
+    color: #3A2E26;
+    margin-bottom: 2px;
+}
+.nth-story-feat__desc {
+    font-size: 12.5px;
+    color: #7E7065;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Đánh giá (Testimonials) */
+.nth-testimonials {
+    background: #F3E9DC;
+}
+.nth-testimonials__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+}
+.nth-testimonial-card {
+    background: #FAF6F0;
+    border: 1px solid #E6D8C8;
+    border-radius: 2px;
+    padding: 36px 32px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: transform 0.3s;
+}
+.nth-testimonial-card:hover {
+    transform: translateY(-4px);
+}
+.nth-testimonial-card__quote-mark {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 52px;
+    line-height: 1;
+    color: #5A4536;
+    opacity: 0.35;
+    margin-bottom: -16px;
+}
+.nth-testimonial-card__quote {
+    font-size: 14px;
+    line-height: 1.75;
+    color: #3A2E26;
+    font-style: italic;
+    margin: 0 0 24px;
+    flex: 1;
+}
+.nth-testimonial-card__author {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid #E6D8C8;
+    padding-top: 14px;
+}
+.nth-testimonial-card__name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #3A2E26;
+}
+.nth-testimonial-card__meta {
+    font-size: 11.5px;
+    color: #7E7065;
+    margin-top: 2px;
+}
+
+/* Banner Tư Vấn */
+.nth-cta-banner {
+    padding: 32px 0 88px;
+    background: #FAF6F0;
+}
+.nth-cta-banner__box {
+    background: #3F2F24;
+    color: #F3E9DC;
+    border-radius: 2px;
+    padding: clamp(36px, 6vw, 64px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
+    position: relative;
+    overflow: hidden;
+}
+.nth-cta-banner__box::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 60%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(243, 233, 220, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+.nth-cta-banner__content {
+    max-width: 640px;
+}
+.nth-cta-banner__kicker {
+    display: block;
+    font-size: 11.5px;
+    letter-spacing: 0.2em;
+    color: #C29D62;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+.nth-cta-banner__title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(28px, 3.5vw, 40px);
+    font-weight: 400;
+    color: #FAF6F0;
+    margin: 0 0 16px;
+    line-height: 1.2;
+}
+.nth-cta-banner__desc {
+    font-size: 14px;
+    line-height: 1.75;
+    color: #D6C7B8;
+    margin: 0;
+}
+.nth-cta-banner__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex-shrink: 0;
+}
+.nth-btn-zalo,
+.nth-btn-hotline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px 28px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    border-radius: 2px;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+.nth-btn-zalo {
+    background: #C29D62;
+    color: #3F2F24;
+}
+.nth-btn-zalo:hover {
+    background: #d8b67b;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+}
+.nth-btn-hotline {
+    background: transparent;
+    color: #FAF6F0;
+    border: 1px solid rgba(243, 233, 220, 0.4);
+}
+.nth-btn-hotline:hover {
+    background: rgba(243, 233, 220, 0.1);
+    border-color: #FAF6F0;
+}
+
+/* ========================================================
+   RESPONSIVE DESIGN
+   ======================================================== */
+@media (max-width: 1200px) {
+    .nth-product-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+}
+@media (max-width: 991px) {
+    .nth-product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    .nth-spaces-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px;
+    }
+    .nth-story__grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+    .nth-testimonials__grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    .nth-cta-banner__box {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .nth-cta-banner__actions {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .nth-btn-zalo, .nth-btn-hotline {
+        flex: 1;
+        min-width: 200px;
+    }
+}
+@media (max-width: 575px) {
+    .nth-section { padding: 56px 0; }
+    .nth-product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    .nth-spaces-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .nth-cta-banner__actions {
+        flex-direction: column;
+    }
+    .nth-btn-zalo, .nth-btn-hotline {
+        width: 100%;
+    }
+}
+
+/* Giảm chuyển động */
+@media (prefers-reduced-motion: reduce) {
+    .nth-card, .nth-card:hover,
+    .nth-space-card, .nth-space-card:hover,
+    .nth-space-card__img-wrap img,
+    .nth-btn-quick-add,
+    .nth-testimonial-card {
+        transition: none !important;
+        transform: none !important;
+    }
+}
+</style>
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
+    // Đóng popup kích thước khi click ra ngoài
     document.addEventListener('click', function () {
-        document.querySelectorAll('.size-popup.open').forEach(p => p.classList.remove('open'));
+        document.querySelectorAll('.nth-size-popup.open').forEach(p => p.classList.remove('open'));
     });
 
-    document.querySelectorAll('.product-card').forEach(function (card) {
+    document.querySelectorAll('.nth-card').forEach(function (card) {
         const productId = card.dataset.productId;
         let variants = [];
         try { variants = JSON.parse(card.dataset.variants || '[]'); } catch (e) {}
 
-        const bagBtn = card.querySelector('.btn-bag');
-        const popup = card.querySelector('.size-popup');
-        const colorDots = card.querySelectorAll('.color-dot');
+        const quickAddBtn = card.querySelector('.nth-btn-quick-add');
+        const popup = card.querySelector('.nth-size-popup');
+        const colorDots = card.querySelectorAll('.nth-swatch');
 
         function selectedColor() {
-            const active = card.querySelector('.color-dot.active');
+            const active = card.querySelector('.nth-swatch.active');
             return active ? active.dataset.color : null;
         }
 
-        /** Chỉ hiện size có đúng màu đang chọn (và còn hàng). Size không có màu đó → ẩn. */
         function filterSizesByColor() {
             if (!popup) return;
             const color = selectedColor();
-            let visibleCount = 0;
 
-            popup.querySelectorAll('.size-option').forEach(function (li) {
+            popup.querySelectorAll('.nth-size-option').forEach(function (li) {
                 if (li.classList.contains('out-of-stock')) {
                     li.classList.add('hidden-by-color');
                     return;
                 }
-
                 let colorsForSize = [];
                 try { colorsForSize = JSON.parse(li.dataset.colors || '[]'); } catch (e) {}
 
                 let show = true;
                 if (color) {
-                    // Chỉ hiện size có đúng màu đã chọn
                     show = colorsForSize.indexOf(color) !== -1;
                 }
-
                 if (show) {
                     li.classList.remove('hidden-by-color');
-                    visibleCount++;
                 } else {
                     li.classList.add('hidden-by-color');
                 }
             });
-
-            const emptyEl = popup.querySelector('.size-empty');
-            if (emptyEl) {
-                emptyEl.style.display = visibleCount === 0 ? 'block' : 'none';
-            }
         }
 
-        /** Giữ mọi màu hiển thị; đánh dấu màu hết hàng để khách vẫn thấy tùy chọn. */
-        function filterColorDots() {
-            if (!colorDots.length) return;
-            colorDots.forEach(function (dot) {
-                const c = dot.dataset.color;
-                const hasSize = variants.some(function (v) {
-                    return v.color === c && (v.stock || 0) > 0 && v.size_key;
-                });
-                dot.style.display = '';
-                dot.classList.toggle('out-of-stock', !hasSize);
-                dot.setAttribute('aria-label', `Màu ${c}${hasSize ? '' : ' (hết hàng)'}`);
-            });
-        }
-
-        // Chọn màu → lọc lại size
         colorDots.forEach(function (dot) {
             dot.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -522,13 +899,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 colorDots.forEach(d => d.classList.remove('active'));
                 this.classList.add('active');
                 filterSizesByColor();
-                // Nếu popup đang mở thì giữ mở với list mới
             });
         });
-
-        // Ẩn màu không có size; lọc size theo màu mặc định
-        filterColorDots();
-        filterSizesByColor();
 
         function findVariant(sizeKey, color) {
             let v = variants.find(function (x) {
@@ -565,12 +937,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 const text = await r.text();
                 try { data = JSON.parse(text); } catch (e) {}
                 if (r.status === 401 || r.status === 403) {
-                    throw new Error('Bạn cần đăng nhập và xác thực email.');
+                    throw new Error('Bạn cần đăng nhập để thêm vào giỏ hàng.');
                 }
-                if (r.status === 419) throw new Error('Phiên hết hạn. Hãy tải lại trang.');
-                if (r.status === 422 && data) {
-                    throw new Error(data.message || Object.values(data.errors || {}).flat().join('\n') || 'Dữ liệu không hợp lệ');
-                }
+                if (r.status === 419) throw new Error('Phiên hết hạn. Vui lòng tải lại trang.');
                 if (!r.ok || !data || !data.success) {
                     throw new Error((data && data.message) || ('Lỗi: ' + r.status));
                 }
@@ -578,14 +947,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(function (data) {
                 if (window.updateCartBadge) window.updateCartBadge(data.cart_count);
-                else {
-                    const badge = document.getElementById('cart-count-badge');
-                    if (badge) {
-                        badge.textContent = data.cart_count;
-                        badge.style.display = 'inline-block';
-                    }
-                }
-                if (window.showCartToast) window.showCartToast(data.message || 'Thêm giỏ hàng thành công.');
+                if (window.showCartToast) window.showCartToast(data.message || 'Thêm vào giỏ hàng thành công.');
             })
             .catch(function (err) {
                 if (window.showCartToast) window.showCartToast(err.message || 'Không thể thêm vào giỏ.', true);
@@ -593,14 +955,14 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        if (bagBtn) {
-            bagBtn.addEventListener('click', function (e) {
+        if (quickAddBtn) {
+            quickAddBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
 
                 if (popup && variants.length > 0) {
                     filterSizesByColor();
-                    document.querySelectorAll('.size-popup.open').forEach(p => {
+                    document.querySelectorAll('.nth-size-popup.open').forEach(p => {
                         if (p !== popup) p.classList.remove('open');
                     });
                     popup.classList.toggle('open');
@@ -613,7 +975,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (popup) {
             popup.addEventListener('click', function (e) { e.stopPropagation(); });
 
-            popup.querySelectorAll('.size-option').forEach(function (li) {
+            popup.querySelectorAll('.nth-size-option').forEach(function (li) {
                 li.addEventListener('click', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -624,7 +986,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const v = findVariant(sizeKey, color);
 
                     if (!v) {
-                        if (window.showCartToast) window.showCartToast('Không có size này cho màu đang chọn (hoặc hết hàng).', true);
+                        if (window.showCartToast) window.showCartToast('Kích thước này tạm hết hàng cho màu đã chọn.', true);
                         return;
                     }
 
@@ -637,4 +999,5 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+
 @endsection
