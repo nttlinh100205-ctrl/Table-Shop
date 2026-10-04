@@ -5,30 +5,30 @@
 @endphp
 
 <header class="nth-header" id="site-header">
-    {{-- Thanh điều hướng chính (Đã bỏ topbar nâu ở trên cùng) --}}
+    {{-- Thanh điều hướng chính (Menu ngang kiểu cũ + Nút Menu bên trái chi tiết) --}}
     <div class="nth-navbar">
         <div class="nth-container nth-navbar__inner">
             
-            {{-- Cụm bên trái: Nút Menu Sidebar + Logo --}}
+            {{-- Cụm bên trái: Nút Menu Drawer chi tiết + Logo thương hiệu --}}
             <div class="nth-navbar__left">
-                {{-- Nút Menu Bên Trái (Hiển thị CẢ Desktop & Mobile) --}}
-                <button type="button" class="nth-sidebar-toggle" id="nth-sidebar-toggle" aria-label="Mở menu danh mục bên trái" title="Danh mục sản phẩm">
+                {{-- Nút Menu Bên Trái — Bấm để mở toàn bộ Danh Mục Chi Tiết --}}
+                <button type="button" class="nth-sidebar-toggle" id="nth-sidebar-toggle" aria-label="Mở menu danh mục chi tiết bên trái" title="Xem toàn bộ danh mục chi tiết">
                     <span class="nth-hamburger">
                         <span class="nth-bar"></span>
                         <span class="nth-bar"></span>
                         <span class="nth-bar"></span>
                     </span>
-                    <span class="nth-sidebar-toggle__label">Danh mục</span>
+                    <span class="nth-sidebar-toggle__label">Danh mục chi tiết</span>
                 </button>
 
-                {{-- Logo chữ Serif --}}
+                {{-- Logo chữ Serif Nội Thất Tinh Hoa (Được ngăn cách bằng vạch dọc thanh lịch) --}}
                 <a href="{{ route('user.home') }}" class="nth-brand">
                     <span class="nth-brand__title">Nội Thất Tinh Hoa</span>
                     <span class="nth-brand__sub">GỖ ĐẸP CHO NHÀ</span>
                 </a>
             </div>
 
-            {{-- Menu chính giữa (Desktop) — Thống nhất 100% với Database --}}
+            {{-- Menu ngang kiểu cũ (Desktop Navbar) — Giữ trọn vẹn và tạo khoảng cách chuẩn đẹp --}}
             <nav class="nth-nav" aria-label="Menu chính">
                 <ul class="nth-nav__list">
                     <li class="nth-nav__item">
@@ -48,12 +48,12 @@
                             <a href="{{ route('admin.products.index') }}" class="nth-nav__link">Products</a>
                         </li>
                     @else
-                        {{-- Danh mục tải trực tiếp từ Database --}}
+                        {{-- Danh mục chính trên thanh ngang kiểu cũ --}}
                         @foreach($categories as $root)
                             <li class="nth-nav__item {{ $root->subCategories->count() ? 'nth-has-dropdown' : '' }}">
                                 <a href="{{ route('user.home', ['category' => $root->id]) }}#product-section"
                                    class="nth-nav__link {{ request('category') == $root->id ? 'is-active' : '' }}">
-                                    {{ $root->name }}
+                                    <span>{{ $root->name }}</span>
                                     @if($root->subCategories->count())
                                         <svg class="nth-caret" width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.3">
                                             <path d="M1 1L4 4L7 1"/>
@@ -179,15 +179,16 @@
     </div>
 
     {{-- ========================================================
-         DRAWER MENU BÊN TRÁI (Hoạt động cả Desktop lẫn Mobile)
-         - Nằm hoàn toàn ở mép trái trong màn hình
-         - Cây danh mục 100% từ Database
+         MENU BÊN TRÁI CHI TIẾT (Sidebar Drawer)
+         - Chứa TOÀN BỘ CÂY DANH MỤC CHI TIẾT TỪ DATABASE
+         - Accordion mở rộng/thu gọn danh mục cấp 1, cấp 2, cấp 3
+         - Nằm hoàn toàn ở mép trái trong màn hình, không lệch trang
          ======================================================== --}}
     <div class="nth-sidebar-drawer" id="nth-sidebar-drawer" aria-hidden="true">
         <div class="nth-sidebar-drawer__head">
             <div class="nth-brand">
                 <span class="nth-brand__title" style="font-size: 21px;">Nội Thất Tinh Hoa</span>
-                <span class="nth-brand__sub">GỖ ĐẸP CHO NHÀ</span>
+                <span class="nth-brand__sub">DANH MỤC CHI TIẾT</span>
             </div>
             <button type="button" class="nth-sidebar-close" id="nth-sidebar-close" aria-label="Đóng menu">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -198,45 +199,80 @@
         </div>
 
         <div class="nth-sidebar-drawer__body">
+            {{-- Ô tìm kiếm ngay trong drawer chi tiết --}}
+            <form action="{{ route('user.home') }}" method="GET" class="nth-sidebar-search">
+                <input type="search" name="q" placeholder="Tìm mẫu bàn, chất liệu gỗ..." value="{{ request('q') }}" aria-label="Tìm kiếm trong danh mục">
+                <button type="submit" aria-label="Tìm kiếm">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                </button>
+            </form>
+
+            {{-- Lối tắt nhanh --}}
             <nav class="nth-sidebar-nav">
                 <a href="{{ route('user.home') }}" class="nth-sidebar-link {{ request()->routeIs('user.home') && !request()->hasAny(['category','q','sub_category','sub_sub_category']) ? 'is-active' : '' }}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                    <span>Trang chủ</span>
+                    <span>Trang chủ chính</span>
                 </a>
 
-                {{-- Cụm danh mục lấy 100% từ Database --}}
+                {{-- CỤM DANH MỤC CHI TIẾT (ACCORDION ĐẦY ĐỦ TỪ DATABASE) --}}
                 <div class="nth-sidebar-cat-group">
-                    <span class="nth-sidebar-kicker">DANH MỤC NỘI THẤT</span>
+                    <div class="nth-sidebar-kicker-wrap">
+                        <span class="nth-sidebar-kicker">TOÀN BỘ DANH MỤC SẢN PHẨM</span>
+                        <small class="nth-sidebar-kicker-sub">Bấm vào để xem phân loại chi tiết</small>
+                    </div>
+
                     @foreach($categories as $root)
-                        <div class="nth-sidebar-cat-item">
-                            <a href="{{ route('user.home', ['category' => $root->id]) }}#product-section"
-                               class="nth-sidebar-rootlink {{ request('category') == $root->id ? 'is-active' : '' }}">
-                                <span>{{ $root->name }}</span>
+                        <div class="nth-accordion-item {{ request('category') == $root->id ? 'is-expanded' : '' }}">
+                            <div class="nth-accordion-header">
+                                <a href="{{ route('user.home', ['category' => $root->id]) }}#product-section"
+                                   class="nth-accordion-title {{ request('category') == $root->id ? 'is-active' : '' }}">
+                                    <span class="nth-accordion-icon">◈</span>
+                                    <span class="nth-accordion-name">{{ $root->name }}</span>
+                                </a>
+
                                 @if($root->subCategories->count())
-                                    <span class="nth-sidebar-count">{{ $root->subCategories->count() }}</span>
+                                    <button type="button" class="nth-accordion-toggle" aria-label="Mở danh mục con">
+                                        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.4">
+                                            <path d="M1 1L5 5L9 1"/>
+                                        </svg>
+                                    </button>
                                 @endif
-                            </a>
+                            </div>
 
                             @if($root->subCategories->count())
-                                <div class="nth-sidebar-child-list">
-                                    @foreach($root->subCategories as $child)
-                                        <div class="nth-sidebar-subitem">
-                                            <a href="{{ route('user.home', ['sub_category' => $child->id]) }}#product-section"
-                                               class="nth-sidebar-sublink {{ request('sub_category') == $child->id ? 'is-active' : '' }}">
-                                                · {{ $child->name }}
-                                            </a>
-                                            @if($child->subSubCategories->count())
-                                                <div class="nth-sidebar-grand-list">
-                                                    @foreach($child->subSubCategories as $grand)
-                                                        <a href="{{ route('user.home', ['sub_sub_category' => $grand->id]) }}#product-section"
-                                                           class="nth-sidebar-grandlink {{ request('sub_sub_category') == $grand->id ? 'is-active' : '' }}">
-                                                            - {{ $grand->name }}
-                                                        </a>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endforeach
+                                <div class="nth-accordion-content" style="{{ request('category') == $root->id ? 'display:block;' : '' }}">
+                                    <div class="nth-child-menu">
+                                        <a href="{{ route('user.home', ['category' => $root->id]) }}#product-section" class="nth-child-all-link">
+                                            ↳ Xem tất cả mẫu {{ $root->name }}
+                                        </a>
+
+                                        @foreach($root->subCategories as $child)
+                                            <div class="nth-child-item">
+                                                <a href="{{ route('user.home', ['sub_category' => $child->id]) }}#product-section"
+                                                   class="nth-child-link {{ request('sub_category') == $child->id ? 'is-active' : '' }}">
+                                                    <span>• {{ $child->name }}</span>
+                                                    @if($child->subSubCategories->count())
+                                                        <span class="nth-child-tag">{{ $child->subSubCategories->count() }} loại</span>
+                                                    @endif
+                                                </a>
+
+                                                {{-- Danh mục cấp 3 (cháu) --}}
+                                                @if($child->subSubCategories->count())
+                                                    <div class="nth-grand-menu">
+                                                        @foreach($child->subSubCategories as $grand)
+                                                            <a href="{{ route('user.home', ['sub_sub_category' => $grand->id]) }}#product-section"
+                                                               class="nth-grand-link {{ request('sub_sub_category') == $grand->id ? 'is-active' : '' }}">
+                                                                - {{ $grand->name }}
+                                                            </a>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
                             @endif
                         </div>
@@ -245,17 +281,20 @@
 
                 <div class="nth-sidebar-divider"></div>
 
+                {{-- Chuyên mục & Hỗ trợ --}}
+                <div class="nth-sidebar-section-title">CHUYÊN MỤC &amp; DỊCH VỤ</div>
                 <a href="{{ route('user.home') }}#xuong-go" class="nth-sidebar-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
-                    <span>Xưởng mộc thủ công</span>
+                    <span>Câu chuyện xưởng mộc thủ công</span>
                 </a>
                 <a href="{{ route('user.home') }}#tu-van" class="nth-sidebar-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    <span>Tư vấn may đo bàn</span>
+                    <span>Dịch vụ tư vấn may đo theo kích thước</span>
                 </a>
 
                 <div class="nth-sidebar-divider"></div>
 
+                {{-- Tài khoản & Đơn hàng --}}
                 @auth
                     <a href="{{ route('user.orders.index') }}" class="nth-sidebar-link {{ request()->routeIs('user.orders.*') ? 'is-active' : '' }}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
@@ -265,28 +304,28 @@
                         @csrf
                         <button type="submit" class="nth-sidebar-link" style="background:none;border:none;color:#9b3327;width:100%;text-align:left;cursor:pointer;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                            <span>Đăng xuất</span>
+                            <span>Đăng xuất ({{ auth()->user()->name }})</span>
                         </button>
                     </form>
                 @else
                     <a href="{{ route('login') }}" class="nth-sidebar-link">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
-                        <span>Đăng nhập</span>
+                        <span>Đăng nhập tài khoản</span>
                     </a>
                     <a href="{{ route('register') }}" class="nth-sidebar-link">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                        <span>Đăng ký tài khoản</span>
+                        <span>Đăng ký thành viên</span>
                     </a>
                 @endauth
             </nav>
 
             <div class="nth-sidebar-contact">
                 <div class="nth-sidebar-contact__item">
-                    <small>Hotline tư vấn:</small>
+                    <small>Hotline xưởng tư vấn:</small>
                     <a href="tel:{{ str_replace(' ', '', config('shop.hotline', '0123456789')) }}">{{ config('shop.hotline', '0123 456 789') }}</a>
                 </div>
                 <div class="nth-sidebar-contact__item">
-                    <small>Địa chỉ xưởng:</small>
+                    <small>Showroom &amp; Xưởng sản xuất:</small>
                     <span>{{ config('shop.address', 'Hồ Chí Minh, Việt Nam') }}</span>
                 </div>
             </div>
@@ -318,52 +357,57 @@
 }
 
 .nth-container {
-    max-width: 1320px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 clamp(14px, 3vw, 40px);
+    padding: 0 clamp(16px, 2.5vw, 40px);
 }
 
-/* Navbar */
+/* Navbar Container */
 .nth-navbar__inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 70px;
+    height: 72px;
     position: relative;
-    gap: 16px;
+    gap: 20px;
 }
 
-/* Cụm bên trái: Nút Menu + Logo */
+/* Cụm bên trái: Nút Menu Chi Tiết + Logo Thương hiệu */
 .nth-navbar__left {
     display: flex;
     align-items: center;
     gap: 14px;
     flex-shrink: 0;
+    padding-right: 20px;
+    border-right: 1px solid #E6D8C8; /* Vạch ngăn cách rõ rệt giữa Logo và Trang chủ */
 }
 
-/* Nút mở Menu bên trái (Cực kỳ nổi bật, sang trọng, hoạt động mọi kích thước) */
+/* Nút mở Menu bên trái (Nổi bật, sang trọng với tông nâu gỗ, hoạt động cả Desktop lẫn Mobile) */
 .nth-sidebar-toggle {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 7px 12px;
-    background: #FAF6F0;
-    border: 1px solid #E6D8C8;
+    padding: 7px 14px;
+    background: #5A4536;
+    border: 1px solid #5A4536;
     border-radius: 2px;
-    color: #3A2E26;
+    color: #FAF6F0;
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
     font-family: 'Manrope', sans-serif;
     letter-spacing: 0.02em;
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 .nth-sidebar-toggle:hover {
-    background: #5A4536;
+    background: #3F2F24;
+    border-color: #3F2F24;
     color: #FAF6F0;
-    border-color: #5A4536;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(90, 69, 54, 0.22);
 }
-.nth-sidebar-toggle:hover .nth-bar {
+.nth-sidebar-toggle .nth-bar {
     background: #FAF6F0;
 }
 .nth-hamburger {
@@ -377,16 +421,17 @@
     display: block;
     width: 16px;
     height: 1.5px;
-    background: #3A2E26;
+    background: #FAF6F0;
     border-radius: 1px;
     transition: background 0.2s ease;
 }
 .nth-sidebar-toggle__label {
     display: inline-block;
     line-height: 1;
+    font-weight: 600;
 }
 
-/* Brand Logo */
+/* Brand Logo (Được ngăn cách bằng vạch dọc thanh lịch, không bao giờ dính chữ vào Trang chủ) */
 .nth-brand {
     text-decoration: none;
     color: #3A2E26;
@@ -397,7 +442,7 @@
 }
 .nth-brand__title {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 23px;
+    font-size: 22px;
     font-weight: 600;
     letter-spacing: 0.03em;
     color: #3A2E26;
@@ -409,19 +454,28 @@
     margin-top: 2px;
 }
 
-/* Nav Desktop */
+/* Menu ngang kiểu cũ (Desktop Navbar — Giữ trọn vẹn, căn chỉnh mượt mà) */
 .nth-nav {
     flex: 1;
+    min-width: 0;
     display: flex;
-    justify-content: center;
+    align-items: center;
+    margin-left: 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.nth-nav::-webkit-scrollbar {
+    display: none;
 }
 .nth-nav__list {
     display: flex;
     align-items: center;
-    gap: 22px;
+    gap: clamp(10px, 1.3vw, 18px);
     list-style: none;
     margin: 0;
     padding: 0;
+    flex-wrap: nowrap;
 }
 .nth-nav__link {
     font-size: 13px;
@@ -429,7 +483,7 @@
     letter-spacing: 0.02em;
     color: #3A2E26;
     text-decoration: none;
-    padding: 24px 0;
+    padding: 24px 2px;
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -465,7 +519,7 @@
     color: #5A4536;
 }
 
-/* Dropdown cấp 2 */
+/* Dropdown menu ngang cấp 2 */
 .nth-has-dropdown {
     position: relative;
 }
@@ -514,7 +568,7 @@
     color: #5A4536;
 }
 
-/* Sub-dropdown cấp 3 */
+/* Sub-dropdown menu ngang cấp 3 */
 .nth-subdropdown {
     position: absolute;
     top: 0;
@@ -550,7 +604,7 @@
     color: #5A4536;
 }
 
-/* Actions */
+/* Các nút thao tác góc phải */
 .nth-actions {
     display: flex;
     align-items: center;
@@ -563,7 +617,7 @@
     align-items: center;
 }
 .nth-search__input {
-    width: 140px;
+    width: 135px;
     height: 36px;
     border: 1px solid #E6D8C8;
     border-radius: 2px;
@@ -575,7 +629,7 @@
     transition: all 0.25s ease;
 }
 .nth-search__input:focus {
-    width: 200px;
+    width: 190px;
     background: #fff;
     border-color: #5A4536;
 }
@@ -681,17 +735,19 @@
 }
 
 /* ========================================================
-   DRAWER MENU BÊN TRÁI — HOẠT ĐỘNG HOÀN HẢO CẢ DESKTOP & MOBILE
+   MENU BÊN TRÁI CHI TIẾT (Sidebar Drawer)
+   - Hoạt động 100% cả Desktop và Mobile
+   - Thiết kế Accordion cây danh mục chi tiết
    ======================================================== */
 .nth-sidebar-drawer {
     position: fixed;
     top: 0;
     left: 0;
-    width: min(340px, 86vw);
+    width: min(360px, 88vw);
     height: 100vh;
     height: 100dvh;
     background: #FAF6F0;
-    box-shadow: 16px 0 48px rgba(58, 46, 38, 0.25);
+    box-shadow: 18px 0 54px rgba(58, 46, 38, 0.28);
     z-index: 2000;
     transform: translateX(-100%);
     visibility: hidden;
@@ -754,6 +810,44 @@
     overflow-y: auto;
     padding: 20px 22px;
 }
+.nth-sidebar-search {
+    position: relative;
+    margin-bottom: 16px;
+}
+.nth-sidebar-search input {
+    width: 100%;
+    height: 40px;
+    background: #FAF6F0;
+    border: 1px solid #E6D8C8;
+    border-radius: 2px;
+    padding: 0 38px 0 14px;
+    font-size: 13px;
+    color: #3A2E26;
+    outline: none;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+.nth-sidebar-search input:focus {
+    border-color: #5A4536;
+    background: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(90, 69, 54, 0.08);
+}
+.nth-sidebar-search button {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #7E7065;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0;
+}
+.nth-sidebar-search button:hover {
+    color: #5A4536;
+}
 .nth-sidebar-nav {
     display: flex;
     flex-direction: column;
@@ -773,86 +867,149 @@
 .nth-sidebar-link.is-active {
     color: #5A4536;
 }
+
+/* Accordion Cây danh mục chi tiết bên trái */
 .nth-sidebar-cat-group {
-    padding: 14px 0 6px;
+    padding: 14px 0 8px;
+}
+.nth-sidebar-kicker-wrap {
+    margin-bottom: 12px;
 }
 .nth-sidebar-kicker {
     display: block;
-    font-size: 10px;
-    letter-spacing: 0.16em;
-    color: #7E7065;
-    margin-bottom: 10px;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    color: #5A4536;
     font-weight: 700;
 }
-.nth-sidebar-cat-item {
-    margin-bottom: 6px;
-    border-bottom: 1px solid #FAF6F0;
-    padding-bottom: 6px;
+.nth-sidebar-kicker-sub {
+    display: block;
+    font-size: 11px;
+    color: #7E7065;
+    margin-top: 2px;
 }
-.nth-sidebar-rootlink {
+.nth-accordion-item {
+    border-bottom: 1px solid #EFE3D3;
+    padding: 2px 0;
+}
+.nth-accordion-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 7px 8px;
+}
+.nth-accordion-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 6px;
     font-size: 13.5px;
     color: #3A2E26;
     font-weight: 600;
     text-decoration: none;
-    border-radius: 2px;
-    transition: background 0.15s;
-}
-.nth-sidebar-rootlink:hover,
-.nth-sidebar-rootlink.is-active {
-    background: #F3E9DC;
-    color: #5A4536;
-}
-.nth-sidebar-count {
-    font-size: 10px;
-    background: #E6D8C8;
-    color: #5A4536;
-    padding: 1px 6px;
-    border-radius: 10px;
-    font-weight: 600;
-}
-.nth-sidebar-child-list {
-    padding-left: 14px;
-    margin-top: 2px;
-    margin-bottom: 4px;
-}
-.nth-sidebar-subitem {
-    margin-bottom: 2px;
-}
-.nth-sidebar-sublink {
-    display: block;
-    padding: 4px 6px;
-    font-size: 12.5px;
-    color: #7E7065;
-    text-decoration: none;
-    border-radius: 2px;
+    flex: 1;
     transition: color 0.15s;
 }
-.nth-sidebar-sublink:hover,
-.nth-sidebar-sublink.is-active {
+.nth-accordion-title:hover,
+.nth-accordion-title.is-active {
     color: #5A4536;
 }
-.nth-sidebar-grand-list {
-    padding-left: 14px;
-}
-.nth-sidebar-grandlink {
-    display: block;
-    padding: 3px 6px;
-    font-size: 11.5px;
+.nth-accordion-icon {
+    font-size: 9px;
     color: #A69282;
-    text-decoration: none;
 }
-.nth-sidebar-grandlink:hover,
-.nth-sidebar-grandlink.is-active {
+.nth-accordion-toggle {
+    background: transparent;
+    border: none;
+    padding: 8px 10px;
+    color: #7E7065;
+    cursor: pointer;
+    transition: transform 0.2s ease, color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.nth-accordion-toggle:hover {
     color: #5A4536;
 }
+.nth-accordion-item.is-expanded .nth-accordion-toggle {
+    transform: rotate(180deg);
+    color: #5A4536;
+}
+.nth-accordion-content {
+    display: none;
+    padding: 4px 0 10px 18px;
+}
+.nth-child-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.nth-child-all-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: #5A4536;
+    text-decoration: none;
+    padding: 4px 6px;
+    background: #F3E9DC;
+    border-radius: 2px;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+.nth-child-item {
+    margin-bottom: 4px;
+}
+.nth-child-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px;
+    font-size: 12.5px;
+    color: #5C4F44;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+.nth-child-link:hover,
+.nth-child-link.is-active {
+    color: #5A4536;
+    font-weight: 600;
+}
+.nth-child-tag {
+    font-size: 9.5px;
+    background: #EFE3D3;
+    color: #7E7065;
+    padding: 1px 5px;
+    border-radius: 2px;
+}
+.nth-grand-menu {
+    padding-left: 14px;
+    margin-top: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.nth-grand-link {
+    font-size: 11.5px;
+    color: #8C7B6E;
+    text-decoration: none;
+    padding: 2px 6px;
+    transition: color 0.15s;
+}
+.nth-grand-link:hover,
+.nth-grand-link.is-active {
+    color: #5A4536;
+}
+
 .nth-sidebar-divider {
     height: 1px;
     background: #E6D8C8;
-    margin: 12px 0;
+    margin: 14px 0;
+}
+.nth-sidebar-section-title {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: #7E7065;
+    font-weight: 700;
+    margin-bottom: 6px;
 }
 .nth-sidebar-contact {
     margin-top: 24px;
@@ -873,14 +1030,17 @@
 .nth-sidebar-contact a { color: #5A4536; text-decoration: none; font-weight: 600; }
 
 /* Responsive Rules */
+@media (max-width: 1199px) {
+    .nth-nav__list { gap: 12px; }
+    .nth-nav__link { font-size: 12.5px; }
+}
 @media (max-width: 991px) {
     .nth-nav { display: none; }
     .nth-search { display: none; }
-    .nth-sidebar-toggle__label { display: none; } /* Trên mobile chỉ hiện icon cho gọn */
+    .nth-navbar__left { border-right: none; padding-right: 0; }
+    .nth-sidebar-toggle__label { display: none; }
     .nth-sidebar-toggle { padding: 6px 9px; }
-    .nth-navbar__inner {
-        height: 60px;
-    }
+    .nth-navbar__inner { height: 60px; }
     .nth-brand__title { font-size: 20px; }
 }
 </style>
@@ -912,6 +1072,27 @@ document.addEventListener('DOMContentLoaded', function () {
     if (toggle) toggle.addEventListener('click', openMenu);
     if (close)  close.addEventListener('click', closeMenu);
     if (bdrop)  bdrop.addEventListener('click', closeMenu);
+
+    // Accordion click mở rộng / thu gọn danh mục con trong drawer bên trái
+    document.querySelectorAll('.nth-accordion-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const item = this.closest('.nth-accordion-item');
+            if (!item) return;
+            const content = item.querySelector('.nth-accordion-content');
+            if (!content) return;
+
+            const isExpanded = item.classList.contains('is-expanded');
+            if (isExpanded) {
+                item.classList.remove('is-expanded');
+                content.style.display = 'none';
+            } else {
+                item.classList.add('is-expanded');
+                content.style.display = 'block';
+            }
+        });
+    });
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && drawer && drawer.classList.contains('is-open')) {
