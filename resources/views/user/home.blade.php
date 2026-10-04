@@ -4,27 +4,7 @@
 
 @section('content')
 <style>
-    /* ===== Hero banner ===== */
-    .hero-banner-wrap { width:100%; margin:0; padding:0; line-height:0; }
-    .hero-banner {
-        position: relative; overflow: hidden; width: 100%; display: block;
-    }
-    .hero-banner img.hero-img {
-        width: 100%; height: 300px; max-height: 300px;
-        object-fit: cover; object-position: center 35%; display: block;
-    }
-    /* gradient overlay for text readability if needed */
-    .hero-banner::after {
-        content: ''; position: absolute; inset: 0;
-        background: linear-gradient(to right, rgba(15,23,42,0.35) 0%, transparent 60%);
-        pointer-events: none;
-    }
-    @media (max-width: 991px) {
-        .hero-banner img.hero-img { height: 210px; max-height: 210px; }
-    }
-    @media (max-width: 575px) {
-        .hero-banner img.hero-img { height: 160px; max-height: 160px; }
-    }
+    /* Hero banner: xem resources/views/components/hero.blade.php */
 
     /* Feature strip */
     .feature-strip {
@@ -238,29 +218,8 @@
     $colorMap = \App\Models\Color::query()->get()->keyBy('name');
 @endphp
 
-{{-- Banner full-width (ảnh do shop cung cấp) --}}
-<div class="hero-banner-wrap">
-    <div class="hero-banner">
-        @php
-            $bannerStoragePath = storage_path('app/public/images/banners/home-banner.png');
-            $bannerPublicPath  = public_path('images/banners/home-banner.png');
-            if (file_exists($bannerStoragePath)) {
-                $bannerSrc = asset('storage/images/banners/home-banner.png');
-            } elseif (file_exists($bannerPublicPath)) {
-                $bannerSrc = asset('images/banners/home-banner.png');
-            } else {
-                $bannerSrc = null;
-            }
-        @endphp
-        @if($bannerSrc)
-        <a href="#product-section">
-            <img src="{{ $bannerSrc }}"
-                 alt="Shop bán bàn - Thế giới bàn cao cấp"
-                 class="hero-img">
-        </a>
-        @endif
-    </div>
-</div>
+{{-- Banner full-width có animation (Ken Burns, vệt nắng, parallax chuột/cuộn, chữ hiện dần) --}}
+<x-hero />
 
 <div class="container pb-4" style="padding-top: 0.25rem;">
 
