@@ -384,6 +384,27 @@ class EngagementFeatureTest extends TestCase
         });
     }
 
+    public function test_completed_orders_award_ten_points_per_hundred_thousand_once_and_refund_same_amount(): void
+    {
+        $this->assertSame(10000, config('membership.earn_rate'));
+        $user = User::factory()->create(['points_balance'=>40,'lifetime_points'=>40]);
+        foreach ([100000=>10,150000=>15,199999=>19,9999=>0] as $amount=>$points) {
+            $order = Order::create(['user_id'=>$user->id,'name'=>'Buyer','phone'=>'0912345678','address'=>'Test','total_price'=>$amount,'ghn_total_fee'=>30000,'status'=>'pending']);
+            $this->assertNull(\App\Services\MembershipService::awardOrderPoints($order));
+            $order->update(['status'=>'completed']);
+            $tx = \App\Services\MembershipService::awardOrderPoints($order);
+            $this->assertEquals($points, $tx?->points ?? 0);
+            $this->assertNull(\App\Services\MembershipService::awardOrderPoints($order));
+        }
+        $this->assertSame(84, $user->fresh()->points_balance);
+        $this->assertSame(84, $user->fresh()->lifetime_points);
+        $earnedOrder = Order::where('total_price',100000)->first();
+        $refund = \App\Services\MembershipService::revokeOrderPoints($earnedOrder);
+        $this->assertEquals(-10,$refund->points);
+        $this->assertSame(74,$user->fresh()->points_balance);
+        $this->assertNull(\App\Services\MembershipService::revokeOrderPoints($earnedOrder));
+    }
+
     public function test_check_in_is_once_per_local_day_and_skipped_days_keep_progress(): void
     {
         $user = User::factory()->create();

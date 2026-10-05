@@ -24,12 +24,12 @@ class MembershipService
 
     /**
      * Cộng điểm khi đơn hàng hoàn thành (Idempotent - chỉ cộng 1 lần duy nhất cho mỗi đơn)
-     * Tỷ lệ: 1 điểm / 10đ (ví dụ đơn 3.000.000đ = 300.000 điểm).
+     * Tỷ lệ: 1 điểm / 10.000đ tiền hàng sau giảm giá (100.000đ = 10 điểm).
      * Hạn dùng điểm: 1 năm.
      */
     public static function awardOrderPoints(Order $order): ?PointTransaction
     {
-        if (empty($order->user_id)) {
+        if (empty($order->user_id) || $order->status !== 'completed') {
             return null;
         }
 
@@ -42,9 +42,9 @@ class MembershipService
             return null;
         }
 
-        $earnRate = (int) config('membership.earn_rate', 10);
+        $earnRate = (int) config('membership.earn_rate', 10000);
         if ($earnRate <= 0) {
-            $earnRate = 10;
+            $earnRate = 10000;
         }
 
         $points = (int) floor((float) $order->total_price / $earnRate);

@@ -45,6 +45,7 @@ class ShopChatSupport
                 $parts[] = 'Hạng hiện tại: '.$tier['name'].'. Tổng điểm tích lũy xét hạng: '.number_format($user->lifetime_points, 0, ',', '.').'.';
                 if ($tier['next_tier']) $parts[] = 'Cần thêm '.number_format($tier['points_needed'], 0, ',', '.').' điểm tích lũy để lên '.$tier['next_tier']['name'].'.';
                 $parts[] = '[Xem điểm và hạng thành viên]('.route('user.points.index').')';
+                $parts[] = 'Đơn hoàn thành nhận 1 điểm mỗi '.number_format(config('membership.earn_rate', 10000), 0, ',', '.').'đ tiền hàng sau giảm giá, không gồm phí vận chuyển; làm tròn xuống. Điểm và xu là hai số dư riêng.';
             }
             // Personal account data is returned directly, never sent to the AI provider or AI history.
             return implode("\n", $parts);

@@ -6,9 +6,10 @@ return [
     |--------------------------------------------------------------------------
     | Tỷ lệ tích luỹ điểm từ đơn hàng
     |--------------------------------------------------------------------------
-    | 1 điểm cho mỗi 10 VNĐ giá trị đơn hàng (Ví dụ: 3.000.000đ = 300.000 điểm)
+    | 1 điểm cho mỗi 10.000 VNĐ tiền hàng sau giảm giá (100.000đ = 10 điểm).
+    | Chỉ cộng khi đơn hoàn thành; làm tròn xuống, không tính phí vận chuyển.
     */
-    'earn_rate' => 10,
+    'earn_rate' => 10000,
 
     /*
     |--------------------------------------------------------------------------
@@ -33,21 +34,21 @@ return [
         ],
         'silver' => [
             'name'        => 'Thành viên Bạc',
-            'min_points'  => 200000, // Tích lũy 2.000.000đ tiền hàng
+            'min_points'  => 200000,
             'color'       => '#94a3b8',
             'badge_class' => 'bg-light text-dark border',
             'description' => 'Được đổi gói voucher ưu đãi từ hạng Bạc',
         ],
         'gold' => [
             'name'        => 'Thành viên Vàng',
-            'min_points'  => 600000, // Tích lũy 6.000.000đ tiền hàng
+            'min_points'  => 600000,
             'color'       => '#d97706',
             'badge_class' => 'bg-warning text-dark',
             'description' => 'Đổi voucher giá trị cao với tỷ lệ điểm ưu đãi',
         ],
         'diamond' => [
             'name'        => 'Thành viên Kim Cương',
-            'min_points'  => 1500000, // Tích lũy 15.000.000đ tiền hàng
+            'min_points'  => 1500000,
             'color'       => '#0284c7',
             'badge_class' => 'bg-info text-white',
             'description' => 'Đặc quyền tối cao: Đổi các voucher cao cấp nhất với tỷ lệ tốt nhất',

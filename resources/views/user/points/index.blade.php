@@ -203,7 +203,7 @@
                         <h5 class="card-title fw-bold mb-1 text-dark font-serif" style="font-size: 1.25rem;">
                             <i class="bi bi-gift-fill text-warning me-2"></i>Đổi điểm lấy Voucher ưu đãi
                         </h5>
-                        <div class="text-muted small">Tích lũy 1 điểm / 10đ tiền hàng. Hạng càng cao đổi được gói giá trị càng lớn với tỷ lệ điểm ưu đãi hơn!</div>
+                        <div class="text-muted small">Đơn hoàn thành tích lũy 1 điểm / {{ number_format(config('membership.earn_rate', 10000), 0, ',', '.') }}đ tiền hàng sau giảm giá, không tính phí vận chuyển; làm tròn xuống. Hạng càng cao đổi được gói giá trị càng lớn với tỷ lệ điểm ưu đãi hơn!</div>
                     </div>
                     <span class="badge bg-light text-dark border px-3 py-2">
                         Số dư: <strong class="text-warning-emphasis">{{ number_format($pointsBalance, 0, ',', '.') }}</strong> điểm
