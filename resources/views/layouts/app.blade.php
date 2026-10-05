@@ -202,6 +202,7 @@
             }
 
             #chat-header {
+                flex-shrink: 0;
                 background: linear-gradient(135deg, #3F2F24, #5A4536);
                 padding: 0.75rem 1rem;
                 display: flex;
@@ -216,6 +217,7 @@
                 cursor: grabbing !important;
             }
             #chat-header .chat-title {
+                min-width: 0;
                 display: flex;
                 align-items: center;
                 gap: 0.45rem;
@@ -241,6 +243,7 @@
                 box-shadow: 0 0 6px rgba(34, 197, 94, 0.7);
             }
             .chat-header-actions {
+                flex-shrink: 0;
                 display: flex;
                 align-items: center;
                 gap: 4px;
@@ -410,7 +413,7 @@
                     <div class="chat-title">
                         <i class="bi bi-grip-vertical chat-drag-handle-hint"></i>
                         <span class="online-dot"></span>
-                        <span id="chat-title-text" style="white-space:nowrap;">Hỗ trợ khách hàng</span>
+                        <span id="chat-title-text" style="white-space:normal;line-height:1.5;">Hỗ trợ khách hàng</span>
                     </div>
                     <div class="chat-header-actions">
                         <button id="chat-minimize-btn" class="chat-header-btn" title="Thu nhỏ" aria-label="Thu nhỏ">
@@ -421,7 +424,12 @@
                         </button>
                     </div>
                 </div>
-                <div id="chat-messages">
+                <div class="d-flex gap-2 p-2 border-bottom" style="flex-shrink:0" role="group" aria-label="Chọn kênh hỗ trợ">
+                    <button type="button" id="chat-mode-ai" class="btn btn-sm btn-dark" aria-pressed="true">✦ Tư vấn AI</button>
+                    <button type="button" id="chat-mode-staff" class="btn btn-sm btn-outline-dark" aria-pressed="false">Nhân viên</button>
+                </div>
+                <div id="chat-mode-note" class="px-3 py-1 small text-muted" style="flex-shrink:0">AI chỉ tư vấn sản phẩm và mua hàng. Tin nhắn được gửi tới Google AI.</div>
+                <div id="chat-messages" role="log" aria-live="polite">
                     <div style="text-align:center;margin:auto;color:#94a3b8;font-size:0.82rem;">
                         <i class="bi bi-chat-square-text d-block mb-1" style="font-size:1.5rem;opacity:0.4;"></i>
                         Bắt đầu trò chuyện
@@ -470,6 +478,8 @@
             const myId = {{ (int) (auth()->id() ?? 0) }};
             const isGuest = {{ auth()->check() ? 'false' : 'true' }};
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+            @include('components.ai-chat')
 
             // ===== DRAG & DROP ENGINE =====
             const STORAGE_POPUP_KEY  = 'table_shop_chat_popup_pos';
@@ -662,6 +672,7 @@
             }
 
             function loadMessages() {
+                if (chatMode === 'ai') { loadAiMessages(); return; }
                 if (isGuest) {
                     chatBox.innerHTML = `
                         <div style="text-align:center;margin:auto;padding:1.5rem 1rem;">
@@ -684,6 +695,7 @@
                 fetch('{{ route('user.chat.messages') }}', { headers: { Accept: 'application/json' } })
                     .then(r => r.json())
                     .then(messages => {
+                        if (chatMode !== 'staff') return;
                         if (!messages || messages.length === 0) {
                             chatBox.innerHTML = `<div style="text-align:center;margin:auto;color:#94a3b8;font-size:0.82rem;"><i class="bi bi-chat-square-text d-block mb-1" style="font-size:1.5rem;opacity:0.4;"></i>Bắt đầu trò chuyện</div>`;
                             return;
@@ -719,7 +731,7 @@
             // Bấm câu mẫu -> gửi ngay
             quickChips.forEach(chip => {
                 chip.addEventListener('click', () => {
-                    if (isGuest) {
+                    if (isGuest && chatMode === 'staff') {
                         window.location.href = "{{ route('login') }}";
                         return;
                     }
@@ -728,12 +740,17 @@
             });
 
             function setSending(state) {
+                sending = state;
+                document.getElementById('chat-mode-ai').disabled = state;
+                document.getElementById('chat-mode-staff').disabled = state;
                 input.disabled = state;
                 sendBtn.disabled = state;
                 quickChips.forEach(c => c.disabled = state);
             }
 
             function sendMessage(preset) {
+                if (sending) return;
+                if (chatMode === 'ai') { sendAiMessage(preset); return; }
                 if (isGuest) {
                     window.location.href = "{{ route('login') }}";
                     return;
@@ -751,7 +768,7 @@
                     },
                     body: JSON.stringify({ message }),
                 })
-                    .then(r => r.json())
+                    .then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.message || 'Không gửi được tin nhắn.'); return data; })
                     .then(() => {
                         if (!fromPreset) input.value = '';
                         setSending(false);
@@ -759,7 +776,7 @@
                         loadMessages();
                     })
                     .catch(err => {
-                        console.error(err);
+                        document.getElementById('chat-mode-note').textContent = err.message || 'Không gửi được tin nhắn. Vui lòng thử lại.';
                         setSending(false);
                     });
             }
@@ -767,11 +784,10 @@
             sendBtn.onclick = () => sendMessage();
             input.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
             setInterval(() => {
-                if (chatPopup.classList.contains('open') && !isGuest) loadMessages();
+                if (chatPopup.classList.contains('open') && !isGuest && chatMode === 'staff') loadMessages();
             }, 3000);
         });
         </script>
         @endif
-@include('components.ai-chat')
 </body>
 </html>

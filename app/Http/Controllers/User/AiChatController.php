@@ -20,6 +20,9 @@ class AiChatController extends Controller
         } catch (\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 503);
         }
+        if ($reply === GeminiChatService::OUT_OF_SCOPE) {
+            return response()->json(['reply' => $reply]);
+        }
         $history[] = ['role' => 'user', 'text' => $data['message']];
         $history[] = ['role' => 'model', 'text' => $reply];
         $request->session()->put('ai_history', array_slice($history, -6));
