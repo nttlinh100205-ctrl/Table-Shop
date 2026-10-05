@@ -2,13 +2,7 @@
 @props(['product', 'colorMap' => []])
 
 @php
-    if ($product->image) {
-        $src = asset('storage/' . $product->image);
-    } elseif ($product->images->first()) {
-        $src = asset('storage/' . $product->images->first()->path);
-    } else {
-        $src = null;
-    }
+    $src = $product->image_url;
 
     $displayPrice = $product->price;
     $displayOld = $product->price_old;

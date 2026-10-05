@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Category;
 use App\Models\Color;
+use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -61,6 +62,7 @@ class ProductController extends Controller
             'advantages'          => 'nullable|string',
             'usage_guide'         => 'nullable|string',
             'image'               => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:3072',
+            'image_url'           => 'nullable|string|max:1000',
             'gallery.*'           => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:3072',
             'material'            => 'nullable|string|max:255',
             'style'               => 'nullable|string|max:255',
@@ -73,10 +75,22 @@ class ProductController extends Controller
             'variants.*.height'             => 'nullable|numeric|min:0',
             'variants.*.desktop_width'      => 'nullable|numeric|min:0',
             'variants.*.color'              => 'nullable|string|max:100',
-            'variants.*.price'              => 'required_with:variants|numeric|min:0',
+            'variants.*.price'              => 'nullable|numeric|min:0',
             'variants.*.price_old'          => 'nullable|numeric|min:0',
             'variants.*.stock'              => 'nullable|integer|min:0',
             'variants.*.sku'                => 'nullable|string|max:50',
+            'sizes'                         => 'nullable|array',
+            'sizes.*.size_label'            => 'nullable|string|max:100',
+            'sizes.*.width'                 => 'nullable|numeric|min:0',
+            'sizes.*.depth'                 => 'nullable|numeric|min:0',
+            'sizes.*.height'                => 'nullable|numeric|min:0',
+            'sizes.*.desktop_width'         => 'nullable|numeric|min:0',
+            'sizes.*.price'                 => 'nullable|numeric|min:0',
+            'sizes.*.price_old'             => 'nullable|numeric|min:0',
+            'sizes.*.colors'                => 'nullable|array',
+            'sizes.*.colors.*'              => 'nullable|string|max:100',
+            'sizes.*.color_stocks'          => 'nullable|array',
+            'sizes.*.color_stocks.*'        => 'nullable|integer|min:0',
         ]);
 
         DB::beginTransaction();
@@ -90,8 +104,12 @@ class ProductController extends Controller
             $data['sub_category_id']     = $request->filled('sub_category_id') ? $request->sub_category_id : null;
             $data['sub_sub_category_id'] = $request->filled('sub_sub_category_id') ? $request->sub_sub_category_id : null;
 
-
-            if ($request->filled('variants')) {
+            if ($request->filled('sizes')) {
+                $prices = collect($request->sizes)->pluck('price')->filter()->map(fn ($p) => (float) $p);
+                if ($prices->isNotEmpty()) {
+                    $data['price'] = $prices->min();
+                }
+            } elseif ($request->filled('variants')) {
                 $prices = collect($request->variants)->pluck('price')->filter()->map(fn ($p) => (float) $p);
                 if ($prices->isNotEmpty()) {
                     $data['price'] = $prices->min();
@@ -100,7 +118,9 @@ class ProductController extends Controller
             $data['price'] = $data['price'] ?? 0;
 
             if ($request->hasFile('image')) {
-                $data['image'] = $request->file('image')->store('products', 'public');
+                $data['image'] = CloudinaryService::uploadOrStore($request->file('image'), 'products');
+            } elseif ($request->filled('image_url')) {
+                $data['image'] = trim($request->input('image_url'));
             }
 
             $product = Product::create($data);
@@ -108,7 +128,7 @@ class ProductController extends Controller
             // Gallery nhiều ảnh
             if ($request->hasFile('gallery')) {
                 foreach ($request->file('gallery') as $i => $file) {
-                    $path = $file->store('products', 'public');
+                    $path = CloudinaryService::uploadOrStore($file, 'products');
                     $product->images()->create(['path' => $path, 'sort_order' => $i]);
                 }
             }
@@ -152,6 +172,7 @@ class ProductController extends Controller
             'advantages'          => 'nullable|string',
             'usage_guide'         => 'nullable|string',
             'image'               => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:3072',
+            'image_url'           => 'nullable|string|max:1000',
             'gallery.*'           => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:3072',
             'material'            => 'nullable|string|max:255',
             'style'               => 'nullable|string|max:255',
@@ -194,8 +215,12 @@ class ProductController extends Controller
             $data['sub_category_id']     = $request->filled('sub_category_id') ? $request->sub_category_id : null;
             $data['sub_sub_category_id'] = $request->filled('sub_sub_category_id') ? $request->sub_sub_category_id : null;
 
-
-            if ($request->filled('variants')) {
+            if ($request->filled('sizes')) {
+                $prices = collect($request->sizes)->pluck('price')->filter()->map(fn ($p) => (float) $p);
+                if ($prices->isNotEmpty()) {
+                    $data['price'] = $prices->min();
+                }
+            } elseif ($request->filled('variants')) {
                 $prices = collect($request->variants)->pluck('price')->filter()->map(fn ($p) => (float) $p);
                 if ($prices->isNotEmpty()) {
                     $data['price'] = $prices->min();
@@ -204,12 +229,17 @@ class ProductController extends Controller
             $data['price'] = $data['price'] ?? $product->price;
 
             if ($request->hasFile('image')) {
-                if ($product->image && Storage::disk('public')->exists($product->image)) {
+                if ($product->image && !str_starts_with($product->image, 'http') && Storage::disk('public')->exists($product->image)) {
                     Storage::disk('public')->delete($product->image);
                 }
-                $data['image'] = $request->file('image')->store('products', 'public');
+                $data['image'] = CloudinaryService::uploadOrStore($request->file('image'), 'products');
+            } elseif ($request->filled('image_url')) {
+                if ($product->image && !str_starts_with($product->image, 'http') && Storage::disk('public')->exists($product->image)) {
+                    Storage::disk('public')->delete($product->image);
+                }
+                $data['image'] = trim($request->input('image_url'));
             } elseif ($request->boolean('delete_main_image') || $request->input('delete_main_image') == '1') {
-                if ($product->image && Storage::disk('public')->exists($product->image)) {
+                if ($product->image && !str_starts_with($product->image, 'http') && Storage::disk('public')->exists($product->image)) {
                     Storage::disk('public')->delete($product->image);
                 }
                 $data['image'] = null;
@@ -221,7 +251,7 @@ class ProductController extends Controller
             if ($request->hasFile('gallery')) {
                 $maxOrder = $product->images()->max('sort_order') ?? 0;
                 foreach ($request->file('gallery') as $i => $file) {
-                    $path = $file->store('products', 'public');
+                    $path = CloudinaryService::uploadOrStore($file, 'products');
                     $product->images()->create(['path' => $path, 'sort_order' => $maxOrder + $i + 1]);
                 }
             }

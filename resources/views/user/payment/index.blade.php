@@ -1113,7 +1113,7 @@
                                     ? trim(explode(' — ', $item['name'], 2)[0])
                                     : ($item['name'] ?? '');
                                 $img = !empty($item['image'])
-                                    ? asset('storage/' . $item['image'])
+                                    ? \App\Models\Product::storageUrl($item['image'])
                                     : null;
                             @endphp
                             <div class="summary-item-row">

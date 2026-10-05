@@ -426,9 +426,7 @@
                                 {{-- Product --}}
                                 <div class="cart-product-cell">
                                     @php
-                                        $img = $item['image']
-                                            ? asset('storage/' . $item['image'])
-                                            : null;
+                                        $img = \App\Models\Product::storageUrl($item['image'] ?? null);
                                     @endphp
                                     @if($img)
                                         <img src="{{ $img }}" alt="{{ $item['name'] }}" class="cart-product-img">

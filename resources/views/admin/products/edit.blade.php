@@ -16,13 +16,35 @@
     gap: 8px; margin-top: 8px;
 }
 .color-pick-item {
+    position: relative;
     border: 2px solid #e2e8f0; border-radius: 8px; padding: 4px;
     cursor: pointer; text-align: center; background: #fff;
-    transition: border-color .15s, box-shadow .15s;
+    transition: all .15s ease;
 }
-.color-pick-item:hover { border-color: #94a3b8; }
+.color-pick-item:hover { border-color: #0d6efd; transform: translateY(-1px); }
 .color-pick-item.active {
     border-color: #0d6efd; box-shadow: 0 0 0 2px rgba(13,110,253,.35);
+    background: #f0f7ff;
+}
+.color-pick-item .color-check-badge {
+    display: none;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 17px;
+    height: 17px;
+    background: #0d6efd;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 10px;
+    line-height: 17px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+.color-pick-item.active .color-check-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .color-stock-row {
     background: #f8fafc; border-radius: 8px; padding: 6px 10px !important;
@@ -266,7 +288,6 @@
                     <div class="image-box-wrapper">
                         @if ($product->image)
                             <div class="mb-2" id="wrap-old-main-image">
-                                <div class="text-muted small mb-1 fw-semibold">Ảnh chính hiện tại (bấm <span class="badge bg-danger rounded-pill px-1">x</span> để xóa):</div>
                                 <div class="image-preview-grid">
                                     <div class="image-preview-item" id="old-main-image-item">
                                         <img src="{{ $product->image_url }}" alt="Ảnh chính" onerror="this.onerror=null;this.src='https://placehold.co/200x200?text=No+Image';">
@@ -288,9 +309,12 @@
                             <label class="form-label small fw-semibold text-secondary">
                                 {{ $product->image ? 'Thay thế bằng ảnh mới:' : 'Tải lên ảnh chính:' }}
                             </label>
-                            <input type="file" name="image" id="input-main-image" class="form-control form-control-sm" accept="image/*">
+                            <input type="file" name="image" id="input-main-image" class="form-control form-control-sm mb-2" accept="image/*">
+                            <input type="url" name="image_url" id="input-main-image-url" class="form-control form-control-sm"
+                                   value="{{ str_starts_with($product->image ?? '', 'http') ? $product->image : '' }}"
+                                   placeholder="Hoặc dán link ảnh trực tiếp (https://...)">
                             <div class="form-text text-muted" style="font-size:0.75rem;">
-                                <i class="bi bi-info-circle me-1"></i>Sau khi chọn ảnh, bấm <strong>"Cập nhật sản phẩm"</strong> ở cuối trang để lưu thật vào hệ thống.
+                                <i class="bi bi-info-circle me-1"></i>Tải file từ máy hoặc dán link ảnh online (Cloudinary, Imgur, v.v.). Sau đó bấm <strong>"Cập nhật"</strong> để lưu.
                             </div>
                         </div>
 
@@ -479,6 +503,7 @@ function buildColorGridHtml(si, selectedMap) {
         const active = isColorSelected(selectedMap, c);
         const title = (c.code ? c.code + ' · ' : '') + c.name;
         html += '<div class="color-pick-item' + (active ? ' active' : '') + '" data-name="' + attrEscape(c.name) + '" data-code="' + attrEscape(c.code || '') + '" data-style="' + attrEscape(c.style || '') + '" title="' + attrEscape(title) + '">';
+        html += '<span class="color-check-badge"><i class="bi bi-check-lg"></i></span>';
         html += '<div class="swatch" style="' + (c.style || 'background:#e2e8f0') + '"></div>';
         html += '<div class="cname">' + escapeHtml(c.code || c.name) + '</div>';
         html += '</div>';
@@ -505,9 +530,10 @@ function buildStockListHtml(si, selectedMap) {
         html += '<div class="color-stock-row" data-name="' + attrEscape(saveName) + '">';
         html += '<span class="mini-swatch" style="' + style + '"></span>';
         html += '<span class="flex-grow-1">' + label + '</span>';
-        html += '<label class="mb-0 small text-muted">Tồn</label>';
-        html += '<input type="number" min="0" class="form-control form-control-sm color-stock-input" name="sizes[' + si + '][color_stocks][' + attrEscape(saveName) + ']" value="' + (stock || 0) + '">';
+        html += '<label class="mb-0 small text-muted">Tồn:</label>';
+        html += '<input type="number" min="0" class="form-control form-control-sm color-stock-input" name="sizes[' + si + '][color_stocks][' + attrEscape(saveName) + ']" value="' + (stock || 0) + '" style="width:90px;">';
         html += '<input type="hidden" name="sizes[' + si + '][colors][]" value="' + attrEscape(saveName) + '">';
+        html += '<button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 btn-remove-color" title="Bỏ chọn màu này" style="line-height:1.5;">&times;</button>';
         html += '</div>';
     });
     html += '</div>';
@@ -517,6 +543,7 @@ function buildStockListHtml(si, selectedMap) {
 function buildSizeBlock(si, data) {
     data = data || {};
     const selected = data.colors || {};
+    const selectedCount = Object.keys(selected).length;
     return `
     <div class="size-block" data-si="${si}">
         <div class="size-block-head">
@@ -539,7 +566,10 @@ function buildSizeBlock(si, data) {
             <div class="col-md-2"><label class="form-label small mb-0">Giá cũ</label>
                 <input type="number" min="0" step="1000" name="sizes[${si}][price_old]" class="form-control form-control-sm" value="${data.price_old ?? ''}"></div>
         </div>
-        <div class="small fw-semibold mb-1">Chọn màu (bấm ô màu — chọn nhiều):</div>
+        <div class="small fw-semibold mb-1 text-dark d-flex align-items-center justify-content-between">
+            <span><i class="bi bi-palette me-1 text-primary"></i>Màu sắc cho size này (bấm ô màu bên dưới để chọn nhiều màu cùng lúc):</span>
+            <span class="text-muted small" style="font-weight:normal;">Đã chọn: <span class="badge bg-primary rounded-pill color-selected-count">${selectedCount}</span> màu</span>
+        </div>
         <div class="color-grid-wrap">${buildColorGridHtml(si, selected)}</div>
         <div class="stock-wrap">${buildStockListHtml(si, selected)}</div>
     </div>`;
@@ -552,6 +582,22 @@ document.getElementById('btnAddSize')?.addEventListener('click', function () {
 });
 
 document.getElementById('sizeBlocks')?.addEventListener('click', function (e) {
+    const removeBtn = e.target.closest('.btn-remove-color');
+    if (removeBtn) {
+        const row = removeBtn.closest('.color-stock-row');
+        const colorName = row.dataset.name;
+        const block = row.closest('.size-block');
+        const si = block.dataset.si;
+        const item = block.querySelector('.color-pick-item[data-name="' + colorName.replace(/"/g, '\\"') + '"]');
+        if (item) item.classList.remove('active');
+        row.remove();
+        const countBadge = block.querySelector('.color-selected-count');
+        if (countBadge) {
+            countBadge.textContent = block.querySelectorAll('.color-stock-row').length;
+        }
+        return;
+    }
+
     const item = e.target.closest('.color-pick-item');
     if (item) {
         const block = item.closest('.size-block');
@@ -565,6 +611,10 @@ document.getElementById('sizeBlocks')?.addEventListener('click', function (e) {
             selected[name] = existing ? existing.value : 0;
         });
         block.querySelector('.stock-wrap').innerHTML = buildStockListHtml(si, selected);
+        const countBadge = block.querySelector('.color-selected-count');
+        if (countBadge) {
+            countBadge.textContent = Object.keys(selected).length;
+        }
         return;
     }
     if (e.target.classList.contains('btn-remove-size')) {

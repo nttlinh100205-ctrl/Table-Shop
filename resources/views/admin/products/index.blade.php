@@ -108,11 +108,7 @@
                     <tbody>
                         @foreach ($products as $product)
                             @php
-                                $thumb = $product->image
-                                    ? asset('storage/' . $product->image)
-                                    : ($product->images->first()
-                                        ? asset('storage/' . $product->images->first()->path)
-                                        : null);
+                                $thumb = $product->image_url;
                                 $variantCount = $product->variants_count ?? $product->variants->count();
                                 $minPrice = $product->min_price ?? $product->price ?? 0;
                             @endphp

@@ -40,7 +40,10 @@
                    value="{{ $sg['price_old'] ?? '' }}">
         </div>
     </div>
-    <div class="small fw-semibold mb-1">Chọn màu (bấm ô màu — chọn nhiều):</div>
+    <div class="small fw-semibold mb-1 text-dark d-flex align-items-center justify-content-between">
+        <span><i class="bi bi-palette me-1 text-primary"></i>Màu sắc cho size này (bấm ô màu bên dưới để chọn nhiều màu cùng lúc):</span>
+        <span class="text-muted small" style="font-weight:normal;">Đã chọn: <span class="badge bg-primary rounded-pill color-selected-count">{{ count($sg['colors'] ?? []) }}</span> màu</span>
+    </div>
     <div class="color-grid-wrap">
         <div class="color-pick-grid">
             @foreach ($flatColors as $c)
@@ -57,6 +60,7 @@
                      data-code="{{ $c['code'] ?? '' }}"
                      data-style="{{ $c['style'] }}"
                      title="{{ $label }}">
+                    <span class="color-check-badge"><i class="bi bi-check-lg"></i></span>
                     <div class="swatch" style="{{ $c['style'] ?: 'background:#e2e8f0' }}"></div>
                     <div class="cname">{{ $c['code'] ?: $c['name'] }}</div>
                 </div>
@@ -73,7 +77,6 @@
                     $st = $cMeta['style'] ?? 'background:#e2e8f0';
                     $code = $cMeta['code'] ?? '';
                     $displayName = $cMeta['name'] ?? $colorName;
-                    // Luôn lưu theo name chuẩn trong bảng màu (nếu tìm thấy)
                     $saveName = $cMeta['name'] ?? $colorName;
                 @endphp
                 <div class="color-stock-row" data-name="{{ $saveName }}">
@@ -86,10 +89,11 @@
                             {{ $displayName }}
                         @endif
                     </span>
-                    <label class="mb-0 small text-muted">Tồn</label>
+                    <label class="mb-0 small text-muted">Tồn:</label>
                     <input type="number" min="0" class="form-control form-control-sm color-stock-input"
-                           name="sizes[{{ $si }}][color_stocks][{{ $saveName }}]" value="{{ $stock }}">
+                           name="sizes[{{ $si }}][color_stocks][{{ $saveName }}]" value="{{ $stock }}" style="width:90px;">
                     <input type="hidden" name="sizes[{{ $si }}][colors][]" value="{{ $saveName }}">
+                    <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 btn-remove-color" title="Bỏ chọn màu này" style="line-height:1.5;">&times;</button>
                 </div>
             @endforeach
         </div>

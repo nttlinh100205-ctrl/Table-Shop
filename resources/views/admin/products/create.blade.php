@@ -5,20 +5,73 @@
 @section('content')
 
 <style>
-.color-cell { display: flex; align-items: center; gap: 6px; min-width: 140px; }
-.color-cell .color-select { flex: 1; min-width: 110px; }
-.color-swatch {
-    width: 22px; height: 22px; border-radius: 4px;
-    border: 1px solid #ccc; flex-shrink: 0;
-    background: #fff;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+.size-block {
+    border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;
+    margin-bottom: 14px; background: #fff;
 }
-.color-swatch.is-empty { background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 8px 8px; }
-.color-option-preview {
-    display: inline-block; width: 12px; height: 12px;
-    border-radius: 2px; border: 1px solid #bbb; margin-right: 6px;
-    vertical-align: middle;
+.size-block-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.size-block-head .title { font-weight: 600; color: #0f172a; }
+.color-pick-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 8px; margin-top: 8px;
 }
+.color-pick-item {
+    position: relative;
+    border: 2px solid #e2e8f0; border-radius: 8px; padding: 4px;
+    cursor: pointer; text-align: center; background: #fff;
+    transition: all .15s ease;
+}
+.color-pick-item:hover { border-color: #0d6efd; transform: translateY(-1px); }
+.color-pick-item.active {
+    border-color: #0d6efd; box-shadow: 0 0 0 2px rgba(13,110,253,.35);
+    background: #f0f7ff;
+}
+.color-pick-item .color-check-badge {
+    display: none;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 17px;
+    height: 17px;
+    background: #0d6efd;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 10px;
+    line-height: 17px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+.color-pick-item.active .color-check-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.color-stock-row {
+    background: #f8fafc; border-radius: 8px; padding: 6px 10px !important;
+    margin-bottom: 4px; border: 1px solid #e2e8f0;
+}
+.color-stock-row .mini-swatch {
+    width: 28px !important; height: 28px !important; border-radius: 6px;
+}
+.color-pick-item .swatch {
+    width: 100%; height: 40px; border-radius: 5px;
+    border: 1px solid rgba(0,0,0,.08);
+    background-size: cover; background-position: center;
+}
+.color-pick-item .cname {
+    font-size: 0.65rem; color: #64748b; margin-top: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.color-stock-list { margin-top: 10px; }
+.color-stock-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 0; font-size: 0.85rem;
+}
+.color-stock-row .mini-swatch {
+    width: 20px; height: 20px; border-radius: 4px; border: 1px solid #cbd5e1;
+    background-size: cover; flex-shrink: 0;
+}
+.color-stock-row input { width: 90px; }
 
 /* Image Manager Styles */
 .image-box-wrapper {
@@ -192,7 +245,13 @@
                     </label>
                     <div class="image-box-wrapper">
                         <div>
-                            <input type="file" name="image" id="input-main-image" class="form-control form-control-sm" accept="image/*">
+                            <input type="file" name="image" id="input-main-image" class="form-control form-control-sm mb-2" accept="image/*">
+                            <input type="url" name="image_url" id="input-main-image-url" class="form-control form-control-sm"
+                                   value="{{ old('image_url') }}"
+                                   placeholder="Hoặc dán link ảnh trực tiếp (https://...)">
+                            <div class="form-text text-muted" style="font-size:0.75rem;">
+                                <i class="bi bi-info-circle me-1"></i>Tải file từ máy hoặc dán trực tiếp link ảnh (Cloudinary, Imgur, v.v.).
+                            </div>
                         </div>
 
                         <!-- Khung xem trước ảnh chính mới upload nhỏ nhỏ -->
@@ -242,55 +301,42 @@
 
         <div class="card mb-4">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <strong>Biến thể (Size + Mặt bàn + Màu + Giá)</strong>
-                <button type="button" class="btn btn-light btn-sm" id="btnAddVariant">+ Thêm size</button>
+                <strong>Biến thể & Bảng màu (Chọn size, click màu trực tiếp)</strong>
+                <button type="button" class="btn btn-light btn-sm" id="btnAddSize">+ Thêm size</button>
             </div>
             <div class="card-body">
-                <p class="text-muted small">VD: 160 x 120 x 75cm (mặt bàn 60cm) — mỗi size một giá.</p>
-                <div class="table-responsive">
-                    <table class="table table-bordered align-middle" id="variantsTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Nhãn size</th>
-                                <th>Dài</th>
-                                <th>Sâu</th>
-                                <th>Cao</th>
-                                <th>Mặt bàn</th>
-                                <th>Màu</th>
-                                <th>Giá *</th>
-                                <th>Giá cũ</th>
-                                <th>Tồn</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="variantsBody">
-                            <tr class="variant-row">
-                                <td><input type="text" name="variants[0][size_label]" class="form-control form-control-sm" placeholder="1m6 x 1m2 x 75cm"></td>
-                                <td><input type="number" name="variants[0][width]" class="form-control form-control-sm" step="0.01" placeholder="160"></td>
-                                <td><input type="number" name="variants[0][depth]" class="form-control form-control-sm" step="0.01" placeholder="120"></td>
-                                <td><input type="number" name="variants[0][height]" class="form-control form-control-sm" step="0.01" placeholder="75"></td>
-                                <td><input type="number" name="variants[0][desktop_width]" class="form-control form-control-sm" step="0.01" placeholder="60"></td>
-                                <td>
-                                    <select name="variants[0][color]" class="form-select form-select-sm color-select">
-                                        <option value="">-- Chọn màu --</option>
-                                        @foreach (\App\Models\Color::GROUPS as $gKey => $gLabel)
-                                            @if(isset($colors[$gKey]) && $colors[$gKey]->count())
-                                                <optgroup label="{{ $gLabel }}">
-                                                    @foreach ($colors[$gKey] as $c)
-                                                        <option value="{{ $c->name }}" data-hex="{{ $c->hex }}">{{ $c->name }}</option>
-                                                    @endforeach
-                                                </optgroup>
-                                            @endif
-                                        @endforeach
-                                    </select>
-                                </td>
-                                <td><input type="number" name="variants[0][price]" class="form-control form-control-sm" min="0" step="1000" placeholder="8500000"></td>
-                                <td><input type="number" name="variants[0][price_old]" class="form-control form-control-sm" min="0" step="1000" placeholder="14500000"></td>
-                                <td><input type="number" name="variants[0][stock]" class="form-control form-control-sm" min="0" value="0"></td>
-                                <td><button type="button" class="btn btn-danger btn-sm btn-remove-row">×</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <p class="text-muted small mb-3">
+                    Mỗi size nhập kích thước + giá. Chọn <strong>nhiều màu</strong> bằng các ô màu hiển thị trực quan ở dưới (không phải chọn từng dòng list).
+                </p>
+                <div id="sizeBlocks">
+                    @php
+                        $flatColors = [];
+                        foreach ($colors as $gKey => $list) {
+                            foreach ($list as $c) {
+                                $flatColors[] = [
+                                    'name' => $c->name,
+                                    'code' => $c->code,
+                                    'hex' => $c->hex,
+                                    'style' => $c->swatch_style,
+                                ];
+                            }
+                        }
+                        $sizeGroups = old('sizes', [
+                            [
+                                'size_label' => '',
+                                'width' => '',
+                                'depth' => '',
+                                'height' => '',
+                                'desktop_width' => '',
+                                'price' => '',
+                                'price_old' => '',
+                                'colors' => [],
+                            ]
+                        ]);
+                    @endphp
+                    @foreach ($sizeGroups as $si => $sg)
+                        @include('admin.products._size_block', ['si' => $loop->index, 'sg' => $sg, 'flatColors' => $flatColors])
+                    @endforeach
                 </div>
             </div>
         </div>
@@ -303,53 +349,154 @@
 
 
 @php
-    $__colorOpts = '';
-    foreach (\App\Models\Color::GROUPS as $gKey => $gLabel) {
-        if (isset($colors[$gKey]) && $colors[$gKey]->count()) {
-            $__colorOpts .= '<optgroup label="'.e($gLabel).'">';
-            foreach ($colors[$gKey] as $c) {
-                $hex = e($c->hex ?? '');
-                $name = e($c->name);
-                $__colorOpts .= '<option value="'.$name.'" data-hex="'.$hex.'">'.$name.'</option>';
-            }
-            $__colorOpts .= '</optgroup>';
-        }
-    }
+    $flatColorsJson = collect($colors)->flatten(1)->map(function ($c) {
+        return [
+            'name' => $c->name,
+            'code' => $c->code,
+            'hex' => $c->hex,
+            'style' => $c->swatch_style,
+        ];
+    })->values();
 @endphp
-<script>window.__colorOptionsHtml = {!! json_encode($__colorOpts) !!};</script>
-
 <script>
-let variantIndex = 1;
+window.__flatColors = @json($flatColorsJson);
+let sizeIndex = {{ count($sizeGroups) }};
 
-function buildVariantRowHtml(idx) {
-    return `
-        <td><input type="text" name="variants[${idx}][size_label]" class="form-control form-control-sm"></td>
-        <td><input type="number" name="variants[${idx}][width]" class="form-control form-control-sm" step="0.01"></td>
-        <td><input type="number" name="variants[${idx}][depth]" class="form-control form-control-sm" step="0.01"></td>
-        <td><input type="number" name="variants[${idx}][height]" class="form-control form-control-sm" step="0.01"></td>
-        <td><input type="number" name="variants[${idx}][desktop_width]" class="form-control form-control-sm" step="0.01"></td>
-        <td><select name="variants[${idx}][color]" class="form-select form-select-sm color-select"><option value="">-- Chọn màu --</option>${window.__colorOptionsHtml || ''}</select></td>
-        <td><input type="number" name="variants[${idx}][price]" class="form-control form-control-sm" min="0" step="1000"></td>
-        <td><input type="number" name="variants[${idx}][price_old]" class="form-control form-control-sm" min="0" step="1000"></td>
-        <td><input type="number" name="variants[${idx}][stock]" class="form-control form-control-sm" min="0" value="0"></td>
-        <td><button type="button" class="btn btn-danger btn-sm btn-remove-row">×</button></td>
-    `;
+function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-document.getElementById('btnAddVariant').addEventListener('click', function () {
-    const tbody = document.getElementById('variantsBody');
-    const row = document.createElement('tr');
-    row.className = 'variant-row';
-    row.innerHTML = buildVariantRowHtml(variantIndex);
-    tbody.appendChild(row);
-    variantIndex++;
+function isColorSelected(selectedMap, c) {
+    if (!selectedMap) return false;
+    if (selectedMap[c.name] !== undefined) return true;
+    if (c.code && selectedMap[c.code] !== undefined) return true;
+    return false;
+}
+function buildColorGridHtml(si, selectedMap) {
+    selectedMap = selectedMap || {};
+    let html = '<div class="color-pick-grid">';
+    (window.__flatColors || []).forEach(function (c) {
+        const active = isColorSelected(selectedMap, c);
+        const title = (c.code ? c.code + ' · ' : '') + c.name;
+        html += '<div class="color-pick-item' + (active ? ' active' : '') + '" data-name="' + attrEscape(c.name) + '" data-code="' + attrEscape(c.code || '') + '" data-style="' + attrEscape(c.style || '') + '" title="' + attrEscape(title) + '">';
+        html += '<span class="color-check-badge"><i class="bi bi-check-lg"></i></span>';
+        html += '<div class="swatch" style="' + (c.style || 'background:#e2e8f0') + '"></div>';
+        html += '<div class="cname">' + escapeHtml(c.code || c.name) + '</div>';
+        html += '</div>';
+    });
+    html += '</div>';
+    return html;
+}
+
+function attrEscape(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+function buildStockListHtml(si, selectedMap) {
+    selectedMap = selectedMap || {};
+    let html = '<div class="color-stock-list">';
+    Object.keys(selectedMap).forEach(function (name) {
+        const stock = selectedMap[name];
+        const c = (window.__flatColors || []).find(x => x.name === name || x.code === name) || {};
+        const style = c.style || 'background:#e2e8f0';
+        const saveName = c.name || name;
+        const code = c.code || '';
+        const label = code
+            ? ('<strong>' + escapeHtml(code) + '</strong> <span class="text-muted">· ' + escapeHtml(c.name || name) + '</span>')
+            : escapeHtml(c.name || name);
+        html += '<div class="color-stock-row" data-name="' + attrEscape(saveName) + '">';
+        html += '<span class="mini-swatch" style="' + style + '"></span>';
+        html += '<span class="flex-grow-1">' + label + '</span>';
+        html += '<label class="mb-0 small text-muted">Tồn:</label>';
+        html += '<input type="number" min="0" class="form-control form-control-sm color-stock-input" name="sizes[' + si + '][color_stocks][' + attrEscape(saveName) + ']" value="' + (stock || 0) + '" style="width:90px;">';
+        html += '<input type="hidden" name="sizes[' + si + '][colors][]" value="' + attrEscape(saveName) + '">';
+        html += '<button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 btn-remove-color" title="Bỏ chọn màu này" style="line-height:1.5;">&times;</button>';
+        html += '</div>';
+    });
+    html += '</div>';
+    return html;
+}
+
+function buildSizeBlock(si, data) {
+    data = data || {};
+    const selected = data.colors || {};
+    const selectedCount = Object.keys(selected).length;
+    return `
+    <div class="size-block" data-si="${si}">
+        <div class="size-block-head">
+            <span class="title">Size #${si + 1}</span>
+            <button type="button" class="btn btn-outline-danger btn-sm btn-remove-size">Xóa size</button>
+        </div>
+        <div class="row g-2 mb-2">
+            <div class="col-md-2"><label class="form-label small mb-0">Nhãn size</label>
+                <input type="text" name="sizes[${si}][size_label]" class="form-control form-control-sm" value="${escapeHtml(data.size_label || '')}" placeholder="BGD16_1"></div>
+            <div class="col-md-1"><label class="form-label small mb-0">Dài</label>
+                <input type="number" step="0.01" name="sizes[${si}][width]" class="form-control form-control-sm" value="${data.width ?? ''}"></div>
+            <div class="col-md-1"><label class="form-label small mb-0">Sâu</label>
+                <input type="number" step="0.01" name="sizes[${si}][depth]" class="form-control form-control-sm" value="${data.depth ?? ''}"></div>
+            <div class="col-md-1"><label class="form-label small mb-0">Cao</label>
+                <input type="number" step="0.01" name="sizes[${si}][height]" class="form-control form-control-sm" value="${data.height ?? ''}"></div>
+            <div class="col-md-1"><label class="form-label small mb-0">Mặt bàn</label>
+                <input type="number" step="0.01" name="sizes[${si}][desktop_width]" class="form-control form-control-sm" value="${data.desktop_width ?? ''}"></div>
+            <div class="col-md-2"><label class="form-label small mb-0">Giá</label>
+                <input type="number" min="0" step="1000" name="sizes[${si}][price]" class="form-control form-control-sm" value="${data.price ?? ''}"></div>
+            <div class="col-md-2"><label class="form-label small mb-0">Giá cũ</label>
+                <input type="number" min="0" step="1000" name="sizes[${si}][price_old]" class="form-control form-control-sm" value="${data.price_old ?? ''}"></div>
+        </div>
+        <div class="small fw-semibold mb-1 text-dark d-flex align-items-center justify-content-between">
+            <span><i class="bi bi-palette me-1 text-primary"></i>Màu sắc cho size này (bấm ô màu bên dưới để chọn nhiều màu cùng lúc):</span>
+            <span class="text-muted small" style="font-weight:normal;">Đã chọn: <span class="badge bg-primary rounded-pill color-selected-count">${selectedCount}</span> màu</span>
+        </div>
+        <div class="color-grid-wrap">${buildColorGridHtml(si, selected)}</div>
+        <div class="stock-wrap">${buildStockListHtml(si, selected)}</div>
+    </div>`;
+}
+
+document.getElementById('btnAddSize')?.addEventListener('click', function () {
+    const wrap = document.getElementById('sizeBlocks');
+    wrap.insertAdjacentHTML('beforeend', buildSizeBlock(sizeIndex, {}));
+    sizeIndex++;
 });
 
-document.getElementById('variantsBody').addEventListener('click', function (e) {
-    if (e.target.classList.contains('btn-remove-row')) {
-        if (document.querySelectorAll('#variantsBody .variant-row').length > 1) {
-            e.target.closest('tr').remove();
+document.getElementById('sizeBlocks')?.addEventListener('click', function (e) {
+    const removeBtn = e.target.closest('.btn-remove-color');
+    if (removeBtn) {
+        const row = removeBtn.closest('.color-stock-row');
+        const colorName = row.dataset.name;
+        const block = row.closest('.size-block');
+        const si = block.dataset.si;
+        const item = block.querySelector('.color-pick-item[data-name="' + colorName.replace(/"/g, '\\"') + '"]');
+        if (item) item.classList.remove('active');
+        row.remove();
+        const countBadge = block.querySelector('.color-selected-count');
+        if (countBadge) {
+            countBadge.textContent = block.querySelectorAll('.color-stock-row').length;
         }
+        return;
+    }
+
+    const item = e.target.closest('.color-pick-item');
+    if (item) {
+        const block = item.closest('.size-block');
+        const si = block.dataset.si;
+        item.classList.toggle('active');
+        // rebuild stock list from active items
+        const selected = {};
+        block.querySelectorAll('.color-pick-item.active').forEach(function (el) {
+            const name = el.dataset.name;
+            const existing = block.querySelector('.color-stock-row[data-name="' + name.replace(/"/g, '\\"') + '"] input.color-stock-input');
+            selected[name] = existing ? existing.value : 0;
+        });
+        block.querySelector('.stock-wrap').innerHTML = buildStockListHtml(si, selected);
+        const countBadge = block.querySelector('.color-selected-count');
+        if (countBadge) {
+            countBadge.textContent = Object.keys(selected).length;
+        }
+        return;
+    }
+    if (e.target.classList.contains('btn-remove-size')) {
+        const blocks = document.querySelectorAll('#sizeBlocks .size-block');
+        if (blocks.length <= 1) return;
+        e.target.closest('.size-block').remove();
     }
 });
 </script>

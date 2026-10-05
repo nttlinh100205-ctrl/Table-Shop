@@ -68,8 +68,8 @@ class Product extends Model
             return null;
         }
 
-        // Đã là URL đầy đủ
-        if (preg_match('#^https?://#i', $path)) {
+        // Đã là URL đầy đủ hoặc Data URI
+        if (preg_match('#^https?://#i', $path) || str_starts_with($path, 'data:image/')) {
             return $path;
         }
 
