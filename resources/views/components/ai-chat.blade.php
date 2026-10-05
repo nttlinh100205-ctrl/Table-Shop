@@ -24,7 +24,7 @@ function renderAiMessages() {
         while ((match = pattern.exec(message.text)) !== null) {
             bubble.append(document.createTextNode(message.text.slice(last, match.index)));
             let url; try { url = new URL(match[2]); } catch (e) {}
-            if (url && url.origin === location.origin && (/^\/(?:user\/)?products\/\d+$/.test(url.pathname) || /^\/(?:user\/orders(?:\/\d+)?|user\/points|login|email\/verify)$/.test(url.pathname))) {
+            if (url && url.origin === location.origin && (/^\/(?:user\/)?products\/\d+$/.test(url.pathname) || /^\/(?:user\/orders(?:\/\d+)?|user\/points|user\/check-in|user\/spin|login|email\/verify)$/.test(url.pathname))) {
                 const a = document.createElement('a'); a.href = url.href; a.textContent = match[1]; bubble.append(a);
             } else bubble.append(document.createTextNode(match[1]));
             last = pattern.lastIndex;

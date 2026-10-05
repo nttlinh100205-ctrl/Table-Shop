@@ -7,11 +7,43 @@ use Illuminate\Support\Str;
 
 class ShopChatSupport
 {
-    public static function reply(string $message, ?User $user): ?string
+    public static function policies(): array
+    {
+        return [
+            'check_in' => 'Điểm danh không cần liên tiếp. Mỗi ngày nhận một lần, chu kỳ '.config('coins.cycle_days', 7).' lần: các lần đầu nhận '.config('coins.daily_reward', 100).' xu, lần cuối nhận '.config('coins.last_day_reward', 200).' xu. Bỏ ngày không mất tiến độ. [Điểm danh nhận xu]('.route('user.check-in.index').').',
+            'coins' => 'Bật Dùng xu dưới ô voucher khi thanh toán. 1 xu = '.config('coins.vnd_per_coin', 1).'đ, giảm tiền hàng sau voucher, không giảm phí giao; tiền hàng còn tối thiểu '.number_format(config('coins.minimum_goods_payment', 1000), 0, ',', '.').'đ. Xu khác điểm thành viên.',
+            'review' => 'Đánh giá đơn đã hoàn thành nhận 200 xu một lần cho mỗi đơn, kể cả đánh giá chưa hài lòng. Mở [Đơn hàng của tôi]('.route('user.orders.index').') để đánh giá.',
+            'referral' => 'Nhập mã giới thiệu ở bước thanh toán, không được dùng mã của chính mình. Khi đơn hoàn thành, chủ mã nhận '.number_format(config('membership.referral_points', 10000), 0, ',', '.').' điểm. [Xem mã giới thiệu]('.route('user.points.index').').',
+            'spin' => 'Mở biểu tượng vòng quay phía trên chat hoặc [Vòng quay may mắn]('.route('user.spin.index').'). Cần có lượt quay; phần thưởng và lượt hiện có hiển thị tại đó. Không thể quay hộ qua chat.',
+            'order_points' => 'Đơn hoàn thành nhận 1 điểm mỗi '.number_format(config('membership.earn_rate', 10000), 0, ',', '.').'đ tiền hàng sau giảm giá, không gồm phí vận chuyển; làm tròn xuống. Đơn có tiền hàng 100.000đ nhận '.intdiv(100000, max(1, (int)config('membership.earn_rate', 10000))).' điểm. Điểm và xu là hai số dư riêng.',
+        ];
+    }
+
+    public static function reply(string $message, ?User $user, array $behavior = []): ?string
     {
         $text = strtolower(Str::ascii($message));
+        if (preg_match('/^(?:san pham|mau|ban) nay (?:hien )?(?:con hang khong|bao hanh.*)\??(?: a\??)?$/', trim($text))) {
+            $product = !empty($behavior['last_product_id']) ? \App\Models\Product::with('variants')->find($behavior['last_product_id']) : null;
+            if ($product) {
+                $heading = '['.$product->name.']('.route('products.show', $product->id).')';
+                if (str_contains($text, 'bao hanh')) return $heading.': '.($product->warranty ?: 'Chưa có thông tin bảo hành cụ thể; bạn chọn Nhân viên để xác nhận.');
+                $rows = [$heading];
+                foreach ($product->variants->take(8) as $variant) {
+                    $rows[] = ($variant->color ?: 'Chưa ghi màu').' / '.($variant->size_label ?: 'Chưa ghi size').': '.($variant->stock > 0 ? 'còn '.$variant->stock.' sản phẩm' : 'hết hàng').', '.number_format($variant->price, 0, ',', '.').'đ.';
+                }
+                if ($product->variants->isEmpty()) $rows[] = 'Chưa có dữ liệu tồn kho biến thể để xác nhận; bạn chọn Nhân viên để kiểm tra.';
+                if ($product->variants->count() > 8) $rows[] = 'Xem các biến thể còn lại tại trang sản phẩm.';
+                return implode("\n", $rows);
+            }
+        }
+        $policies = self::policies();
+        $policyReplies = [];
+        foreach (['check_in'=>'diem danh', 'coins'=>'dung xu|doi xu|1 xu|xu doi', 'review'=>'danh gia.*(?:xu|thuong)|(?:xu|thuong).*danh gia', 'referral'=>'ma gioi thieu', 'spin'=>'vong quay|quay may man', 'order_points'=>'(?:don|mua).*(?:cong|nhan|doi|duoc).*diem|(?:tinh|quy doi|tich luy) diem'] as $key=>$pattern) {
+            if (preg_match('/\b(?:'.$pattern.')\b/', $text)) $policyReplies[] = $policies[$key];
+        }
+        if ($policyReplies) return implode("\n\n", $policyReplies);
         $orders = preg_match('/\b(don hang|van don|tra cuu don|xem don|kiem tra don)\b/', $text) || preg_match('/^\s*#\d+\s*$/', $text);
-        $points = preg_match('/\b(diem thuong|diem tich|diem cua|xu cua|bao nhieu diem|kiem tra diem|xem diem|hang thanh vien|hang muc|hang cua|hang gi|so du xu|bao nhieu xu|diem va hang)\b/', $text);
+        $points = preg_match('/\b(diem thuong|diem tich|diem cua|xu cua|bao nhieu diem|kiem tra diem|xem diem|hang thanh vien|hang muc|hang cua|hang gi|so du xu|bao nhieu xu|diem va hang)\b/', str_replace('don hang', 'don', $text));
         $parts = [];
         if ($orders || $points) {
             if (!$user) return 'Bạn vui lòng [đăng nhập]('.route('login').') để xem đơn hàng, điểm, xu và hạng thành viên của mình.';

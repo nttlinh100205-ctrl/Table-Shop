@@ -84,6 +84,7 @@ class HomeController extends Controller
             ->findOrFail($id);
 
         session()->put('shopping_behavior', [
+            'last_product_id' => $product->id,
             'last_category' => $product->category?->name,
             'category_id' => $product->category_id,
             'last_product_name' => $product->name,

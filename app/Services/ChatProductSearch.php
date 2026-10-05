@@ -77,6 +77,12 @@ class ChatProductSearch
         $turns[] = $message;
         foreach ($turns as $turn) {
             $text = self::normalize($turn);
+            // Explicitly removing filters must not leave old constraints in the session.
+            if (preg_match('/\b(bo|xoa|khong gioi han|khong can)\b/', $text)) {
+                foreach (['budget_vnd'=>'gia|ngan sach', 'colors'=>'mau', 'styles'=>'phong cach', 'dimensions_cm'=>'size|sz|kich thuoc'] as $field=>$words) {
+                    if (preg_match('/\b('.$words.')\b/', $text)) $state[$field] = $field === 'budget_vnd' ? null : [];
+                }
+            }
             $types = self::phrases($text, ['ban','ghe','sofa','giuong']);
             if ($types && $state['types'] && $types !== $state['types']) {
                 $state = ['types'=>[], 'colors'=>[], 'styles'=>[], 'dimensions_cm'=>[], 'budget_vnd'=>null];
@@ -88,6 +94,21 @@ class ChatProductSearch
             }
         }
         return $state;
+    }
+
+    public static function isAttributeFollowUp(string $message, array $history, ?array $behavior): bool
+    {
+        $previous = self::criteria('', $history, $behavior['chat_search_context'] ?? []);
+        if (!array_filter($previous)) return false;
+        $text = self::normalize($message);
+        if (!self::phrases($text, array_merge(self::COLORS, self::STYLES)) && !self::dimensions($text)) return false;
+        // Consume only a small shopping grammar. Arbitrary instructions and mixed requests fail closed.
+        $text = preg_replace('/(?<=\d)[x×*](?=\d)/', ' ', $text);
+        $text = preg_replace('/\b\d+m\d{1,2}\b|\b\d+(?:[.,]\d+)?\s*(?:mm|cm|m)?\b/', ' ', $text);
+        foreach (array_merge(self::STYLES, self::COLORS, ['phong cach','kich thuoc','thi sao','co','mau','dai','rong','cao','sau','size','sz','khong','nhe','a','con','doi','sang','va','loai','kieu']) as $word) {
+            $text = preg_replace('/\b'.preg_quote($word, '/').'\b/', ' ', $text);
+        }
+        return trim(preg_replace('/[\s?!.,×*x-]+/', '', $text)) === '';
     }
 
     public static function isBudgetFollowUp(string $message, array $history, ?array $behavior): bool
@@ -169,7 +190,7 @@ class ChatProductSearch
                 foreach ($selected as &$variant) unset($variant['_score']);
                 unset($variant);
                 $best[] = ['id'=>$product->id, 'name'=>$product->name, 'category'=>$product->category?->name,
-                    'style'=>$product->style, 'material'=>$product->material,
+                    'style'=>$product->style, 'material'=>$product->material, 'warranty'=>$product->warranty,
                     'description'=>Str::limit(strip_tags($product->description ?? ''), 300),
                     'price_vnd'=>(float)$product->price, 'url'=>route('products.show', $product->id),
                     'matches_detected_filters'=>$hasMatch, 'variants'=>$selected, '_score'=>$score];

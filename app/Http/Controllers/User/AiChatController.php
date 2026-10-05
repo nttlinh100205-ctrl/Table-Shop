@@ -43,7 +43,7 @@ class AiChatController extends Controller
     {
         $data = $request->validate(['message' => 'required|string|max:2000']);
         $this->transcript($request);
-        $support = \App\Services\ShopChatSupport::reply($data['message'], $request->user());
+        $support = \App\Services\ShopChatSupport::reply($data['message'], $request->user(), $request->session()->get('shopping_behavior', []));
         if ($support !== null) return $this->reply($request, $data['message'], $support);
         $history = $request->session()->get('ai_history', []);
         $behavior = $request->session()->get('shopping_behavior', []);
