@@ -122,7 +122,7 @@
                             @else
                                 <a href="{{ route('user.orders.index') }}" class="nth-account-menu__item">Đơn hàng của tôi</a>
                                 <a href="{{ route('user.points.index') }}" class="nth-account-menu__item">
-                                    <span>Hồ sơ · Điểm thưởng &amp; Hạng</span>
+                                    <span>Hồ sơ</span>
                                 </a>
                                 <a href="{{ route('user.check-in.index') }}" class="nth-account-menu__item"><i class="bi bi-calendar-check me-2" aria-hidden="true"></i>Điểm danh nhận xu</a>
                             @endif
@@ -282,6 +282,16 @@
 
                 {{-- Tài khoản & Đơn hàng --}}
                 @auth
+                    @if(!auth()->user()->isAdmin())
+                        <a href="{{ route('user.points.index') }}" class="nth-sidebar-link {{ request()->routeIs('user.points.*') ? 'is-active' : '' }}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M8 12l-1 10 5-3 5 3-1-10"/></svg>
+                            <span>Hạng thành viên</span>
+                        </a>
+                        <a href="{{ route('user.check-in.index') }}" class="nth-sidebar-link {{ request()->routeIs('user.check-in.*') ? 'is-active' : '' }}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 15l3 3 5-5"/></svg>
+                            <span>Điểm danh nhận xu</span>
+                        </a>
+                    @endif
                     <a href="{{ route('user.orders.index') }}" class="nth-sidebar-link {{ request()->routeIs('user.orders.*') ? 'is-active' : '' }}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                         <span>Đơn hàng của tôi</span>
