@@ -31,6 +31,7 @@ return [
     ],
 
     'ghn' => [
+        'max_cod_amount'    => env('GHN_MAX_COD_AMOUNT', 50000000),
         'base_url'          => env('GHN_BASE_URL', 'https://dev-online-gateway.ghn.vn/shiip/public-api'),
         'token'             => env('GHN_TOKEN', '391561a1-aa86-11f1-a973-aee5264794df'),
         'shop_id'           => env('GHN_SHOP_ID', 217485),

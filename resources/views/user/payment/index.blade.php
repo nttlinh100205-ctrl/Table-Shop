@@ -1592,12 +1592,28 @@ document.addEventListener('DOMContentLoaded', function () {
         const coinDiscount = coins * coinRate;
         document.getElementById('coin-discount-text').textContent = '-' + fmt(coinDiscount);
         const finalTotal = Math.max(0, subtotal - currentDiscount - coinDiscount + fee);
+        const codLimit = @json(\App\Services\GHNOrderService::codLimit());
+        const codExceeded = Math.round(Math.max(0, subtotal - currentDiscount - coinDiscount)) > codLimit;
+        const codButton = document.getElementById('btn_cod_submit');
+        let codNotice = document.getElementById('cod-limit-notice');
+        if (!codNotice && codButton) {
+            codNotice = document.createElement('div');
+            codNotice.id = 'cod-limit-notice';
+            codNotice.className = 'alert alert-warning mt-2';
+            codNotice.setAttribute('role', 'status');
+            codButton.parentNode.insertBefore(codNotice, codButton);
+        }
+        if (codNotice) {
+            codNotice.hidden = !codExceeded;
+            codNotice.textContent = @json(\App\Services\GHNOrderService::codLimitMessage());
+        }
 
         if (fee > 0) {
             shippingFeeText.innerText = fmt(fee);
             shippingFeeInput.value = fee;
             finalTotalText.innerText = fmt(finalTotal);
             checkoutButtons.forEach(button => { button.disabled = false; });
+            if (codButton) codButton.disabled = codExceeded;
 
             if (ghnStatusBox) {
                 ghnStatusBox.className = 'ghn-status-box ghn-status-success';

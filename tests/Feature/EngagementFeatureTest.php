@@ -232,6 +232,8 @@ class EngagementFeatureTest extends TestCase
 
     public function test_checkout_deducts_coins_from_order_and_payment_after_coupon(): void
     {
+        // Exactly at the configured limit after coupon and coins; shipping is paid separately.
+        config(['services.ghn.max_cod_amount' => 8700]);
         $buyer = User::factory()->create(['role' => 'user']);
         $buyer->forceFill(['coin_balance' => 500])->save();
         $category = \App\Models\Category::create(['name' => 'Bàn']);
@@ -257,5 +259,22 @@ class EngagementFeatureTest extends TestCase
         $user = User::factory()->unverified()->create(['role' => 'user']);
         $this->actingAs($user)->postJson(route('user.check-in.store'))->assertForbidden();
         $this->assertSame(0, $user->fresh()->coin_balance);
+    }
+
+    public function test_over_limit_cod_keeps_cart_and_coins_without_creating_order(): void
+    {
+        config(['services.ghn.max_cod_amount' => 50000000]);
+        $buyer = User::factory()->create(['role' => 'user']);
+        $buyer->forceFill(['coin_balance' => 500])->save();
+        $cart = [['id' => 1, 'price' => 81333000, 'quantity' => 1]];
+        $this->mock(\App\Services\GHNOrderService::class, fn ($mock) => $mock->shouldNotReceive('create'));
+        $this->actingAs($buyer)->withSession(['cart' => $cart])->post(route('user.orders.store'), [
+            'name' => 'Buyer', 'phone' => '0912345678', 'address' => 'Test',
+            'to_district_id' => 1, 'to_ward_code' => '1', 'shipping_fee' => 20000,
+            'payment_method' => 'cod', 'coins_to_use' => 300,
+        ])->assertSessionHasErrors('payment_method')->assertSessionHas('cart', $cart);
+        $this->assertSame(0, Order::count());
+        $this->assertSame(0, \App\Models\PaymentTransaction::count());
+        $this->assertSame(500, $buyer->fresh()->coin_balance);
     }
 }

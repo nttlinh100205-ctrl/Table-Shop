@@ -6,6 +6,26 @@ use App\Models\Order;
 
 class GHNOrderService
 {
+    public static function codLimit(): int
+    {
+        return max(0, min(50000000, (int) config('services.ghn.max_cod_amount', 50000000)));
+    }
+
+    public static function codLimitMessage(): string
+    {
+        return 'Tiền hàng vượt hạn mức thu hộ COD ' . number_format(self::codLimit(), 0, ',', '.')
+            . 'đ. Vui lòng giảm số lượng hoặc chọn thanh toán online; chỉ giao hàng sau khi xác nhận đã thanh toán.';
+    }
+
+    public static function validateCodAmount(int $amount): void
+    {
+        if ($amount > self::codLimit()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'payment_method' => self::codLimitMessage(),
+            ]);
+        }
+    }
+
     public function __construct(private GHNService $ghn)
     {
     }
@@ -26,6 +46,9 @@ class GHNOrderService
      */
     public function create(Order $order, bool $isPaid = false): array
     {
+        if (!$isPaid && (int) round((float) $order->total_price) > self::codLimit()) {
+            return ['code' => 422, 'message' => self::codLimitMessage(), 'data' => null];
+        }
         $order->loadMissing('items.product');
 
         $items  = [];

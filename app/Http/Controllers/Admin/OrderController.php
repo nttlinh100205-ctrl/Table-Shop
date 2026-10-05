@@ -308,6 +308,9 @@ class OrderController extends Controller
 
             // Nếu MoMo đã trả tiền thì COD = 0; nếu chưa trả tiền hoặc đơn COD thì thu COD = tiền hàng
             $isPaid = $isPaidMomo;
+            if (!$isPaid && (int) round((float) $lockedOrder->total_price) > GHNOrderService::codLimit()) {
+                return ['error' => GHNOrderService::codLimitMessage()];
+            }
 
             // Nếu đơn MoMo chưa thanh toán nhưng Admin tạo vận đơn giao, cập nhật thành COD
             if (!$isPaidMomo && !$isCod && $lockedOrder->status === 'pending') {

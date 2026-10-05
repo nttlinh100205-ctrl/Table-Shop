@@ -154,6 +154,9 @@ class OrderController extends Controller
                 $coins = (int) ($validated['coins_to_use'] ?? 0);
                 $coinDiscount = $coinService->discount($buyer, $coins, $goodsAmount);
                 $goodsAmount -= $coinDiscount;
+                if ($method === 'cod') {
+                    GHNOrderService::validateCodAmount($goodsAmount);
+                }
                 $order = Order::create([
                     'coins_used' => $coins,
                     'coin_discount_amount' => $coinDiscount,
@@ -444,6 +447,10 @@ class OrderController extends Controller
     public function switchToCod(Order $order, GHNOrderService $ghnOrder)
     {
         abort_unless($order->user_id === Auth::id() || (Auth::user() && Auth::user()->isAdmin()), 403);
+
+        if ((int) round((float) $order->total_price) > GHNOrderService::codLimit()) {
+            return back()->with('error', GHNOrderService::codLimitMessage());
+        }
 
         if (in_array($order->status, ['paid', 'completed', 'cancelled'], true) || !empty($order->ghn_order_code)) {
             return back()->with('error', 'Đơn hàng không thể chuyển sang COD.');
