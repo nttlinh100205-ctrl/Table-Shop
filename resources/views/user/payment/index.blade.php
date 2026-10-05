@@ -920,9 +920,22 @@
                 <form method="POST" action="{{ route('user.orders.store') }}" id="checkoutForm">
                     @csrf
                     <div class="card p-3 mb-3">
-                        <label for="coins_to_use" class="form-label">Dùng xu điểm danh ({{ number_format(auth()->user()->coin_balance) }} xu khả dụng)</label>
-                        <input type="number" name="coins_to_use" id="coins_to_use" min="0" step="1" max="{{ auth()->user()->coin_balance }}" value="{{ old('coins_to_use', 0) }}" class="form-control">
-                        <small>1 xu = {{ config('coins.vnd_per_coin') }}đ. Chỉ giảm tiền hàng; tiền hàng còn tối thiểu {{ number_format(config('coins.minimum_goods_payment')) }}đ.</small>
+                        <div class="d-flex align-items-center justify-content-between gap-3">
+                            <label for="use-coins-toggle" class="d-flex align-items-center gap-3 mb-0" style="cursor:pointer"><span aria-hidden="true" style="display:grid;place-items:center;width:34px;height:34px;flex-shrink:0;border:2px solid #b68a48;border-radius:50%;color:#b68a48;font-family:Georgia,serif;font-weight:bold">T</span><span>Dùng <strong id="usable-coins">0</strong> xu Table Shop</span></label>
+                            <label class="coin-switch"><input type="checkbox" id="use-coins-toggle" role="switch" aria-label="Dùng xu Table Shop" aria-describedby="coin-use-note" @checked(old('coins_to_use', 0) > 0)><span aria-hidden="true"></span></label>
+                        </div>
+                        <input type="hidden" name="coins_to_use" id="coins_to_use" value="0">
+                        <small id="coin-use-note" class="text-muted mt-2">Bật để giảm tiền hàng bằng xu. 1 xu = {{ config('coins.vnd_per_coin') }}đ.</small>
+                        <style>
+                            .coin-switch { position:relative;display:inline-block;width:48px;height:28px;flex-shrink:0;cursor:pointer; }
+                            .coin-switch input { position:absolute;opacity:0;width:100%;height:100%;margin:0;z-index:1;cursor:pointer; }
+                            .coin-switch span { display:block;width:100%;height:100%;border-radius:30px;background:#dedbd6;transition:background .2s; }
+                            .coin-switch span::before { content:'';position:absolute;width:22px;height:22px;left:3px;top:3px;border-radius:50%;background:white;box-shadow:0 1px 4px #0002;transition:transform .2s; }
+                            .coin-switch input:checked + span { background:#8a6542; }
+                            .coin-switch input:checked + span::before { transform:translateX(20px); }
+                            .coin-switch input:focus-visible + span { outline:3px solid #c29d62;outline-offset:3px; }
+                            .coin-switch input:disabled + span { opacity:.5; }
+                        </style>
                         @error('coins_to_use')<div class="text-danger">{{ $message }}</div>@enderror
                     </div>
                     <div class="card p-3 mb-3">
@@ -1574,10 +1587,12 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentDiscount = parseInt(document.getElementById('discount_amount_input')?.value || 0, 10) || 0;
     let currentFee = 0;
     const coinInput = document.getElementById('coins_to_use');
-    const coinBalance = {{ (int) auth()->user()->coin_balance }};
+    let coinBalance = {{ (int) auth()->user()->coin_balance }};
+    const coinToggle = document.getElementById('use-coins-toggle');
     const coinRate = {{ (int) config('coins.vnd_per_coin') }};
     const minGoods = {{ (int) config('coins.minimum_goods_payment') }};
-    coinInput.addEventListener('input', () => updateTotals(currentFee));
+    coinToggle.addEventListener('change', () => updateTotals(currentFee));
+    window.addEventListener('coins-claimed', event => { coinBalance=Number(event.detail.balance)||0;updateTotals(currentFee); });
 
     function fmt(n) {
         return new Intl.NumberFormat('vi-VN').format(n) + 'đ';
@@ -1586,9 +1601,14 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateTotals(fee) {
         currentFee = fee;
         const maxCoins = Math.min(coinBalance, Math.floor(Math.max(0, subtotal - currentDiscount - minGoods) / coinRate));
-        coinInput.max = maxCoins;
-        const coins = Math.max(0, Math.min(maxCoins, parseInt(coinInput.value, 10) || 0));
-        if (Number(coinInput.value) > maxCoins) coinInput.value = coins;
+        coinToggle.disabled = maxCoins <= 0;
+        if (coinToggle.disabled) coinToggle.checked = false;
+        const coins = coinToggle.checked ? maxCoins : 0;
+        coinInput.value = coins;
+        document.getElementById('usable-coins').textContent = new Intl.NumberFormat('vi-VN').format(maxCoins);
+        document.getElementById('coin-use-note').textContent = maxCoins > 0
+            ? (coinToggle.checked ? 'Đã giảm ' + fmt(coins * coinRate) + ' tiền hàng.' : 'Bật để giảm ' + fmt(maxCoins * coinRate) + ' tiền hàng.')
+            : (coinBalance > 0 ? 'Tiền hàng đã đạt mức tối thiểu, không thể dùng thêm xu.' : 'Bạn chưa có xu. Điểm danh mỗi ngày để tích xu.');
         const coinDiscount = coins * coinRate;
         document.getElementById('coin-discount-text').textContent = '-' + fmt(coinDiscount);
         const finalTotal = Math.max(0, subtotal - currentDiscount - coinDiscount + fee);
@@ -1643,6 +1663,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
+
+    updateTotals(0);
 
     function showShippingError(message) {
         updateTotals(0);
