@@ -6,6 +6,23 @@ const channelDrafts = { ai: '', staff: '' };
 const aiModeButton = document.getElementById('chat-mode-ai');
 const staffModeButton = document.getElementById('chat-mode-staff');
 const channelNote = document.getElementById('chat-mode-note');
+function readableAiText(text) {
+    // Convert model tables to compact text cards; links are still validated below, never HTML.
+    const lines = text.split(/\r?\n/), output = [];
+    let headers = null;
+    for (const line of lines) {
+        if (/^\s*\|.*\|\s*$/.test(line)) {
+            const cells = line.trim().slice(1, -1).split('|').map(cell => cell.trim());
+            if (cells.every(cell => /^:?-{2,}:?$/.test(cell))) continue;
+            if (!headers) { headers = cells; continue; }
+            output.push(cells.map((cell, index) => headers[index] === '#' ? '' : `${headers[index] || ''}: ${cell}`).filter(Boolean).join('\n'), '');
+        } else {
+            headers = null;
+            output.push(line.replace(/^\s*(?:#{1,6}\s+|>\s?)/, ''));
+        }
+    }
+    return output.join('\n').replace(/\*\*([^*]+)\*\*/g, '$1').trim();
+}
 function renderAiMessages() {
     if (chatMode !== 'ai') return;
     chatBox.replaceChildren();
@@ -20,16 +37,17 @@ function renderAiMessages() {
         bubble.style.overflowWrap = 'anywhere';
         // Allow only read-only shop pages; generated HTML is always treated as text.
         const pattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+        const content = message.user ? message.text : readableAiText(message.text);
         let match, last = 0;
-        while ((match = pattern.exec(message.text)) !== null) {
-            bubble.append(document.createTextNode(message.text.slice(last, match.index)));
+        while ((match = pattern.exec(content)) !== null) {
+            bubble.append(document.createTextNode(content.slice(last, match.index)));
             let url; try { url = new URL(match[2]); } catch (e) {}
             if (url && url.origin === location.origin && (/^\/(?:user\/)?products\/\d+$/.test(url.pathname) || /^\/(?:user\/orders(?:\/\d+)?|user\/points|user\/check-in|user\/spin|login|email\/verify)$/.test(url.pathname))) {
                 const a = document.createElement('a'); a.href = url.href; a.textContent = match[1]; bubble.append(a);
             } else bubble.append(document.createTextNode(match[1]));
             last = pattern.lastIndex;
         }
-        bubble.append(document.createTextNode(message.text.slice(last)));
+        bubble.append(document.createTextNode(content.slice(last)));
         row.append(label, bubble); chatBox.append(row);
     });
     chatBox.scrollTop = chatBox.scrollHeight;
