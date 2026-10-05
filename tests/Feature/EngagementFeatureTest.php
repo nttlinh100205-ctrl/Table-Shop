@@ -326,6 +326,64 @@ class EngagementFeatureTest extends TestCase
         $this->assertCount(5, $this->getJson(route('ai.greeting'))->assertOk()->json('messages'));
     }
 
+    public function test_keyword_search_finds_matching_product_beyond_first_twenty_and_exact_variant(): void
+    {
+        $category = \App\Models\Category::create(['name'=>'Bàn văn phòng']);
+        for ($i=0; $i<25; $i++) \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn cổ điển '.$i,'style'=>'Cổ điển','color'=>'Nâu','width'=>80,'price'=>900000]);
+        $match = \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn Nordic','style'=>'Bắc Âu','material'=>'Gỗ sồi','price'=>1500000]);
+        $variant = \App\Models\ProductVariant::create(['product_id'=>$match->id,'color'=>'Trắng','width'=>120,'depth'=>60,'height'=>75,'price'=>1700000,'stock'=>3]);
+        $result = \App\Services\ChatProductSearch::search('Tim ban scandinavian white sz 1m2');
+        $this->assertSame($match->id, $result['products'][0]['id']);
+        $this->assertTrue($result['products'][0]['matches_detected_filters']);
+        $this->assertSame($variant->id, $result['products'][0]['variants'][0]['id']);
+        $this->assertSame(1700000.0, $result['products'][0]['variants'][0]['price_vnd']);
+        $this->assertSame(3, $result['products'][0]['variants'][0]['stock']);
+        foreach (['Bàn Bắc Âu trắng 120 x 60cm','Bàn Bắc Âu trắng dài 1.2m','Bàn Bắc Âu trắng sz 120cm','Bàn Bắc Âu trắng 1200mm'] as $query) {
+            $this->assertTrue(\App\Services\ChatProductSearch::search($query)['products'][0]['matches_detected_filters']);
+        }
+    }
+
+    public function test_keyword_search_does_not_combine_color_and_size_of_different_variants(): void
+    {
+        $category = \App\Models\Category::create(['name'=>'Bàn']);
+        $product = \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn tối giản','style'=>'Tối giản','price'=>1000000]);
+        foreach ([['Trắng',160],['Đen',120]] as [$color,$width]) {
+            \App\Models\ProductVariant::create(['product_id'=>$product->id,'color'=>$color,'width'=>$width,'depth'=>60,'price'=>1500000,'stock'=>0]);
+        }
+        $result = \App\Services\ChatProductSearch::search('Bàn tối giản màu trắng sz 120x60');
+        $this->assertFalse($result['products'][0]['matches_detected_filters']);
+        foreach ($result['products'][0]['variants'] as $variant) $this->assertFalse($variant['matches_detected_filters']);
+    }
+
+    public function test_keyword_search_short_followup_keeps_style_and_new_color_overrides_old_color(): void
+    {
+        $category = \App\Models\Category::create(['name'=>'Bàn']);
+        $white = \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn A','style'=>'Tối giản','color'=>'Trắng','width'=>120,'price'=>1000000]);
+        $black = \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn B','style'=>'Tối giản','color'=>'Đen','width'=>120,'price'=>1000000]);
+        $result = \App\Services\ChatProductSearch::search('Có màu đen không?', null, [['role'=>'user','text'=>'Tôi cần bàn tối giản màu trắng 1m2']]);
+        $this->assertSame($black->id,$result['products'][0]['id']);
+        $this->assertSame(['den'],$result['detected_filters']['colors']);
+        $this->assertSame(['toi gian'],$result['detected_filters']['styles']);
+        $this->assertTrue($result['products'][0]['matches_detected_filters']);
+        $none = \App\Services\ChatProductSearch::search('Sofa phong cách xyzunknown');
+        $this->assertSame([], $none['products']);
+    }
+
+    public function test_groq_answer_receives_keyword_selected_catalog_with_real_variant_data(): void
+    {
+        config(['services.ai.provider'=>'groq','services.groq.api_key'=>'test']);
+        $category = \App\Models\Category::create(['name'=>'Bàn']);
+        $product = \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn Japandi','style'=>'Japandi','material'=>'Gỗ sồi','price'=>1000000]);
+        \App\Models\ProductVariant::create(['product_id'=>$product->id,'color'=>'Nâu','size_label'=>'140x70','price'=>1800000,'stock'=>2]);
+        Http::fake(['api.groq.com/*'=>Http::sequence()->push(['choices'=>[['message'=>['content'=>'ALLOWED']]]])->push(['choices'=>[['message'=>['content'=>'Gợi ý bàn Japandi màu nâu.']]]])]);
+        $this->postJson(route('ai.send'),['message'=>'Có bàn japandi nâu sz 140x70 không?'])->assertOk();
+        Http::assertSent(function ($request) use ($product) {
+            $prompt = $request['messages'][0]['content'];
+            return str_contains($prompt, '"price_vnd":1800000') && str_contains($prompt, '"stock":2')
+                && str_contains($prompt, route('products.show',$product->id)) && str_contains($prompt,'"matches_detected_filters":true');
+        });
+    }
+
     public function test_check_in_is_once_per_local_day_and_skipped_days_keep_progress(): void
     {
         $user = User::factory()->create();
