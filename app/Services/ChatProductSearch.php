@@ -40,6 +40,67 @@ class ChatProductSearch
         return [];
     }
 
+    private static function money(string $number, string $unit): float
+    {
+        if (in_array($unit, ['trieu','tr','k','nghin','ngan'], true)) {
+            return (float)str_replace(',', '.', $number) * (in_array($unit, ['trieu','tr'], true) ? 1000000 : 1000);
+        }
+        return (float)str_replace(['.', ','], '', $number);
+    }
+
+    public static function budget(string $message): ?array
+    {
+        $text = self::normalize($message);
+        $number = '(\d+(?:[.,]\d+)*)';
+        $unit = '(trieu|tr|nghin|ngan|k|vnd|dong|d)';
+        if (preg_match('/\b(?:tu\s+)?'.$number.'\s*'.$unit.'?\s*(?:den|toi|-)\s*'.$number.'\s*'.$unit.'\b/', $text, $m)) {
+            $min = self::money($m[1], $m[2] ?: $m[4]);
+            $max = self::money($m[3], $m[4]);
+            return ['min'=>min($min,$max),'max'=>max($min,$max),'max_exclusive'=>false,'min_exclusive'=>false,'approximate'=>false];
+        }
+        if (!preg_match('/\b'.$number.'\s*'.$unit.'\b/', $text, $m)) return null;
+        $value = self::money($m[1],$m[2]);
+        if (preg_match('/\b(duoi|it hon|khong qua|toi da|tro xuong)\b/', $text)) {
+            return ['min'=>0,'max'=>$value,'max_exclusive'=>(bool)preg_match('/\b(duoi|it hon)\b/',$text),'min_exclusive'=>false,'approximate'=>false];
+        }
+        if (preg_match('/\b(tren|tu|toi thieu|tro len)\b/', $text)) {
+            return ['min'=>$value,'max'=>null,'max_exclusive'=>false,'min_exclusive'=>(bool)preg_match('/\btren\b/',$text),'approximate'=>false];
+        }
+        // "Tầm/khoảng" uses a disclosed +/-20% range, rather than exact equality.
+        return ['min'=>$value * .8,'max'=>$value * 1.2,'max_exclusive'=>false,'min_exclusive'=>false,'approximate'=>true];
+    }
+
+    public static function criteria(string $message, array $history = [], array $saved = []): array
+    {
+        $state = $saved + ['types'=>[], 'colors'=>[], 'styles'=>[], 'dimensions_cm'=>[], 'budget_vnd'=>null];
+        $turns = $saved ? [] : array_column(array_filter($history, fn($entry)=>($entry['role'] ?? '') === 'user'), 'text');
+        $turns[] = $message;
+        foreach ($turns as $turn) {
+            $text = self::normalize($turn);
+            $types = self::phrases($text, ['ban','ghe','sofa','giuong']);
+            if ($types && $state['types'] && $types !== $state['types']) {
+                $state = ['types'=>[], 'colors'=>[], 'styles'=>[], 'dimensions_cm'=>[], 'budget_vnd'=>null];
+            }
+            // "đến" in a budget range is not the colour "đen".
+            $attributes = preg_replace('/(\d[\d.,]*\s*(?:trieu|tr|nghin|ngan|k)?)\s+den(?=\s+\d)/', '$1 toi', $text);
+            foreach (['types'=>$types, 'colors'=>self::phrases($attributes,self::COLORS), 'styles'=>self::phrases($text,self::STYLES), 'dimensions_cm'=>self::dimensions($text), 'budget_vnd'=>self::budget($turn)] as $field=>$value) {
+                if ($value) $state[$field] = $value;
+            }
+        }
+        return $state;
+    }
+
+    public static function isBudgetFollowUp(string $message, array $history, ?array $behavior): bool
+    {
+        if (!self::budget($message)) return false;
+        $previous = self::criteria('', $history, $behavior['chat_search_context'] ?? []);
+        if (!$previous['types'] && !$previous['budget_vnd'] && !$previous['styles'] && !$previous['colors']) return false;
+        // A narrow fallback for pure budget changes, never for mixed requests or instructions.
+        $text = preg_replace('/\b\d+(?:[.,]\d+)*\s*(?:trieu|tr|nghin|ngan|k|vnd|dong|d)?\b/', ' ', self::normalize($message));
+        $text = preg_replace('/\b(?:thi sao|the nao|khong qua|it hon|toi da|toi thieu|tro xuong|tro len|ngan sach|duoi|tren|tam|khoang|tu|den|toi|gia|muc|con|nhe|a|thoi|sao|thi)\b/', ' ', $text);
+        return trim(preg_replace('/[\s?!.,-]+/', '', $text)) === '';
+    }
+
     public static function search(string $message, ?array $behavior = null, array $history = []): array
     {
         $text = self::normalize($message);
@@ -47,18 +108,15 @@ class ChatProductSearch
         foreach (array_reverse($history) as $entry) {
             if (($entry['role'] ?? '') === 'user') { $previous = self::normalize($entry['text']); break; }
         }
-        // Explicitly switching product type starts a new search; short follow-ups retain context.
-        $types = self::phrases($text, ['ban', 'ghe', 'sofa', 'giuong']);
-        if ($types) $previous = '';
-        else $types = self::phrases($previous, ['ban', 'ghe', 'sofa', 'giuong']);
-        $colors = self::phrases($text, self::COLORS) ?: self::phrases($previous, self::COLORS);
-        $styles = self::phrases($text, self::STYLES) ?: self::phrases($previous, self::STYLES);
-        $dimensions = self::dimensions($text) ?: self::dimensions($previous);
-        $stop = explode(' ', 'toi minh ban can muon tim shop co khong a nhe cho voi la va hay loai mau kieu phong cach kich thuoc size sz san pham tu van giup duoc nao nay kia mot chiec gom thi con hon xin chao');
+        $criteria = self::criteria($message, $history, $behavior['chat_search_context'] ?? []);
+        $types = $criteria['types']; $colors = $criteria['colors']; $styles = $criteria['styles'];
+        $dimensions = $criteria['dimensions_cm']; $budget = $criteria['budget_vnd'];
+        if (self::phrases($text, ['ban','ghe','sofa','giuong'])) $previous = '';
+        $stop = explode(' ', 'toi minh ban can muon tim shop co khong a nhe cho voi la va hay loai mau kieu phong cach kich thuoc size sz san pham tu van giup duoc nao nay kia mot chiec gom thi con hon xin chao gia tam khoang duoi tren trieu tr nghin ngan vnd dong den toi da sao the');
         $tokens = array_values(array_diff(array_unique(preg_split('/[^a-z0-9]+/', $text.' '.$previous)), $stop, ['']));
         $tokens = array_slice(array_filter($tokens, fn($t)=>strlen($t)>1 && !is_numeric($t)), 0, 24);
         $best = [];
-        Product::with(['category', 'variants'])->chunkById(100, function ($products) use (&$best, $tokens, $colors, $styles, $dimensions, $behavior, $types) {
+        Product::with(['category', 'variants'])->chunkById(100, function ($products) use (&$best, $tokens, $colors, $styles, $dimensions, $behavior, $types, $budget) {
             foreach ($products as $product) {
                 $name = self::normalize($product->name.' '.$product->category?->name.' '.$product->sku);
                 if ($types && !self::phrases($name, $types)) continue;
@@ -72,6 +130,9 @@ class ChatProductSearch
                 $variants = [];
                 $sources = $product->variants->isEmpty() ? collect([$product]) : $product->variants;
                 foreach ($sources as $variant) {
+                    $price = (float)$variant->price;
+                    if ($budget && ($price < $budget['min'] || ($budget['min_exclusive'] && $price <= $budget['min'])
+                        || ($budget['max'] !== null && ($price > $budget['max'] || ($budget['max_exclusive'] && $price >= $budget['max']))))) continue;
                     $color = $variant->color ?: $product->color;
                     $variantText = self::normalize($color.' '.$variant->size_label.' '.$variant->sku);
                     $variantScore = 0;
@@ -90,11 +151,12 @@ class ChatProductSearch
                         'stock'=>$variant instanceof \App\Models\ProductVariant ? (int)$variant->stock : null,
                         'matches_detected_filters'=>$match, '_score'=>$variantScore + ($match ? 30 : 0)];
                 }
+                if (!$variants) continue;
                 usort($variants, fn($a,$b)=>($b['matches_detected_filters'] <=> $a['matches_detected_filters']) ?: ($b['_score'] <=> $a['_score']));
                 $hasMatch = collect($variants)->contains('matches_detected_filters', true);
                 $score += max(array_column($variants, '_score'));
                 // No lexical hit and no detected filters: prefer browsing context only for generic questions.
-                $hasFilters = $colors || $styles || $dimensions;
+                $hasFilters = $colors || $styles || $dimensions || $budget;
                 $lexicalScore = $score - ($hasMatch ? 30 : 0);
                 if ($tokens && !$hasFilters && $lexicalScore <= 0) continue;
                 if ($hasFilters && !$hasMatch && $lexicalScore <= 0) continue;
@@ -116,6 +178,6 @@ class ChatProductSearch
             $best = array_slice($best, 0, 8);
         });
         foreach ($best as &$product) unset($product['_score']);
-        return ['detected_filters'=>['colors'=>$colors,'styles'=>$styles,'dimensions_cm'=>$dimensions], 'products'=>$best];
+        return ['detected_filters'=>$criteria, 'products'=>$best];
     }
 }
