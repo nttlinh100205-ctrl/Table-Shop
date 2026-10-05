@@ -22,5 +22,18 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.env') === 'production' || str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
+
+        // Đăng ký custom mail driver cho Resend và Brevo (gửi qua HTTPS API không bị chặn SMTP trên Render)
+        \Illuminate\Support\Facades\Mail::extend('api', function (array $config = []) {
+            return new \App\Mail\Transport\ApiTransport($config);
+        });
+        \Illuminate\Support\Facades\Mail::extend('resend', function (array $config = []) {
+            $config['provider'] = 'resend';
+            return new \App\Mail\Transport\ApiTransport($config);
+        });
+        \Illuminate\Support\Facades\Mail::extend('brevo', function (array $config = []) {
+            $config['provider'] = 'brevo';
+            return new \App\Mail\Transport\ApiTransport($config);
+        });
     }
 }

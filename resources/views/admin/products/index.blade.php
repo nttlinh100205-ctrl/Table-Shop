@@ -116,7 +116,8 @@
                                 <td style="padding-left:1.25rem;">
                                     @if ($thumb)
                                         <img src="{{ $thumb }}" alt="{{ $product->name }}"
-                                             style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;">
+                                             style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;"
+                                             onerror="this.onerror=null;this.src='https://placehold.co/48x48/f1f5f9/64748b?text=Img';">
                                     @else
                                         <div style="width:48px;height:48px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;display:flex;align-items:center;justify-content:center;">
                                             <i class="bi bi-image text-muted"></i>

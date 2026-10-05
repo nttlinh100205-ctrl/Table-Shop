@@ -43,15 +43,23 @@ class RegisterController extends Controller
             'password.min'          => 'Mật khẩu phải có ít nhất 6 ký tự.',
         ]);
 
+        $isEmailConfigured = \App\Services\EmailApiService::isConfigured();
+
         $user = User::create([
             'name'              => $validated['name'],
             'email'             => $validated['email'],
             'password'          => Hash::make($validated['password']),
             'role'              => 'user', // mặc định là user thường
-            'email_verified_at' => now(), // tự xác thực ngay khi đăng ký
+            'email_verified_at' => $isEmailConfigured ? null : now(),
         ]);
 
         Auth::login($user);
+
+        if ($isEmailConfigured) {
+            $user->sendEmailVerificationNotification();
+            return redirect()->route('verification.notice')
+                ->with('success', 'Đăng ký thành công! Vui lòng kiểm tra hộp thư email (' . $user->email . ') để xác thực tài khoản.');
+        }
 
         return redirect()->route('user.home')
             ->with('success', 'Đăng ký thành công! Chào mừng bạn.');

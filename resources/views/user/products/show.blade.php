@@ -409,7 +409,8 @@
                                      src="{{ $gallery->first() }}"
                                      class="pd-main-img"
                                      alt="{{ $product->name }}"
-                                     data-gallery='@json($gallery->values())'>
+                                     data-gallery='@json($gallery->values())'
+                                     onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=800&q=80';">
                                 <button type="button" class="pd-fullscreen-btn" id="pdFullscreenBtn" title="Xem ảnh toàn màn hình" aria-label="Xem ảnh toàn màn hình">
                                     <i class="bi bi-arrows-fullscreen"></i>
                                 </button>
@@ -420,7 +421,8 @@
                                         <img src="{{ $src }}"
                                              class="pd-thumb {{ $i === 0 ? 'active' : '' }}"
                                              data-src="{{ $src }}"
-                                             alt="Ảnh {{ $i + 1 }}">
+                                             alt="Ảnh {{ $i + 1 }}"
+                                             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=200&q=80';">
                                     @endforeach
                                 </div>
                             @endif

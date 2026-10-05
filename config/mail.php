@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'smtp'),
+    'default' => env('MAIL_MAILER', (env('RESEND_API_KEY') || env('BREVO_API_KEY') || env('MAIL_API_KEY')) ? 'api' : 'smtp'),
 
     /*
     |--------------------------------------------------------------------------
@@ -34,6 +34,22 @@ return [
     */
 
     'mailers' => [
+        'resend' => [
+            'transport' => 'resend',
+            'api_key' => env('RESEND_API_KEY', env('MAIL_API_KEY')),
+        ],
+
+        'brevo' => [
+            'transport' => 'brevo',
+            'api_key' => env('BREVO_API_KEY', env('MAIL_API_KEY')),
+        ],
+
+        'api' => [
+            'transport' => 'api',
+            'api_key' => env('MAIL_API_KEY', env('RESEND_API_KEY', env('BREVO_API_KEY'))),
+            'provider' => env('MAIL_API_PROVIDER'),
+        ],
+
         'smtp' => [
             'transport' => 'smtp',
             'host' => env('MAIL_HOST', 'smtp.mailgun.org'),

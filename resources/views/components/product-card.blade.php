@@ -56,7 +56,8 @@
                 <img src="{{ $src }}"
                      alt="{{ $product->name }}"
                      class="nth-card__img"
-                     loading="lazy">
+                     loading="lazy"
+                     onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=600&q=80';">
             @else
                 <div class="nth-card__placeholder">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">

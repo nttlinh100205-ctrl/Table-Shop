@@ -46,6 +46,7 @@ su-exec www-data php artisan storage:link --force || true
 
 su-exec www-data php artisan config:cache
 su-exec www-data php artisan tinker --execute="echo '==> Cloudinary: ' . (App\Services\CloudinaryService::isConfigured() ? 'CONFIGURED (cloud: ' . (App\Services\CloudinaryService::getConfig()['cloud_name'] ?? '?') . ')' : 'NOT CONFIGURED (Fallback: MySQL Data URI)') . PHP_EOL;" || true
+su-exec www-data php artisan tinker --execute="echo '==> Email Service: ' . (App\Services\EmailApiService::isConfigured() ? 'CONFIGURED (' . strtoupper(App\Services\EmailApiService::getProvider()) . ' HTTPS API)' : 'NOT CONFIGURED (Add RESEND_API_KEY or BREVO_API_KEY on Render)') . PHP_EOL;" || true
 
 case "${RUN_MIGRATIONS:-true}" in
     true) su-exec www-data php artisan migrate --force --no-interaction ;;

@@ -53,10 +53,23 @@ return [
     ],
 
     'cloudinary' => [
-        'url'        => env('CLOUDINARY_URL'),
-        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
-        'api_key'    => env('CLOUDINARY_API_KEY'),
-        'api_secret' => env('CLOUDINARY_API_SECRET'),
+        'url'        => env('CLOUDINARY_URL', 'cloudinary://172312639864859:Or8rQj6nWsBsbQpd9oxqWR7iFYo@ojnfvvw1'),
+        'cloud_name' => env('CLOUDINARY_CLOUD_NAME', 'ojnfvvw1'),
+        'api_key'    => env('CLOUDINARY_API_KEY', '172312639864859'),
+        'api_secret' => env('CLOUDINARY_API_SECRET', 'Or8rQj6nWsBsbQpd9oxqWR7iFYo'),
+    ],
+
+    'resend' => [
+        'key' => env('RESEND_API_KEY'),
+    ],
+
+    'brevo' => [
+        'key' => env('BREVO_API_KEY'),
+    ],
+
+    'mail_api' => [
+        'key'      => env('MAIL_API_KEY'),
+        'provider' => env('MAIL_API_PROVIDER'),
     ],
 
 ];
