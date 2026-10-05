@@ -173,9 +173,7 @@ class ProductController extends Controller
             $data['price'] = $data['price'] ?? $product->price;
 
             if ($request->hasFile('image')) {
-                if ($product->image && !str_starts_with($product->image, 'http') && Storage::disk('public')->exists($product->image)) {
-                    Storage::disk('public')->delete($product->image);
-                }
+                $this->deleteLocalImage($product->image);
                 $data['image'] = CloudinaryService::uploadOrStore($request->file('image'), 'products');
             }
 
@@ -195,9 +193,7 @@ class ProductController extends Controller
                 foreach ($request->delete_images as $imgId) {
                     $img = $product->images()->find($imgId);
                     if ($img) {
-                        if (Storage::disk('public')->exists($img->path)) {
-                            Storage::disk('public')->delete($img->path);
-                        }
+                        $this->deleteLocalImage($img->path);
                         $img->delete();
                     }
                 }
@@ -237,18 +233,34 @@ class ProductController extends Controller
     {
         $product = Product::with('images')->findOrFail($id);
 
-        if ($product->image && Storage::disk('public')->exists($product->image)) {
-            Storage::disk('public')->delete($product->image);
-        }
+        $this->deleteLocalImage($product->image);
         foreach ($product->images as $img) {
-            if (Storage::disk('public')->exists($img->path)) {
-                Storage::disk('public')->delete($img->path);
-            }
+            $this->deleteLocalImage($img->path);
         }
 
         $product->delete();
 
         return redirect()->route('products.index')
                          ->with('success', 'Sản phẩm đã được xóa thành công.');
+    }
+
+    /**
+     * Xóa an toàn file ảnh lưu trữ local disk (nếu có).
+     */
+    protected function deleteLocalImage(?string $path): void
+    {
+        if (empty($path)) {
+            return;
+        }
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, 'data:') || strlen($path) > 255) {
+            return;
+        }
+        try {
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+        } catch (\Throwable $e) {
+            // Không để lỗi filesystem làm hỏng transaction cập nhật/xóa
+        }
     }
 }
