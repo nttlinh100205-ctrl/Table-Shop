@@ -14,6 +14,8 @@ class AiChatController extends Controller
     public function send(Request $request)
     {
         $data = $request->validate(['message' => 'required|string|max:2000']);
+        $support = \App\Services\ShopChatSupport::reply($data['message'], $request->user());
+        if ($support !== null) return response()->json(['reply' => $support])->header('Cache-Control', 'no-store, private');
         $history = $request->session()->get('ai_history', []);
         try {
             $reply = AiChatService::chat($data['message'], $request->session()->get('shopping_behavior'), $history);

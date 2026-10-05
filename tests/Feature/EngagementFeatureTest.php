@@ -208,6 +208,66 @@ class EngagementFeatureTest extends TestCase
         $this->artisan('ai:check')->expectsOutput('Groq connection successful.')->assertExitCode(0);
     }
 
+    public function test_support_requires_login_and_verification_for_private_data(): void
+    {
+        Http::fake();
+        $this->postJson(route('ai.send'), ['message'=>'Xem đơn hàng và điểm của tôi'])
+            ->assertOk()->assertJsonFragment(['reply'=>'Bạn vui lòng [đăng nhập]('.route('login').') để xem đơn hàng, điểm, xu và hạng thành viên của mình.']);
+        $user = User::factory()->create(['email_verified_at'=>null]);
+        $response = $this->actingAs($user)->postJson(route('ai.send'), ['message'=>'Kiểm tra điểm'])->assertOk();
+        $this->assertStringContainsString('xác thực email', $response->json('reply'));
+        Http::assertNothingSent();
+    }
+
+    public function test_support_only_looks_up_owned_orders_by_id_and_tracking_code(): void
+    {
+        Http::fake();
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $attributes = ['name'=>'Buyer','phone'=>'0912345678','address'=>'Private address','total_price'=>100000,'status'=>'pending'];
+        $mine = Order::create($attributes + ['user_id'=>$user->id,'ghn_order_code'=>'ABC123']);
+        $foreign = Order::create($attributes + ['user_id'=>$other->id,'ghn_order_code'=>'SECRET456']);
+        $this->actingAs($user)->postJson(route('ai.send'),['message'=>'Tra cứu đơn #'.$mine->id])
+            ->assertOk()->assertSee('ABC123')->assertDontSee('Private address')->assertSessionMissing('ai_history');
+        $this->postJson(route('ai.send'),['message'=>'Tra cứu vận đơn ABC123'])->assertOk()->assertSee('ABC123');
+        foreach (['Tra cứu đơn #'.$foreign->id,'Tra cứu vận đơn SECRET456'] as $message) {
+            $response = $this->postJson(route('ai.send'),compact('message'))->assertOk()->assertDontSee('SECRET456');
+            $this->assertStringContainsString('Không tìm thấy đơn phù hợp', $response->json('reply'));
+        }
+        Http::assertNothingSent();
+    }
+
+    public function test_support_reads_current_points_coins_and_membership_without_sending_to_ai(): void
+    {
+        Http::fake();
+        $user = User::factory()->create(['points_balance'=>40000,'lifetime_points'=>250000]);
+        $user->forceFill(['coin_balance'=>800])->save();
+        $response = $this->actingAs($user)->postJson(route('ai.send'),['message'=>'Kiểm tra điểm và hạng thành viên'])
+            ->assertOk()->assertSessionMissing('ai_history');
+        foreach (['40.000','800 xu','Thành viên Bạc','350.000',route('user.points.index')] as $text) {
+            $this->assertStringContainsString($text, $response->json('reply'));
+        }
+        Http::assertNothingSent();
+    }
+
+    public function test_shop_quick_questions_have_answers_without_provider_access(): void
+    {
+        Http::fake();
+        foreach ([
+            'Sản phẩm này hiện còn hàng không ạ?',
+            'Phí vận chuyển và thời gian giao hàng là bao lâu?',
+            'Hiện shop có chương trình khuyến mãi hoặc mã giảm giá nào không?',
+            'Chính sách bảo hành và đổi trả của shop như thế nào?',
+            'Shop có hỗ trợ lắp đặt tại nhà không?',
+            'Shop hỗ trợ những phương thức thanh toán nào?',
+        ] as $message) {
+            $response = $this->postJson(route('ai.send'),compact('message'))->assertOk();
+            $this->assertNotEmpty($response->json('reply'));
+            $this->assertNotSame(GeminiChatService::OUT_OF_SCOPE, $response->json('reply'));
+        }
+        Http::assertNothingSent();
+    }
+
     public function test_check_in_is_once_per_local_day_and_skipped_days_keep_progress(): void
     {
         $user = User::factory()->create();

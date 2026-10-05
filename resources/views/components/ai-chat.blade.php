@@ -17,13 +17,13 @@ function renderAiMessages() {
         bubble.className = 'chat-bubble ' + (message.user ? 'me' : 'admin');
         bubble.style.whiteSpace = 'pre-wrap';
         bubble.style.overflowWrap = 'anywhere';
-        // Allow only shop product links; generated HTML is always treated as text.
+        // Allow only read-only shop pages; generated HTML is always treated as text.
         const pattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
         let match, last = 0;
         while ((match = pattern.exec(message.text)) !== null) {
             bubble.append(document.createTextNode(message.text.slice(last, match.index)));
             let url; try { url = new URL(match[2]); } catch (e) {}
-            if (url && url.origin === location.origin && /\/(?:user\/)?products\/\d+$/.test(url.pathname)) {
+            if (url && url.origin === location.origin && (/^\/(?:user\/)?products\/\d+$/.test(url.pathname) || /^\/(?:user\/orders(?:\/\d+)?|user\/points|login|email\/verify)$/.test(url.pathname))) {
                 const a = document.createElement('a'); a.href = url.href; a.textContent = match[1]; bubble.append(a);
             } else bubble.append(document.createTextNode(match[1]));
             last = pattern.lastIndex;
@@ -73,7 +73,7 @@ async function sendAiMessage(preset) {
     } finally {
         clearTimeout(timeout);
         setSending(false); renderAiMessages(); input.focus();
-        channelNote.textContent = 'AI chỉ tư vấn sản phẩm và mua hàng. Tin nhắn được gửi tới Google AI.';
+        channelNote.textContent = 'Hỗ trợ sản phẩm, đơn hàng, điểm và hạng thành viên. Câu hỏi tư vấn AI được gửi tới dịch vụ AI.';
     }
 }
 function switchChatMode(mode) {
@@ -85,7 +85,7 @@ function switchChatMode(mode) {
     aiModeButton.className = 'btn btn-sm ' + (mode === 'ai' ? 'btn-dark' : 'btn-outline-dark');
     staffModeButton.className = 'btn btn-sm ' + (mode === 'staff' ? 'btn-dark' : 'btn-outline-dark');
     channelNote.textContent = mode === 'ai'
-        ? 'AI chỉ tư vấn sản phẩm và mua hàng. Tin nhắn được gửi tới Google AI.'
+        ? 'Hỗ trợ sản phẩm, đơn hàng, điểm và hạng thành viên. Câu hỏi tư vấn AI được gửi tới dịch vụ AI.'
         : 'Bạn đang chat với nhân viên shop. Cần đăng nhập để gửi tin nhắn.';
     input.placeholder = mode === 'ai' ? 'Hỏi về sản phẩm, giá, giao hàng…' : 'Nhập lời nhắn cho nhân viên…';
     chatBox.replaceChildren(); loadMessages();

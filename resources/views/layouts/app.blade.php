@@ -438,7 +438,7 @@
                     <button type="button" id="chat-mode-staff" class="btn btn-sm btn-outline-dark" aria-pressed="false">Nhân viên</button>
                     <a href="{{ route('user.check-in.index') }}" class="btn btn-sm btn-outline-dark ms-auto" title="Điểm danh nhận xu"><i class="bi bi-calendar-check" aria-hidden="true"></i> Nhận xu</a>
                 </div>
-                <div id="chat-mode-note" class="px-3 py-1 small text-muted" style="flex-shrink:0">AI chỉ tư vấn sản phẩm và mua hàng. Tin nhắn được gửi tới Google AI.</div>
+                <div id="chat-mode-note" class="px-3 py-1 small text-muted" style="flex-shrink:0">Hỗ trợ sản phẩm, đơn hàng, điểm và hạng thành viên. Câu hỏi tư vấn AI được gửi tới dịch vụ AI.</div>
                 <div id="chat-messages" role="log" aria-live="polite">
                     <div style="text-align:center;margin:auto;color:#94a3b8;font-size:0.82rem;">
                         <i class="bi bi-chat-square-text d-block mb-1" style="font-size:1.5rem;opacity:0.4;"></i>
@@ -458,6 +458,8 @@
                         <button type="button" class="chat-quick-chip" data-msg="Phí vận chuyển và thời gian giao hàng là bao lâu?"><i class="bi bi-truck"></i>Phí &amp; thời gian giao</button>
                         <button type="button" class="chat-quick-chip" data-msg="Hiện shop có chương trình khuyến mãi hoặc mã giảm giá nào không?"><i class="bi bi-tag"></i>Khuyến mãi</button>
                         <button type="button" class="chat-quick-chip" data-msg="Tôi muốn kiểm tra tình trạng đơn hàng của mình."><i class="bi bi-receipt"></i>Kiểm tra đơn hàng</button>
+                        <button type="button" class="chat-quick-chip" data-msg="Tôi muốn tra cứu đơn hàng."><i class="bi bi-search"></i>Tra cứu đơn hàng</button>
+                        <button type="button" class="chat-quick-chip" data-msg="Kiểm tra điểm và hạng thành viên của tôi."><i class="bi bi-award"></i>Điểm &amp; hạng thành viên</button>
                         <button type="button" class="chat-quick-chip" data-msg="Chính sách bảo hành và đổi trả của shop như thế nào?"><i class="bi bi-shield-check"></i>Bảo hành &amp; đổi trả</button>
                         <button type="button" class="chat-quick-chip" data-msg="Shop có hỗ trợ lắp đặt tại nhà không?"><i class="bi bi-tools"></i>Lắp đặt tại nhà</button>
                         <button type="button" class="chat-quick-chip" data-msg="Shop hỗ trợ những phương thức thanh toán nào?"><i class="bi bi-credit-card"></i>Thanh toán</button>
