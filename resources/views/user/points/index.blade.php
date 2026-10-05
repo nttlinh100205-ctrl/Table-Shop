@@ -3,6 +3,16 @@
 @section('title', 'Điểm thưởng & Hạng thành viên')
 
 @section('content')
+<div class="container py-3">
+    <div class="card p-3">
+        <h2 class="h5">Giới thiệu bạn bè</h2>
+        <p>Mã của bạn: <strong>{{ auth()->user()->referral_code }}</strong> · Điểm hiện có: {{ number_format(auth()->user()->points_balance) }}</p>
+        <a href="{{ route('user.spin.index') }}">Vòng quay may mắn · {{ auth()->user()->spin_tickets }} lượt</a>
+        @foreach(auth()->user()->notifications()->latest()->limit(5)->get() as $notification)
+            <p class="mb-1 mt-2">{{ $notification->data['message'] ?? 'Thông báo điểm thưởng' }}</p>
+        @endforeach
+    </div>
+</div>
 <div class="py-4" style="background-color: #FAF6F0; min-height: 80vh;">
     <div class="container" style="max-width: 1140px;">
 

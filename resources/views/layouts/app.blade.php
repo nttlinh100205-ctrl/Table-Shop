@@ -772,5 +772,6 @@
         });
         </script>
         @endif
+@include('components.ai-chat')
 </body>
 </html>

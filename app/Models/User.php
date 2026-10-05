@@ -22,10 +22,12 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'avatar',
+        'referral_code',
         'password',
         'role',
         'points_balance',
         'lifetime_points',
+        'spin_tickets',
         'email_verified_at',
     ];
 
@@ -48,7 +50,28 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'points_balance'    => 'integer',
         'lifetime_points'   => 'integer',
+        'spin_tickets'      => 'integer',
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($user) {
+            if (empty($user->referral_code)) {
+                do {
+                    $code = 'REF-' . strtoupper(\Illuminate\Support\Str::random(6));
+                } while (static::where('referral_code', $code)->exists());
+                $user->referral_code = $code;
+            }
+            if (!isset($user->spin_tickets)) {
+                $user->spin_tickets = 3;
+            }
+        });
+    }
+
+    public function spinHistories()
+    {
+        return $this->hasMany(SpinHistory::class)->orderByDesc('id');
+    }
 
     public function reviews()
     {

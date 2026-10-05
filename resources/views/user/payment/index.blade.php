@@ -919,6 +919,12 @@
             <div class="col-lg-7">
                 <form method="POST" action="{{ route('user.orders.store') }}" id="checkoutForm">
                     @csrf
+                    <div class="card p-3 mb-3">
+                        <label for="referral_code" class="form-label">Mã giới thiệu (không bắt buộc)</label>
+                        <input id="referral_code" name="referral_code" maxlength="32" class="form-control" value="{{ old('referral_code') }}" placeholder="REF-XXXXXX">
+                        <small>Người giới thiệu nhận điểm khi đơn hàng hoàn thành.</small>
+                        @error('referral_code')<div class="text-danger">{{ $message }}</div>@enderror
+                    </div>
 
                     {{-- Card 1: Delivery information --}}
                     <div class="checkout-card">

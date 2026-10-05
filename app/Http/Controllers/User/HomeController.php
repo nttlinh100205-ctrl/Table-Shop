@@ -69,6 +69,9 @@ class HomeController extends Controller
             $currentCategory = SubSubCategory::find($request->sub_sub_category);
         }
 
+        if ($currentCategory) {
+            session()->put('shopping_behavior', ['last_category' => $currentCategory->name]);
+        }
         return view('user.home', compact('products', 'categories', 'currentCategory'));
     }
 
@@ -80,6 +83,13 @@ class HomeController extends Controller
         $product = Product::with(['category', 'variants', 'images', 'reviews.user'])
             ->findOrFail($id);
 
+        session()->put('shopping_behavior', [
+            'last_category' => $product->category?->name,
+            'category_id' => $product->category_id,
+            'last_product_name' => $product->name,
+            'last_product_price' => (float) $product->price,
+            'price_range' => ['min' => (float) $product->price * 0.7, 'max' => (float) $product->price * 1.3],
+        ]);
         return view('user.products.show', compact('product'));
     }
 }

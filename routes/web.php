@@ -216,3 +216,11 @@ Route::post('/payment/momo/ipn', [MomoController::class, 'ipn'])->name('payment.
 Route::get('/payment/momo/callback', [MomoController::class, 'callback'])
     ->middleware(['auth', 'verified'])
     ->name('user.payment.momo.callback');
+
+Route::get('/ai-chat/greeting', [\App\Http\Controllers\User\AiChatController::class, 'greeting'])->middleware('throttle:30,1')->name('ai.greeting');
+Route::post('/ai-chat', [\App\Http\Controllers\User\AiChatController::class, 'send'])->middleware('throttle:10,1')->name('ai.send');
+Route::middleware(['auth', 'verified', 'user'])->prefix('user')->name('user.')->group(function () {
+    Route::get('/spin', [\App\Http\Controllers\User\SpinController::class, 'index'])->name('spin.index');
+    Route::post('/spin', [\App\Http\Controllers\User\SpinController::class, 'store'])->middleware('throttle:10,1')->name('spin.store');
+    Route::get('/profile', fn () => redirect()->route('user.points.index'))->name('profile');
+});

@@ -371,6 +371,8 @@
         #admin-chat-header {
             background: #0f172a !important;
             color: #ffffff !important;
+            flex-shrink: 0;
+            gap: 12px;
             padding: 10px 14px;
             border-bottom: 1px solid #1e293b;
             border-radius: 12px 12px 0 0;
@@ -380,6 +382,26 @@
         #admin-chat-header #admin-chat-title {
             color: #ffffff !important;
             font-weight: 600;
+            display: block;
+            line-height: 1.5;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+        .admin-chat-heading {
+            flex: 1;
+            min-width: 0;
+        }
+        .admin-chat-heading > i,
+        .admin-chat-status,
+        .admin-chat-actions {
+            flex-shrink: 0;
+        }
+        .admin-chat-heading-text {
+            min-width: 0;
+        }
+        #chat-total-customers-badge {
+            display: inline-block;
+            margin-top: 2px;
         }
         #chat-close {
             background: #ef4444 !important;
@@ -663,13 +685,15 @@
         <div id="chat-popup" class="card border-0" role="dialog" aria-labelledby="admin-chat-title">
             <!-- Header chung có thể kéo thả toàn bộ popup -->
             <div id="admin-chat-header" class="card-header d-flex justify-content-between align-items-center py-2 px-3">
-                <div class="d-flex align-items-center gap-2">
+                <div class="admin-chat-heading d-flex align-items-center gap-2">
                     <i class="bi bi-grip-vertical text-secondary" style="font-size:1.1rem;"></i>
-                    <div style="width:8px;height:8px;background:#22c55e;border-radius:50%;box-shadow:0 0 6px #22c55e;"></div>
+                    <div class="admin-chat-status" style="width:8px;height:8px;background:#22c55e;border-radius:50%;box-shadow:0 0 6px #22c55e;"></div>
+                    <div class="admin-chat-heading-text">
                     <strong id="admin-chat-title" class="text-white" style="font-size:0.875rem;">Hỗ trợ khách hàng trực tuyến</strong>
                     <span class="badge bg-secondary-subtle text-white-50 px-2 py-0.5 rounded-pill" style="font-size:0.7rem;" id="chat-total-customers-badge">0 khách</span>
+                    </div>
                 </div>
-                <div class="d-flex align-items-center gap-1">
+                <div class="admin-chat-actions d-flex align-items-center gap-1">
                     <button id="admin-chat-minimize" class="btn btn-sm text-white py-0 px-2"
                             title="Thu nhỏ" style="background:rgba(255,255,255,0.12);border-radius:6px;border:none;">
                         <i class="bi bi-dash-lg" style="font-size:0.75rem;"></i>

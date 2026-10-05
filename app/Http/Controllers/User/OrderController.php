@@ -91,7 +91,11 @@ class OrderController extends Controller
      */
     public function store(Request $request, GHNOrderService $ghnOrder, MomoService $momo)
     {
+        if (is_string($request->input('referral_code', ''))) {
+            $request->merge(['referral_code' => strtoupper(trim($request->input('referral_code', '')))]);
+        }
         $validated = $request->validate([
+            'referral_code' => ['nullable', 'string', 'max:32', new \App\Rules\ReferralCode((int) $request->user()->id)],
             'name'           => 'required|string|max:255',
             'phone'          => ['required', 'string', 'regex:/^(0[3|5|7|8|9])[0-9]{8}$/'],
             'address'        => 'required|string|max:500',
@@ -148,6 +152,7 @@ class OrderController extends Controller
                     'user_id'         => Auth::id(),
                     'promotion_id'    => $promotionId,
                     'coupon_code'     => $couponCode,
+                    'referral_code_applied' => $validated['referral_code'] ?: null,
                     'discount_amount' => $discountAmount,
                     'name'            => $validated['name'],
                     'phone'           => $validated['phone'],

@@ -72,4 +72,9 @@ return [
         'provider' => env('MAIL_API_PROVIDER'),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model'   => env('GEMINI_MODEL', 'gemini-flash-latest'),
+    ],
+
 ];

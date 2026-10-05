@@ -13,6 +13,7 @@ class Order extends Model
         'user_id',
         'promotion_id',
         'coupon_code',
+        'referral_code_applied',
         'discount_amount',
         'name',
         'phone',
@@ -47,9 +48,23 @@ class Order extends Model
         'return_processed_at' => 'datetime',
     ];
 
+    protected static function booted()
+    {
+        static::saved(function ($order) {
+            if ($order->status === 'completed') {
+                event(new \App\Events\OrderCompleted($order->id));
+            }
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function referralUser()
+    {
+        return $this->belongsTo(User::class, 'referral_code_applied', 'referral_code');
     }
 
     public function promotion()
