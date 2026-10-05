@@ -13,10 +13,10 @@
     {{-- Page Header --}}
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <div>
-            <h2 class="h5 fw-bold mb-1" style="color:#0f172a;">Sản phẩm</h2>
+            <h2 class="h5 fw-bold mb-1" style="color:#3f2f24;">Sản phẩm</h2>
             <div class="d-flex align-items-center gap-2">
                 <span class="text-muted" style="font-size:0.82rem;">Tổng</span>
-                <span class="badge" style="background:#eff6ff;color:#2563eb;font-size:0.78rem;font-weight:700;padding:0.25rem 0.6rem;border-radius:20px;">
+                <span class="badge" style="background:#faf3e8;color:#765338;font-size:0.78rem;font-weight:700;padding:0.25rem 0.6rem;border-radius:20px;">
                     {{ number_format($totalProducts) }} sản phẩm
                 </span>
             </div>
@@ -34,20 +34,20 @@
         <div class="admin-card-body" style="padding:1rem 1.25rem;">
             <div class="row g-2 align-items-end">
                 <div class="col-md-5">
-                    <label class="form-label" style="font-size:0.78rem;font-weight:600;color:#64748b;margin-bottom:0.3rem;">TÌM KIẾM</label>
+                    <label class="form-label" style="font-size:0.78rem;font-weight:600;color:#7e7065;margin-bottom:0.3rem;">TÌM KIẾM</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-white" style="border-right:none;border-color:#e2e8f0;">
+                        <span class="input-group-text bg-white" style="border-right:none;border-color:#e6d8c8;">
                             <i class="bi bi-search text-muted" style="font-size:0.85rem;"></i>
                         </span>
                         <input type="text" name="q" value="{{ $q }}" class="form-control"
                                placeholder="Tên hoặc mã SP (SKU)..."
-                               style="border-left:none;border-color:#e2e8f0;font-size:0.875rem;">
+                               style="border-left:none;border-color:#e6d8c8;font-size:0.875rem;">
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label" style="font-size:0.78rem;font-weight:600;color:#64748b;margin-bottom:0.3rem;">DANH MỤC</label>
+                    <label class="form-label" style="font-size:0.78rem;font-weight:600;color:#7e7065;margin-bottom:0.3rem;">DANH MỤC</label>
                     <select name="category_id" class="form-select"
-                            style="border-color:#e2e8f0;font-size:0.875rem;">
+                            style="border-color:#e6d8c8;font-size:0.875rem;">
                         <option value="">Tất cả danh mục</option>
                         @foreach ($categories ?? [] as $cat)
                             <option value="{{ $cat->id }}" @selected((string)$categoryId === (string)$cat->id)>
@@ -64,7 +64,7 @@
                     @if ($q || $categoryId)
                         <a href="{{ route('admin.products.index') }}"
                            class="btn d-flex align-items-center justify-content-center"
-                           style="border:1px solid #e2e8f0;border-radius:8px;color:#64748b;background:#f8fafc;"
+                           style="border:1px solid #e6d8c8;border-radius:8px;color:#7e7065;background:#faf6f0;"
                            title="Xóa lọc">
                             <i class="bi bi-x-lg" style="font-size:0.85rem;"></i>
                         </a>
@@ -78,10 +78,10 @@
         {{-- Empty State --}}
         <div class="admin-card">
             <div style="padding:3.5rem 1.5rem;text-align:center;">
-                <div style="width:64px;height:64px;background:#f1f5f9;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
-                    <i class="bi bi-box-seam" style="font-size:1.75rem;color:#94a3b8;"></i>
+                <div style="width:64px;height:64px;background:#f3e9dc;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                    <i class="bi bi-box-seam" style="font-size:1.75rem;color:#9c8875;"></i>
                 </div>
-                <p class="fw-semibold mb-1" style="color:#0f172a;">Không tìm thấy sản phẩm</p>
+                <p class="fw-semibold mb-1" style="color:#3f2f24;">Không tìm thấy sản phẩm</p>
                 <p class="text-muted mb-3" style="font-size:0.875rem;">Thử đổi từ khóa hoặc thêm sản phẩm mới.</p>
                 <a href="{{ route('admin.products.create') }}"
                    class="btn btn-primary btn-sm"
@@ -116,28 +116,28 @@
                                 <td style="padding-left:1.25rem;">
                                     @if ($thumb)
                                         <img src="{{ $thumb }}" alt="{{ $product->name }}"
-                                             style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;"
+                                             style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #e6d8c8;"
                                              onerror="this.onerror=null;this.src='https://placehold.co/48x48/f1f5f9/64748b?text=Img';">
                                     @else
-                                        <div style="width:48px;height:48px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;display:flex;align-items:center;justify-content:center;">
+                                        <div style="width:48px;height:48px;border-radius:8px;border:1px solid #e6d8c8;background:#faf6f0;display:flex;align-items:center;justify-content:center;">
                                             <i class="bi bi-image text-muted"></i>
                                         </div>
                                     @endif
                                 </td>
                                 <td>
-                                    <div class="fw-semibold" style="color:#0f172a;font-size:0.875rem;">{{ $product->name }}</div>
+                                    <div class="fw-semibold" style="color:#3f2f24;font-size:0.875rem;">{{ $product->name }}</div>
                                     <div style="margin-top:3px;">
                                         @if ($product->sku)
-                                            <span style="display:inline-block;background:#f8fafc;border:1px solid #e2e8f0;color:#64748b;font-size:0.72rem;font-weight:600;padding:0.15rem 0.5rem;border-radius:5px;font-family:monospace;">
+                                            <span style="display:inline-block;background:#faf6f0;border:1px solid #e6d8c8;color:#7e7065;font-size:0.72rem;font-weight:600;padding:0.15rem 0.5rem;border-radius:5px;font-family:monospace;">
                                                 {{ $product->sku }}
                                             </span>
                                         @else
-                                            <span style="font-size:0.78rem;color:#cbd5e1;">Không có SKU</span>
+                                            <span style="font-size:0.78rem;color:#d9c7b3;">Không có SKU</span>
                                         @endif
                                     </div>
                                 </td>
                                 <td>
-                                    <span style="font-size:0.82rem;color:#64748b;">
+                                    <span style="font-size:0.82rem;color:#7e7065;">
                                         {{ $product->category->name ?? '—' }}
                                     </span>
                                 </td>
@@ -178,7 +178,7 @@
                 </table>
             </div>
             @if ($products->hasPages())
-                <div style="padding:1rem 1.25rem;border-top:1px solid #f1f5f9;display:flex;justify-content:center;">
+                <div style="padding:1rem 1.25rem;border-top:1px solid #f3e9dc;display:flex;justify-content:center;">
                     {{ $products->onEachSide(1)->links() }}
                 </div>
             @endif

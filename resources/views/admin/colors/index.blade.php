@@ -75,7 +75,7 @@
     gap: 12px;
 }
 .color-admin-item {
-    border: 1px solid #e2e8f0;
+    border: 1px solid #e6d8c8;
     border-radius: 10px;
     overflow: hidden;
     background: #fff;
@@ -86,7 +86,7 @@
 .color-admin-swatch {
     height: 64px;
     display: flex; align-items: center; justify-content: center;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f3e9dc;
 }
 .color-admin-meta { padding: 8px 10px 10px; font-size: 0.82rem; }
 </style>

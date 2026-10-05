@@ -6,24 +6,24 @@
 
 <style>
 .size-block {
-    border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;
+    border: 1px solid #e6d8c8; border-radius: 10px; padding: 14px 16px;
     margin-bottom: 14px; background: #fff;
 }
 .size-block-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.size-block-head .title { font-weight: 600; color: #0f172a; }
+.size-block-head .title { font-weight: 600; color: #3f2f24; }
 .color-pick-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
     gap: 8px; margin-top: 8px;
 }
 .color-pick-item {
     position: relative;
-    border: 2px solid #e2e8f0; border-radius: 8px; padding: 4px;
+    border: 2px solid #e6d8c8; border-radius: 8px; padding: 4px;
     cursor: pointer; text-align: center; background: #fff;
     transition: all .15s ease;
 }
-.color-pick-item:hover { border-color: #0d6efd; transform: translateY(-1px); }
+.color-pick-item:hover { border-color: #765338; transform: translateY(-1px); }
 .color-pick-item.active {
-    border-color: #0d6efd; box-shadow: 0 0 0 2px rgba(13,110,253,.35);
+    border-color: #765338; box-shadow: 0 0 0 2px rgba(118,83,56,.35);
     background: #f0f7ff;
 }
 .color-pick-item .color-check-badge {
@@ -33,7 +33,7 @@
     right: 2px;
     width: 17px;
     height: 17px;
-    background: #0d6efd;
+    background: #765338;
     color: #fff;
     border-radius: 50%;
     font-size: 10px;
@@ -47,8 +47,8 @@
     justify-content: center;
 }
 .color-stock-row {
-    background: #f8fafc; border-radius: 8px; padding: 6px 10px !important;
-    margin-bottom: 4px; border: 1px solid #e2e8f0;
+    background: #faf6f0; border-radius: 8px; padding: 6px 10px !important;
+    margin-bottom: 4px; border: 1px solid #e6d8c8;
 }
 .color-stock-row .mini-swatch {
     width: 28px !important; height: 28px !important; border-radius: 6px;
@@ -59,7 +59,7 @@
     background-size: cover; background-position: center;
 }
 .color-pick-item .cname {
-    font-size: 0.65rem; color: #64748b; margin-top: 3px;
+    font-size: 0.65rem; color: #7e7065; margin-top: 3px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .color-stock-list { margin-top: 10px; }
@@ -68,15 +68,15 @@
     padding: 4px 0; font-size: 0.85rem;
 }
 .color-stock-row .mini-swatch {
-    width: 20px; height: 20px; border-radius: 4px; border: 1px solid #cbd5e1;
+    width: 20px; height: 20px; border-radius: 4px; border: 1px solid #d9c7b3;
     background-size: cover; flex-shrink: 0;
 }
 .color-stock-row input { width: 90px; }
 
 /* Image Manager Styles */
 .image-box-wrapper {
-    background: #f8fafc;
-    border: 1px dashed #cbd5e1;
+    background: #faf6f0;
+    border: 1px dashed #d9c7b3;
     border-radius: 8px;
     padding: 14px;
 }
@@ -92,14 +92,14 @@
     height: 86px;
     border-radius: 8px;
     overflow: hidden;
-    border: 1.5px solid #e2e8f0;
+    border: 1.5px solid #e6d8c8;
     background: #fff;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     transition: transform 0.15s, border-color 0.15s, opacity 0.2s;
 }
 .image-preview-item:hover {
     transform: translateY(-2px);
-    border-color: #94a3b8;
+    border-color: #9c8875;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 .image-preview-item img {
@@ -380,7 +380,7 @@ function buildColorGridHtml(si, selectedMap) {
         const title = (c.code ? c.code + ' · ' : '') + c.name;
         html += '<div class="color-pick-item' + (active ? ' active' : '') + '" data-name="' + attrEscape(c.name) + '" data-code="' + attrEscape(c.code || '') + '" data-style="' + attrEscape(c.style || '') + '" title="' + attrEscape(title) + '">';
         html += '<span class="color-check-badge"><i class="bi bi-check-lg"></i></span>';
-        html += '<div class="swatch" style="' + (c.style || 'background:#e2e8f0') + '"></div>';
+        html += '<div class="swatch" style="' + (c.style || 'background:#e6d8c8') + '"></div>';
         html += '<div class="cname">' + escapeHtml(c.code || c.name) + '</div>';
         html += '</div>';
     });
@@ -397,7 +397,7 @@ function buildStockListHtml(si, selectedMap) {
     Object.keys(selectedMap).forEach(function (name) {
         const stock = selectedMap[name];
         const c = (window.__flatColors || []).find(x => x.name === name || x.code === name) || {};
-        const style = c.style || 'background:#e2e8f0';
+        const style = c.style || 'background:#e6d8c8';
         const saveName = c.name || name;
         const code = c.code || '';
         const label = code

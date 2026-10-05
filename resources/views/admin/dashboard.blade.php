@@ -1,13 +1,13 @@
 @extends('layouts.admin')
 
-@section('title', 'Dashboard')
+@section('title', 'Tổng quan')
 
 @section('content')
 <style>
     .stat-card {
         background: #fff;
         border-radius: 12px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #e6d8c8;
         box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
         padding: 1.25rem 1.35rem;
         display: flex;
@@ -36,7 +36,7 @@
     .stat-card-label {
         font-size: 0.78rem;
         font-weight: 600;
-        color: #64748b;
+        color: #7e7065;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin-bottom: 0.25rem;
@@ -44,27 +44,27 @@
     .stat-card-value {
         font-size: 1.85rem;
         font-weight: 800;
-        color: #0f172a;
+        color: #3f2f24;
         line-height: 1;
     }
     .stat-card-footer {
         font-size: 0.78rem;
-        color: #94a3b8;
-        border-top: 1px solid #f1f5f9;
+        color: #9c8875;
+        border-top: 1px solid #f3e9dc;
         padding-top: 0.65rem;
         display: flex;
         align-items: center;
         gap: 0.35rem;
     }
     .stat-card-footer a {
-        color: var(--admin-primary, #3b82f6);
+        color: var(--admin-primary, #8b6544);
         text-decoration: none;
         font-weight: 600;
     }
     .stat-card-footer a:hover { text-decoration: underline; }
 
     /* Icon color variants */
-    .icon-blue   { background: #eff6ff; color: #2563eb; }
+    .icon-blue   { background: #faf3e8; color: #765338; }
     .icon-green  { background: #f0fdf4; color: #16a34a; }
     .icon-violet { background: #f5f3ff; color: #7c3aed; }
     .icon-amber  { background: #fffbeb; color: #d97706; }
@@ -73,19 +73,19 @@
     .quick-action-card {
         background: #fff;
         border-radius: 12px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #e6d8c8;
         box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
         overflow: hidden;
     }
     .quick-action-header {
         padding: 0.875rem 1.25rem;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid #f3e9dc;
         display: flex;
         align-items: center;
         gap: 0.5rem;
         font-size: 0.875rem;
         font-weight: 700;
-        color: #0f172a;
+        color: #3f2f24;
     }
     .quick-action-body {
         padding: 1rem;
@@ -99,17 +99,17 @@
         gap: 0.75rem;
         padding: 0.7rem 0.875rem;
         border-radius: 8px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #e6d8c8;
         text-decoration: none;
-        color: #334155;
+        color: #5a4536;
         font-size: 0.875rem;
         font-weight: 500;
         transition: all 0.15s;
     }
     .quick-action-link:hover {
-        border-color: #bfdbfe;
-        background: #eff6ff;
-        color: #1d4ed8;
+        border-color: #dfc8a8;
+        background: #faf3e8;
+        color: #5a4536;
     }
     .quick-action-link .link-icon {
         width: 32px; height: 32px;
@@ -118,24 +118,24 @@
         font-size: 0.95rem;
         flex-shrink: 0;
     }
-    .quick-action-link:hover .link-icon { background: #dbeafe; }
+    .quick-action-link:hover .link-icon { background: #f0e2ce; }
 
     .account-card {
         background: #fff;
         border-radius: 12px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #e6d8c8;
         box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
         overflow: hidden;
     }
     .account-card-header {
         padding: 0.875rem 1.25rem;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid #f3e9dc;
         display: flex;
         align-items: center;
         gap: 0.5rem;
         font-size: 0.875rem;
         font-weight: 700;
-        color: #0f172a;
+        color: #3f2f24;
     }
     .account-card-body { padding: 1.25rem; }
     .account-avatar-section {
@@ -144,11 +144,11 @@
         gap: 1rem;
         margin-bottom: 1.25rem;
         padding-bottom: 1.25rem;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid #f3e9dc;
     }
     .account-avatar-lg {
         width: 52px; height: 52px;
-        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        background: linear-gradient(135deg, #8b6544, #c29d62);
         border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         color: #fff; font-size: 1.25rem; font-weight: 700;
@@ -157,12 +157,12 @@
     .account-name {
         font-size: 1rem;
         font-weight: 700;
-        color: #0f172a;
+        color: #3f2f24;
         margin-bottom: 0.1rem;
     }
     .account-email {
         font-size: 0.82rem;
-        color: #64748b;
+        color: #7e7065;
     }
     .account-info-row {
         display: flex;
@@ -172,13 +172,21 @@
         font-size: 0.875rem;
     }
     .account-info-row:not(:last-child) {
-        border-bottom: 1px solid #f8fafc;
+        border-bottom: 1px solid #faf6f0;
     }
-    .account-info-label { color: #94a3b8; font-weight: 500; }
-    .account-info-value { color: #334155; font-weight: 600; }
+    .account-info-label { color: #9c8875; font-weight: 500; }
+    .account-info-value { color: #5a4536; font-weight: 600; }
 </style>
 
 {{-- Stats Row --}}
+<section class="admin-welcome">
+    <div>
+        <div class="eyebrow">Nội Thất Tinh Hoa · Quản trị cửa hàng</div>
+        <h2>Chào {{ auth()->user()->name }},</h2>
+        <p>Theo dõi cửa hàng, chăm sóc khách hàng và quản lý công việc mỗi ngày.</p>
+    </div>
+    <a class="btn btn-primary px-3 py-2" href="{{ route('admin.orders.index') }}"><i class="bi bi-receipt me-2"></i>Quản lý đơn hàng</a>
+</section>
 <div class="row g-3 mb-4">
     <div class="col-6 col-xl-3">
         <div class="stat-card">

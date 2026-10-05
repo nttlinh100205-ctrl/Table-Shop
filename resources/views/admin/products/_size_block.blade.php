@@ -61,7 +61,7 @@
                      data-style="{{ $c['style'] }}"
                      title="{{ $label }}">
                     <span class="color-check-badge"><i class="bi bi-check-lg"></i></span>
-                    <div class="swatch" style="{{ $c['style'] ?: 'background:#e2e8f0' }}"></div>
+                    <div class="swatch" style="{{ $c['style'] ?: 'background:#e6d8c8' }}"></div>
                     <div class="cname">{{ $c['code'] ?: $c['name'] }}</div>
                 </div>
             @endforeach
@@ -74,7 +74,7 @@
                     $cMeta = collect($flatColors)->first(function ($c) use ($colorName) {
                         return $c['name'] === $colorName || ($c['code'] ?? '') === $colorName;
                     });
-                    $st = $cMeta['style'] ?? 'background:#e2e8f0';
+                    $st = $cMeta['style'] ?? 'background:#e6d8c8';
                     $code = $cMeta['code'] ?? '';
                     $displayName = $cMeta['name'] ?? $colorName;
                     $saveName = $cMeta['name'] ?? $colorName;

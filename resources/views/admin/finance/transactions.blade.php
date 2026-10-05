@@ -11,54 +11,54 @@
 .fn-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; }
 .fn-title-wrap { display: flex; align-items: center; gap: 0.85rem; }
 .fn-icon { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #059669, #10b981); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(16,185,129,0.25); }
-.fn-title { font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.015em; }
-.fn-subtitle { font-size: 0.82rem; color: #64748b; margin: 0.15rem 0 0; }
+.fn-title { font-size: 1.35rem; font-weight: 800; color: #3f2f24; margin: 0; letter-spacing: -0.015em; }
+.fn-subtitle { font-size: 0.82rem; color: #7e7065; margin: 0.15rem 0 0; }
 
 /* Tabs Navigation */
-.fn-nav-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
-.fn-nav-link { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.5rem 1.15rem; border-radius: 9px; font-size: 0.84rem; font-weight: 600; color: #64748b; text-decoration: none; transition: all 0.15s ease; background: #fff; border: 1.5px solid #e2e8f0; }
-.fn-nav-link:hover { color: #0f172a; background: #f8fafc; border-color: #cbd5e1; }
-.fn-nav-link.active { color: #fff; background: #0f172a; border-color: #0f172a; box-shadow: 0 2px 6px rgba(15,23,42,0.2); }
+.fn-nav-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; border-bottom: 1px solid #e6d8c8; padding-bottom: 0.5rem; }
+.fn-nav-link { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.5rem 1.15rem; border-radius: 9px; font-size: 0.84rem; font-weight: 600; color: #7e7065; text-decoration: none; transition: all 0.15s ease; background: #fff; border: 1.5px solid #e6d8c8; }
+.fn-nav-link:hover { color: #3f2f24; background: #faf6f0; border-color: #d9c7b3; }
+.fn-nav-link.active { color: #fff; background: #3f2f24; border-color: #3f2f24; box-shadow: 0 2px 6px rgba(63,47,36,0.2); }
 
 /* Filter Card */
-.fn-filter-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+.fn-filter-card { background: #fff; border: 1px solid #e6d8c8; border-radius: 14px; padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
 .fn-filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.85rem; align-items: flex-end; }
 .fn-field-group { display: flex; flex-direction: column; gap: 0.35rem; }
-.fn-label { font-size: 0.74rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.03em; }
-.fn-input, .fn-select { height: 38px; border-radius: 8px; border: 1.5px solid #e2e8f0; padding: 0 0.75rem; font-size: 0.84rem; color: #0f172a; background: #fafbfc; outline: none; transition: all 0.15s ease; width: 100%; }
+.fn-label { font-size: 0.74rem; font-weight: 700; color: #6b5848; text-transform: uppercase; letter-spacing: 0.03em; }
+.fn-input, .fn-select { height: 38px; border-radius: 8px; border: 1.5px solid #e6d8c8; padding: 0 0.75rem; font-size: 0.84rem; color: #3f2f24; background: #faf6f0; outline: none; transition: all 0.15s ease; width: 100%; }
 .fn-input:focus, .fn-select:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.12); background: #fff; }
 .fn-btn-submit { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; height: 38px; padding: 0 1.25rem; border-radius: 8px; background: #059669; color: #fff; border: none; font-size: 0.84rem; font-weight: 600; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
 .fn-btn-submit:hover { background: #047857; }
-.fn-btn-clear { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; padding: 0 1rem; border-radius: 8px; border: 1.5px solid #e2e8f0; background: #fff; color: #64748b; font-size: 0.84rem; font-weight: 600; text-decoration: none; transition: all 0.15s; white-space: nowrap; }
+.fn-btn-clear { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; padding: 0 1rem; border-radius: 8px; border: 1.5px solid #e6d8c8; background: #fff; color: #7e7065; font-size: 0.84rem; font-weight: 600; text-decoration: none; transition: all 0.15s; white-space: nowrap; }
 .fn-btn-clear:hover { border-color: #ef4444; color: #dc2626; background: #fef2f2; }
 
 /* Notice Banner */
-.fn-notice { font-size: 0.82rem; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0.75rem 1rem; margin-bottom: 1.25rem; }
-.fn-notice strong { color: #0f172a; }
-.fn-notice-sub { font-size: 0.76rem; color: #94a3b8; margin-top: 0.2rem; }
+.fn-notice { font-size: 0.82rem; color: #7e7065; background: #faf6f0; border: 1px solid #e6d8c8; border-radius: 9px; padding: 0.75rem 1rem; margin-bottom: 1.25rem; }
+.fn-notice strong { color: #3f2f24; }
+.fn-notice-sub { font-size: 0.76rem; color: #9c8875; margin-top: 0.2rem; }
 
 /* Table Container */
-.fn-table-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
-.fn-table-header { padding: 1rem 1.25rem; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
-.fn-table-title { font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0; }
+.fn-table-card { background: #fff; border-radius: 14px; border: 1px solid #e6d8c8; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+.fn-table-header { padding: 1rem 1.25rem; border-bottom: 1px solid #e6d8c8; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+.fn-table-title { font-size: 0.95rem; font-weight: 700; color: #3f2f24; margin: 0; }
 .fn-table { width: 100%; margin: 0; border-collapse: collapse; }
-.fn-table thead th { background: #f8fafc; padding: 0.85rem 1rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
-.fn-table tbody td { padding: 0.9rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.84rem; color: #334155; vertical-align: middle; }
+.fn-table thead th { background: #faf6f0; padding: 0.85rem 1rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #7e7065; border-bottom: 1px solid #e6d8c8; white-space: nowrap; }
+.fn-table tbody td { padding: 0.9rem 1rem; border-bottom: 1px solid #f3e9dc; font-size: 0.84rem; color: #5a4536; vertical-align: middle; }
 .fn-table tbody tr:last-child td { border-bottom: none; }
-.fn-table tbody tr:hover { background: #f8fafc; }
+.fn-table tbody tr:hover { background: #faf6f0; }
 
 /* Cells */
-.fn-order-link { font-weight: 800; font-size: 0.88rem; color: #0f172a; text-decoration: none; }
-.fn-order-link:hover { color: #2563eb; }
-.fn-date { font-size: 0.76rem; color: #64748b; margin-top: 0.1rem; }
-.fn-customer-name { font-weight: 700; color: #0f172a; font-size: 0.86rem; }
-.fn-customer-phone { font-size: 0.76rem; color: #64748b; margin-top: 0.1rem; }
-.fn-price { font-weight: 800; font-size: 0.92rem; color: #0f172a; white-space: nowrap; }
+.fn-order-link { font-weight: 800; font-size: 0.88rem; color: #3f2f24; text-decoration: none; }
+.fn-order-link:hover { color: #765338; }
+.fn-date { font-size: 0.76rem; color: #7e7065; margin-top: 0.1rem; }
+.fn-customer-name { font-weight: 700; color: #3f2f24; font-size: 0.86rem; }
+.fn-customer-phone { font-size: 0.76rem; color: #7e7065; margin-top: 0.1rem; }
+.fn-price { font-weight: 800; font-size: 0.92rem; color: #3f2f24; white-space: nowrap; }
 
 /* Method Badges */
 .fn-badge-cod  { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.22rem 0.55rem; border-radius: 6px; font-weight: 700; font-size: 0.74rem; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; white-space: nowrap; }
 .fn-badge-momo { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.22rem 0.55rem; border-radius: 6px; font-weight: 700; font-size: 0.74rem; background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; white-space: nowrap; }
-.fn-badge-unk  { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.22rem 0.55rem; border-radius: 6px; font-weight: 700; font-size: 0.74rem; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; white-space: nowrap; }
+.fn-badge-unk  { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.22rem 0.55rem; border-radius: 6px; font-weight: 700; font-size: 0.74rem; background: #faf6f0; color: #6b5848; border: 1px solid #e6d8c8; white-space: nowrap; }
 
 /* Status Pastel Badges (No more "đậm lè") */
 .fn-pill { display: inline-flex; align-items: center; gap: 0.38rem; padding: 0.28rem 0.68rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; border: 1px solid transparent; }
@@ -76,8 +76,8 @@
 .fn-pill-failed    { background: #fef2f2; color: #991b1b; border-color: #fecdd3; }
 .fn-pill-failed .fn-pill-dot { background-color: #ef4444; }
 
-.fn-pill-cancelled { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
-.fn-pill-cancelled .fn-pill-dot { background-color: #94a3b8; }
+.fn-pill-cancelled { background: #faf6f0; color: #6b5848; border-color: #e6d8c8; }
+.fn-pill-cancelled .fn-pill-dot { background-color: #9c8875; }
 
 .fn-pill-refund-p  { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
 .fn-pill-refund-p .fn-pill-dot { background-color: #ea580c; }
@@ -87,15 +87,15 @@
 
 /* COD Quick Update Form */
 .fn-cod-form { display: inline-flex; align-items: center; gap: 0.4rem; }
-.fn-status-select { height: 32px; border-radius: 7px; border: 1.5px solid #e2e8f0; padding: 0 0.5rem; font-size: 0.78rem; color: #0f172a; background: #fff; outline: none; transition: border-color 0.15s; }
+.fn-status-select { height: 32px; border-radius: 7px; border: 1.5px solid #e6d8c8; padding: 0 0.5rem; font-size: 0.78rem; color: #3f2f24; background: #fff; outline: none; transition: border-color 0.15s; }
 .fn-status-select:focus { border-color: #10b981; }
 .fn-btn-save { height: 32px; padding: 0 0.75rem; border-radius: 7px; background: #059669; color: #fff; border: none; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
 .fn-btn-save:hover { background: #047857; }
-.fn-locked { font-size: 0.74rem; color: #94a3b8; display: inline-flex; align-items: center; gap: 0.3rem; }
+.fn-locked { font-size: 0.74rem; color: #9c8875; display: inline-flex; align-items: center; gap: 0.3rem; }
 
 /* Empty state & Pagination */
-.fn-empty { padding: 4rem 1rem; text-align: center; color: #64748b; font-size: 0.88rem; }
-.fn-pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; padding: 0.85rem 1.25rem; border-top: 1px solid #f1f5f9; background: #fafbfc; }
+.fn-empty { padding: 4rem 1rem; text-align: center; color: #7e7065; font-size: 0.88rem; }
+.fn-pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; padding: 0.85rem 1.25rem; border-top: 1px solid #f3e9dc; background: #faf6f0; }
 </style>
 
 <div class="fn-page">
@@ -288,7 +288,7 @@
                 @empty
                     <tr>
                         <td colspan="6" class="fn-empty">
-                            <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; color:#94a3b8;"></i>
+                            <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; color:#9c8875;"></i>
                             Không có đơn hàng nào phù hợp với bộ lọc.
                         </td>
                     </tr>
@@ -299,7 +299,7 @@
 
     @if($orders->hasPages())
         <div class="fn-pagination">
-            <div style="font-size: 0.8rem; color: #64748b;">
+            <div style="font-size: 0.8rem; color: #7e7065;">
                 Hiển thị <strong>{{ $orders->firstItem() }}-{{ $orders->lastItem() }}</strong> trong <strong>{{ $orders->total() }}</strong> đơn
             </div>
             <div>

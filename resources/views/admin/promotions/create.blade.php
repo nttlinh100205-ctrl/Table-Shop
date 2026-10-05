@@ -7,12 +7,12 @@
     .form-section-title {
         font-size: 0.88rem;
         font-weight: 700;
-        color: #1e293b;
+        color: #3a2e26;
         text-transform: uppercase;
         letter-spacing: 0.04em;
         margin-bottom: 1rem;
         padding-bottom: 0.5rem;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid #f3e9dc;
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -20,20 +20,20 @@
     .form-label-custom {
         font-size: 0.8rem;
         font-weight: 600;
-        color: #475569;
+        color: #6b5848;
         margin-bottom: 0.35rem;
     }
     .req-star { color: #dc2626; }
 
     /* Voucher Live Preview Ticket */
     .voucher-preview-ticket {
-        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        background: linear-gradient(135deg, #1e3a8a, #765338);
         border-radius: 16px;
         color: #fff;
         padding: 1.5rem;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 10px 25px -5px rgba(37,99,235,0.4);
+        box-shadow: 0 10px 25px -5px rgba(118,83,56,0.4);
     }
     .voucher-preview-ticket::before,
     .voucher-preview-ticket::after {
@@ -41,7 +41,7 @@
         position: absolute;
         width: 24px;
         height: 24px;
-        background: #f8fafc;
+        background: #faf6f0;
         border-radius: 50%;
         top: calc(50% - 12px);
     }
@@ -72,9 +72,9 @@
                     <i class="bi bi-arrow-left"></i> Khuyến mãi
                 </a>
                 <span class="text-muted">/</span>
-                <span class="fw-bold" style="color:#0f172a;">Tạo mã mới</span>
+                <span class="fw-bold" style="color:#3f2f24;">Tạo mã mới</span>
             </div>
-            <h2 class="h5 fw-bold mb-0" style="color:#0f172a;">Thêm mã khuyến mãi & voucher</h2>
+            <h2 class="h5 fw-bold mb-0" style="color:#3f2f24;">Thêm mã khuyến mãi & voucher</h2>
         </div>
     </div>
 
@@ -230,7 +230,7 @@
                         <div class="form-check form-switch mt-4">
                             <input class="form-check-input" type="checkbox" name="is_active" id="is_active" value="1"
                                    @checked(old('is_active', true))>
-                            <label class="form-check-label fw-semibold" for="is_active" style="font-size:0.875rem; color:#1e293b;">
+                            <label class="form-check-label fw-semibold" for="is_active" style="font-size:0.875rem; color:#3a2e26;">
                                 Kích hoạt mã ngay sau khi lưu
                             </label>
                         </div>

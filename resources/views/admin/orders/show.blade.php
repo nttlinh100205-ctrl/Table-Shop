@@ -5,11 +5,11 @@
 @section('content')
 <style>
 .badge.bg-success { background-color: #ecfdf5 !important; color: #065f46 !important; border: 1px solid #a7f3d0 !important; }
-.badge.bg-primary { background-color: #eff6ff !important; color: #1e40af !important; border: 1px solid #bfdbfe !important; }
+.badge.bg-primary { background-color: #faf3e8 !important; color: #1e40af !important; border: 1px solid #dfc8a8 !important; }
 .badge.bg-danger  { background-color: #fef2f2 !important; color: #991b1b !important; border: 1px solid #fecdd3 !important; }
 .badge.bg-warning { background-color: #fffbeb !important; color: #b45309 !important; border: 1px solid #fde68a !important; }
 .badge.bg-info    { background-color: #f0fdfa !important; color: #0f766e !important; border: 1px solid #99f6e4 !important; }
-.badge.bg-secondary { background-color: #f8fafc !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
+.badge.bg-secondary { background-color: #faf6f0 !important; color: #6b5848 !important; border: 1px solid #e6d8c8 !important; }
 .badge { font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 9999px; }
 </style>
 <div class="container-fluid">

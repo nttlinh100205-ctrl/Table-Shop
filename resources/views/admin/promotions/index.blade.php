@@ -7,7 +7,7 @@
     .stat-card {
         background: #fff;
         border-radius: 12px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #e6d8c8;
         padding: 1.1rem 1.25rem;
         display: flex;
         align-items: center;
@@ -29,17 +29,17 @@
         font-size: 1.35rem;
         flex-shrink: 0;
     }
-    .stat-val { font-size: 1.4rem; font-weight: 800; color: #0f172a; line-height: 1.2; }
-    .stat-lbl { font-size: 0.78rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-val { font-size: 1.4rem; font-weight: 800; color: #3f2f24; line-height: 1.2; }
+    .stat-lbl { font-size: 0.78rem; font-weight: 600; color: #7e7065; text-transform: uppercase; letter-spacing: 0.04em; }
 
     .coupon-code-badge {
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.88rem;
         font-weight: 700;
         letter-spacing: 0.05em;
-        background: #eff6ff;
-        color: #1d4ed8;
-        border: 1px dashed #93c5fd;
+        background: #faf3e8;
+        color: #5a4536;
+        border: 1px dashed #c29d62;
         padding: 0.25rem 0.6rem;
         border-radius: 6px;
         display: inline-flex;
@@ -55,7 +55,7 @@
         font-size: 0.82rem;
         transition: color 0.15s;
     }
-    .btn-copy-code:hover { color: #1d4ed8; }
+    .btn-copy-code:hover { color: #5a4536; }
 
     .discount-pill {
         display: inline-flex;
@@ -73,13 +73,13 @@
         width: 100px;
         height: 6px;
         border-radius: 4px;
-        background: #e2e8f0;
+        background: #e6d8c8;
         overflow: hidden;
         margin-top: 4px;
     }
     .usage-progress-bar {
         height: 100%;
-        background: #3b82f6;
+        background: #8b6544;
         border-radius: 4px;
     }
 </style>
@@ -88,7 +88,7 @@
     {{-- Header --}}
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <div>
-            <h2 class="h5 fw-bold mb-1" style="color:#0f172a;">Quản lý Khuyến mãi & Voucher</h2>
+            <h2 class="h5 fw-bold mb-1" style="color:#3f2f24;">Quản lý Khuyến mãi & Voucher</h2>
             <p class="text-muted mb-0" style="font-size:0.82rem;">Tạo và quản lý các chương trình giảm giá theo %, tiền mặt, lượt dùng và hạn sử dụng</p>
         </div>
         <a href="{{ route('admin.promotions.create') }}"
@@ -102,7 +102,7 @@
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-xl-3">
             <div class="stat-card">
-                <div class="stat-icon" style="background:#eff6ff; color:#2563eb;">
+                <div class="stat-icon" style="background:#faf3e8; color:#765338;">
                     <i class="bi bi-ticket-perforated"></i>
                 </div>
                 <div>
@@ -151,27 +151,27 @@
         <div class="admin-card-body" style="padding:1rem 1.25rem;">
             <div class="row g-2 align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label" style="font-size:0.75rem;font-weight:700;color:#64748b;margin-bottom:0.25rem;">TÌM KIẾM MÃ / TÊN</label>
+                    <label class="form-label" style="font-size:0.75rem;font-weight:700;color:#7e7065;margin-bottom:0.25rem;">TÌM KIẾM MÃ / TÊN</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-white" style="border-right:none;border-color:#e2e8f0;">
+                        <span class="input-group-text bg-white" style="border-right:none;border-color:#e6d8c8;">
                             <i class="bi bi-search text-muted"></i>
                         </span>
                         <input type="text" name="keyword" value="{{ request('keyword') }}" class="form-control"
                                placeholder="VD: SALE20, GIAM50K, Khai trương..."
-                               style="border-left:none;border-color:#e2e8f0;font-size:0.875rem;">
+                               style="border-left:none;border-color:#e6d8c8;font-size:0.875rem;">
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label" style="font-size:0.75rem;font-weight:700;color:#64748b;margin-bottom:0.25rem;">LOẠI GIẢM GIÁ</label>
-                    <select name="discount_type" class="form-select" style="border-color:#e2e8f0;font-size:0.875rem;">
+                    <label class="form-label" style="font-size:0.75rem;font-weight:700;color:#7e7065;margin-bottom:0.25rem;">LOẠI GIẢM GIÁ</label>
+                    <select name="discount_type" class="form-select" style="border-color:#e6d8c8;font-size:0.875rem;">
                         <option value="">Tất cả loại</option>
                         <option value="percent" @selected(request('discount_type') === 'percent')>Giảm theo phần trăm (%)</option>
                         <option value="fixed" @selected(request('discount_type') === 'fixed')>Giảm theo số tiền (VNĐ)</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label" style="font-size:0.75rem;font-weight:700;color:#64748b;margin-bottom:0.25rem;">TRẠNG THÁI</label>
-                    <select name="status" class="form-select" style="border-color:#e2e8f0;font-size:0.875rem;">
+                    <label class="form-label" style="font-size:0.75rem;font-weight:700;color:#7e7065;margin-bottom:0.25rem;">TRẠNG THÁI</label>
+                    <select name="status" class="form-select" style="border-color:#e6d8c8;font-size:0.875rem;">
                         <option value="">Tất cả trạng thái</option>
                         <option value="active" @selected(request('status') === 'active')>Đang diễn ra (Hợp lệ)</option>
                         <option value="expired" @selected(request('status') === 'expired')>Hết hạn sử dụng</option>
@@ -225,7 +225,7 @@
                                         <i class="bi bi-clipboard"></i>
                                     </button>
                                 </div>
-                                <div class="fw-bold" style="font-size:0.88rem; color:#0f172a;">{{ $promo->name }}</div>
+                                <div class="fw-bold" style="font-size:0.88rem; color:#3f2f24;">{{ $promo->name }}</div>
                                 @if($promo->description)
                                     <div class="text-muted" style="font-size:0.75rem; max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                         {{ $promo->description }}
@@ -252,7 +252,7 @@
 
                             <td>
                                 @if($promo->min_order_amount > 0)
-                                    <span style="font-weight:600; color:#334155;">{{ number_format($promo->min_order_amount, 0, ',', '.') }}đ</span>
+                                    <span style="font-weight:600; color:#5a4536;">{{ number_format($promo->min_order_amount, 0, ',', '.') }}đ</span>
                                 @else
                                     <span class="text-muted" style="font-size:0.8rem;">Không yêu cầu</span>
                                 @endif
@@ -332,9 +332,9 @@
                         <tr>
                             <td colspan="7" class="text-center py-5">
                                 <div class="text-muted mb-2">
-                                    <i class="bi bi-ticket-perforated" style="font-size:2.5rem; color:#cbd5e1;"></i>
+                                    <i class="bi bi-ticket-perforated" style="font-size:2.5rem; color:#d9c7b3;"></i>
                                 </div>
-                                <div class="fw-bold" style="color:#475569;">Chưa có mã khuyến mãi nào</div>
+                                <div class="fw-bold" style="color:#6b5848;">Chưa có mã khuyến mãi nào</div>
                                 <p class="text-muted small mb-3">Tạo mã giảm giá để thu hút khách hàng và gia tăng đơn hàng.</p>
                                 <a href="{{ route('admin.promotions.create') }}" class="btn btn-sm btn-primary">
                                     <i class="bi bi-plus-lg me-1"></i> Tạo mã đầu tiên
