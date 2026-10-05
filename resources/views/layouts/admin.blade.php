@@ -299,7 +299,7 @@
         }
         #chat-popup {
             display: none; position: fixed; bottom: 24px; right: 24px;
-            width: 380px; max-width: calc(100vw - 20px); height: 520px; max-height: calc(100vh - 40px);
+            width: 380px; max-width: calc(100vw - 20px); height: 590px; max-height: calc(100vh - 40px);
             border-radius: 14px; overflow: hidden;
             flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.25);
             z-index: 2001; transition: box-shadow 0.2s ease;
@@ -340,6 +340,47 @@
         }
         .msg-me   { background: #eff6ff; color: #1e40af; text-align: right; margin-left: 20%; }
         .msg-other{ background: #f8fafc; color: #334155; margin-right: 20%; }
+
+        /* ===== ADMIN QUICK REPLIES ===== */
+        #admin-quick-wrap {
+            background: #fff; border-top: 1px solid #f1f5f9;
+            padding: 6px 10px 4px;
+        }
+        .admin-quick-head {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em;
+            text-transform: uppercase; color: #64748b; margin-bottom: 4px;
+        }
+        #admin-quick-toggle {
+            background: none; border: none; color: #64748b; cursor: pointer;
+            font-size: 0.75rem; padding: 0 2px; transition: transform 0.2s;
+        }
+        #admin-quick-wrap.collapsed #admin-quick-toggle { transform: rotate(180deg); }
+        #admin-quick-wrap.collapsed #admin-quick-list { display: none; }
+        #admin-quick-list {
+            display: flex; flex-wrap: wrap; gap: 5px;
+            max-height: 66px; overflow-y: auto;
+        }
+        .admin-quick-chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #f8fafc; color: #1e293b;
+            border: 1px solid #e2e8f0; border-radius: 999px;
+            padding: 3px 10px; font-size: 0.75rem; font-weight: 500;
+            font-family: inherit; cursor: pointer; white-space: nowrap;
+            transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+        }
+        .admin-quick-chip i { color: #3b82f6; font-size: 0.78rem; }
+        .admin-quick-chip:hover { background: #0f172a; color: #fff; border-color: #0f172a; transform: translateY(-1px); }
+        .admin-quick-chip:hover i { color: #fff; }
+        .admin-quick-chip:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .admin-quick-chip.suggested {
+            background: #eff6ff; border-color: #3b82f6; color: #1d4ed8;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+        }
+        .admin-quick-chip.suggested::before {
+            content: 'Gợi ý'; font-size: 0.6rem; font-weight: 700;
+            background: #3b82f6; color: #fff; border-radius: 999px; padding: 0 5px;
+        }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 991.98px) {
@@ -509,24 +550,20 @@
 
 
     <div id="admin-chat-box">
-        <button id="chat-toggle" title="Kéo để di chuyển hoặc bấm để mở chat" aria-label="Mở chat khách">
+        <button id="chat-toggle" title="Chat khách" aria-label="Mở chat khách">
             <i class="bi bi-chat-dots"></i>
             Chat khách
             <span id="chat-unread-count" class="badge rounded-pill text-bg-danger d-none">0</span>
         </button>
         <div id="chat-popup" class="card border-0" role="dialog" aria-labelledby="admin-chat-title">
             <div id="admin-chat-header" class="card-header d-flex justify-content-between align-items-center py-2"
-                 style="background:#0f172a; border:none;" title="Giữ chuột hoặc chạm để kéo di chuyển hộp chat">
+                 style="background:#0f172a; border:none;">
                 <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-grip-vertical text-secondary" style="font-size:1rem;" title="Kéo để di chuyển"></i>
+                    <i class="bi bi-grip-vertical text-secondary" style="font-size:1rem;"></i>
                     <div style="width:8px;height:8px;background:#22c55e;border-radius:50%;box-shadow:0 0 6px #22c55e;"></div>
                     <strong id="admin-chat-title" class="text-white" style="font-size:0.875rem;">Hỗ trợ trực tuyến</strong>
                 </div>
                 <div class="d-flex align-items-center gap-1">
-                    <button id="admin-chat-reset" class="btn btn-sm text-white py-0 px-2"
-                            title="Đặt lại vị trí góc phải (hoặc nhấp đúp tiêu đề)" style="background:rgba(255,255,255,0.12);border-radius:6px;border:none;">
-                        <i class="bi bi-arrow-counterclockwise" style="font-size:0.75rem;"></i>
-                    </button>
                     <button id="admin-chat-minimize" class="btn btn-sm text-white py-0 px-2"
                             title="Thu nhỏ" style="background:rgba(255,255,255,0.12);border-radius:6px;border:none;">
                         <i class="bi bi-dash-lg" style="font-size:0.75rem;"></i>
@@ -550,6 +587,15 @@
                     <i class="bi bi-chat-square-text d-block mb-2" style="font-size:2rem;opacity:0.3;"></i>
                     Chọn khách hàng để xem tin nhắn
                 </div>
+            </div>
+            <div id="admin-quick-wrap">
+                <div class="admin-quick-head">
+                    <span><i class="bi bi-lightning-charge-fill text-warning"></i> Trả lời nhanh</span>
+                    <button type="button" id="admin-quick-toggle" title="Ẩn/hiện trả lời nhanh" aria-label="Ẩn/hiện trả lời nhanh">
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                </div>
+                <div id="admin-quick-list"></div>
             </div>
             <div class="card-footer p-2" style="background:#fff; border-top:1px solid #f1f5f9;">
                 <div class="input-group input-group-sm">
@@ -807,16 +853,92 @@
                     });
                     chatMessages.innerHTML = html || '<div class="text-muted text-center" style="margin-top:3rem;font-size:0.85rem;"><i class="bi bi-chat-square-text d-block mb-2" style="font-size:1.5rem;opacity:0.3;"></i>Chưa có tin nhắn</div>';
                     chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                    // Gợi ý câu trả lời khớp với tin nhắn mới nhất của khách
+                    const lastCustomer = [...(messages || [])].reverse().find(m => m.sender_id != myId);
+                    const lastMsg = messages && messages.length ? messages[messages.length - 1] : null;
+                    const needsReply = lastCustomer && lastMsg && lastMsg.sender_id != myId;
+                    const text = needsReply ? String(lastCustomer.content).trim() : '';
+                    const match = QUICK_REPLIES.find(r => r.q && r.q === text);
+                    renderQuickReplies(match ? match.key : null);
                 });
         }
+
+        // ===== CÂU TRẢ LỜI MẪU (khớp với câu hỏi mẫu của khách) =====
+        const QUICK_REPLIES = [
+            { key: 'greet',    icon: 'bi-emoji-smile',  label: 'Chào khách', q: null,
+              a: 'Dạ Nội Thất Tinh Hoa xin chào anh/chị! Shop có thể hỗ trợ gì cho anh/chị ạ?' },
+            { key: 'advise',   icon: 'bi-hand-thumbs-up', label: 'Tư vấn chọn bàn', q: 'Xin chào, tôi cần tư vấn chọn bàn phù hợp.',
+              a: 'Dạ chào anh/chị! Anh/chị cho shop biết kích thước không gian, mục đích sử dụng (làm việc, ăn uống, học tập...) và ngân sách dự kiến để shop tư vấn mẫu bàn phù hợp nhất nhé.' },
+            { key: 'stock',    icon: 'bi-box-seam',     label: 'Còn hàng', q: 'Sản phẩm này hiện còn hàng không ạ?',
+              a: 'Dạ sản phẩm anh/chị quan tâm hiện vẫn còn hàng ạ. Anh/chị có thể đặt hàng trực tiếp trên website hoặc gửi tên sản phẩm để shop hỗ trợ nhanh nhé.' },
+            { key: 'shipping', icon: 'bi-truck',        label: 'Phí & thời gian giao', q: 'Phí vận chuyển và thời gian giao hàng là bao lâu?',
+              a: 'Dạ phí vận chuyển được tính tự động theo địa chỉ nhận hàng ở bước thanh toán (giao qua GHN). Thời gian giao thường từ 2–5 ngày làm việc tùy khu vực ạ.' },
+            { key: 'promo',    icon: 'bi-tag',          label: 'Khuyến mãi', q: 'Hiện shop có chương trình khuyến mãi hoặc mã giảm giá nào không?',
+              a: 'Dạ anh/chị có thể xem và áp dụng các mã giảm giá đang có ngay tại trang Giỏ hàng. Shop sẽ thông báo khi có chương trình mới ạ.' },
+            { key: 'order',    icon: 'bi-receipt',      label: 'Kiểm tra đơn', q: 'Tôi muốn kiểm tra tình trạng đơn hàng của mình.',
+              a: 'Dạ anh/chị vui lòng gửi giúp shop mã đơn hàng, shop sẽ kiểm tra tình trạng và phản hồi ngay ạ.' },
+            { key: 'warranty', icon: 'bi-shield-check', label: 'Bảo hành & đổi trả', q: 'Chính sách bảo hành và đổi trả của shop như thế nào?',
+              a: 'Dạ sản phẩm được bảo hành theo chính sách của shop và hỗ trợ đổi trả nếu có lỗi từ nhà sản xuất. Anh/chị gửi giúp shop mã đơn và hình ảnh sản phẩm để được hỗ trợ nhanh nhất ạ.' },
+            { key: 'install',  icon: 'bi-tools',        label: 'Lắp đặt', q: 'Shop có hỗ trợ lắp đặt tại nhà không?',
+              a: 'Dạ shop có hỗ trợ lắp đặt tại nhà tùy khu vực. Anh/chị cho shop xin địa chỉ để báo chi phí và lịch lắp đặt cụ thể ạ.' },
+            { key: 'payment',  icon: 'bi-credit-card',  label: 'Thanh toán', q: 'Shop hỗ trợ những phương thức thanh toán nào?',
+              a: 'Dạ shop hỗ trợ thanh toán khi nhận hàng (COD) và thanh toán online qua ví MoMo ạ.' },
+            { key: 'wait',     icon: 'bi-hourglass-split', label: 'Chờ một chút', q: null,
+              a: 'Dạ anh/chị vui lòng chờ shop một chút để kiểm tra thông tin nhé.' },
+            { key: 'thanks',   icon: 'bi-heart',        label: 'Cảm ơn', q: null,
+              a: 'Cảm ơn anh/chị đã quan tâm đến Nội Thất Tinh Hoa! Chúc anh/chị một ngày tốt lành ạ.' },
+        ];
+        const quickWrap = document.getElementById('admin-quick-wrap');
+        const quickList = document.getElementById('admin-quick-list');
+        const QUICK_COLLAPSE_KEY = 'table_shop_admin_quick_collapsed';
+        let lastSuggestedKey = undefined;
+        let isSending = false;
+
+        try { if (localStorage.getItem(QUICK_COLLAPSE_KEY) === '1') quickWrap.classList.add('collapsed'); } catch (e) {}
+        document.getElementById('admin-quick-toggle').onclick = () => {
+            quickWrap.classList.toggle('collapsed');
+            try { localStorage.setItem(QUICK_COLLAPSE_KEY, quickWrap.classList.contains('collapsed') ? '1' : '0'); } catch (e) {}
+        };
+
+        function renderQuickReplies(suggestedKey) {
+            if (suggestedKey === lastSuggestedKey && quickList.childElementCount) {
+                updateQuickDisabled();
+                return;
+            }
+            lastSuggestedKey = suggestedKey;
+            const ordered = suggestedKey
+                ? [QUICK_REPLIES.find(r => r.key === suggestedKey), ...QUICK_REPLIES.filter(r => r.key !== suggestedKey)]
+                : QUICK_REPLIES;
+            quickList.innerHTML = ordered.map(r =>
+                `<button type="button" class="admin-quick-chip ${r.key === suggestedKey ? 'suggested' : ''}" data-key="${r.key}" title="${escapeHtml(r.a)}"><i class="bi ${r.icon}"></i>${escapeHtml(r.label)}</button>`
+            ).join('');
+            quickList.scrollTop = 0;
+            quickList.querySelectorAll('.admin-quick-chip').forEach(btn => {
+                btn.onclick = () => {
+                    const reply = QUICK_REPLIES.find(r => r.key === btn.dataset.key);
+                    if (reply) sendMessage(reply.a);
+                };
+            });
+            updateQuickDisabled();
+        }
+
+        function updateQuickDisabled() {
+            quickList.querySelectorAll('.admin-quick-chip').forEach(b => b.disabled = !currentUserId || isSending);
+        }
+
+        renderQuickReplies(null);
 
         function escapeHtml(s) {
             return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         }
 
-        function sendMessage() {
-            const message = chatInput.value.trim();
-            if (!message || !currentUserId) return;
+        function sendMessage(preset) {
+            const fromPreset = typeof preset === 'string';
+            const message = (fromPreset ? preset : chatInput.value).trim();
+            if (!message || !currentUserId || isSending) return;
+            isSending = true;
+            updateQuickDisabled();
             fetch('{{ route('admin.chat.send') }}', {
                 method: 'POST',
                 headers: {
@@ -827,11 +949,12 @@
                 body: JSON.stringify({ message, user_id: currentUserId }),
             })
                 .then(r => r.json())
-                .then(() => { chatInput.value = ''; loadMessages(); })
-                .catch(err => console.error(err));
+                .then(() => { if (!fromPreset) chatInput.value = ''; loadMessages(); })
+                .catch(err => console.error(err))
+                .finally(() => { isSending = false; updateQuickDisabled(); });
         }
 
-        document.getElementById('send-btn').onclick = sendMessage;
+        document.getElementById('send-btn').onclick = () => sendMessage();
         chatInput.onkeypress = e => { if (e.key === 'Enter') sendMessage(); };
 
         setInterval(() => {

@@ -393,23 +393,19 @@
 
         <div id="chat-box">
             <!-- Nút bật chat (có thể kéo di chuyển) -->
-            <button id="chat-toggle" title="Kéo để di chuyển hoặc bấm để mở chat" aria-label="Mở chat hỗ trợ">
+            <button id="chat-toggle" title="Chat hỗ trợ" aria-label="Mở chat hỗ trợ">
                 <i class="bi bi-chat-dots"></i>
             </button>
 
             <!-- Hộp thoại chat popup (có thể kéo di chuyển thanh tiêu đề) -->
             <div id="chat-popup" role="dialog" aria-labelledby="chat-title-text">
-                <div id="chat-header" title="Giữ chuột hoặc chạm để kéo di chuyển hộp chat">
+                <div id="chat-header">
                     <div class="chat-title">
-                        <i class="bi bi-grip-vertical chat-drag-handle-hint" title="Kéo để di chuyển"></i>
+                        <i class="bi bi-grip-vertical chat-drag-handle-hint"></i>
                         <span class="online-dot"></span>
-                        <span id="chat-title-text">Hỗ trợ khách hàng</span>
-                        <span class="chat-drag-badge d-none d-sm-inline">Kéo di chuyển</span>
+                        <span id="chat-title-text" style="white-space:nowrap;">Hỗ trợ khách hàng</span>
                     </div>
                     <div class="chat-header-actions">
-                        <button id="chat-reset-btn" class="chat-header-btn" title="Đặt lại vị trí góc phải (hoặc nhấp đúp tiêu đề)" aria-label="Đặt lại vị trí">
-                            <i class="bi bi-arrow-counterclockwise"></i>
-                        </button>
                         <button id="chat-minimize-btn" class="chat-header-btn" title="Thu nhỏ" aria-label="Thu nhỏ">
                             <i class="bi bi-dash-lg"></i>
                         </button>
@@ -421,7 +417,7 @@
                 <div id="chat-messages">
                     <div style="text-align:center;margin:auto;color:#94a3b8;font-size:0.82rem;">
                         <i class="bi bi-chat-square-text d-block mb-1" style="font-size:1.5rem;opacity:0.4;"></i>
-                        Bắt đầu trò chuyện với Admin
+                        Bắt đầu trò chuyện
                     </div>
                 </div>
                 <div id="chat-quick-wrap">
@@ -637,7 +633,7 @@
                 chatPopup.style.right = '24px';
                 chatPopup.style.bottom = '24px';
             }
-            resetBtn.onclick = resetChatPosition;
+            if (resetBtn) resetBtn.onclick = resetChatPosition;
             // Nhấp đúp vào header để reset vị trí
             chatHeader.addEventListener('dblclick', function(e) {
                 if (!e.target.closest('.chat-header-btn')) {
@@ -655,7 +651,7 @@
                     .then(r => r.json())
                     .then(messages => {
                         if (!messages || messages.length === 0) {
-                            chatBox.innerHTML = `<div style="text-align:center;margin:auto;color:#94a3b8;font-size:0.82rem;"><i class="bi bi-chat-square-text d-block mb-1" style="font-size:1.5rem;opacity:0.4;"></i>Bắt đầu trò chuyện với Admin</div>`;
+                            chatBox.innerHTML = `<div style="text-align:center;margin:auto;color:#94a3b8;font-size:0.82rem;"><i class="bi bi-chat-square-text d-block mb-1" style="font-size:1.5rem;opacity:0.4;"></i>Bắt đầu trò chuyện</div>`;
                             return;
                         }
                         let html = '';
