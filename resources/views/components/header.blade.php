@@ -76,8 +76,6 @@
                 </ul>
             </nav>
 
-            {{-- Các nút thao tác góc phải --}}
-            <div class="nth-actions">
                 {{-- Ô tìm kiếm thu gọn thanh lịch --}}
                 <form action="{{ route('user.home') }}" method="GET" class="nth-search">
                     <input type="search"
@@ -94,6 +92,13 @@
                     </button>
                 </form>
 
+            {{-- Các nút thao tác góc phải --}}
+            <div class="nth-actions">
+                @if(!auth()->check() || !auth()->user()->isAdmin())
+                    <a href="{{ route('user.orders.index') }}" class="nth-action-btn" id="nth-orders-link" title="Đơn hàng của tôi" aria-label="Đơn hàng của tôi">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M7 3H5a2 2 0 0 0-2 2v15a1 1 0 0 0 1.6.8L7 19l3 2 3-2 3 2 3-2 1.4.8A1 1 0 0 0 22 19V5a2 2 0 0 0-2-2h-3"/><rect x="7" y="1" width="10" height="5" rx="2"/><path d="M7 11h10M7 15h7"/></svg>
+                    </a>
+                @endif
                 {{-- Tài khoản / Đơn hàng --}}
                 @auth
                     <div class="nth-account-dropdown">
@@ -366,7 +371,7 @@
 .nth-navbar__inner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     height: 72px;
     position: relative;
     gap: 16px;
@@ -457,7 +462,7 @@
 
 /* Menu ngang chính (Desktop Navbar — Dùng font Cormorant Garamond đồng điệu Logo, hiển thị trọn vẹn không mất chữ) */
 .nth-nav {
-    flex: 1;
+    flex: 0 0 auto;
     min-width: 0;
     display: flex;
     align-items: center;
@@ -602,12 +607,14 @@
 
 /* Các nút thao tác góc phải */
 .nth-actions {
+    margin-left: auto;
     display: flex;
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
 }
 .nth-search {
+    flex-shrink: 0;
     position: relative;
     display: flex;
     align-items: center;
@@ -625,7 +632,7 @@
     transition: all 0.25s ease;
 }
 .nth-search__input:focus {
-    width: 190px;
+    width: 135px;
     background: #fff;
     border-color: #5A4536;
 }
@@ -1026,7 +1033,14 @@
 .nth-sidebar-contact a { color: #5A4536; text-decoration: none; font-weight: 600; }
 
 /* Responsive Rules */
-@media (max-width: 1199px) {
+@media (min-width: 1200px) and (max-width: 1450px) {
+    .nth-nav__list { gap:14px; }
+    .nth-nav__link { font-size:15px; }
+    .nth-nav { margin-left:0; }
+    .nth-navbar__inner { gap:12px; }
+}
+@media (max-width: 1279px) {
+    .nth-nav { display:none; }
     .nth-nav__list { gap: 12px; }
     .nth-nav__link { font-size: 12.5px; }
 }
@@ -1038,6 +1052,14 @@
     .nth-sidebar-toggle { padding: 6px 9px; }
     .nth-navbar__inner { height: 60px; }
     .nth-brand__title { font-size: 20px; }
+}
+@media (max-width: 575px) {
+    .nth-navbar__inner { gap:6px; }
+    .nth-navbar__left { gap:8px; }
+    .nth-brand__title { font-size:16px; }
+    .nth-brand__sub { font-size:8px; }
+    .nth-actions { gap:0; }
+    .nth-action-btn { width:32px; }
 }
 </style>
 
