@@ -18,6 +18,6 @@ class ProductImage extends Model
 
     public function getUrlAttribute()
     {
-        return asset('storage/' . $this->path);
+        return Product::storageUrl($this->path);
     }
 }

@@ -665,7 +665,8 @@
 
             function onPointerDown(e) {
                 if (e.type === 'mousedown' && e.button !== 0) return;
-                if (e.target.closest('button')) return;
+                // Chỉ bỏ qua nếu bấm vào nút con bên trong handle (ví dụ các nút trong header), không bỏ qua chính handleEl
+                if (handleEl !== targetEl && e.target.closest('button')) return;
 
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -729,10 +730,24 @@
             handleEl.addEventListener('touchstart', onPointerDown, { passive: true });
         }
 
-        // Kéo nút toggle admin
+        // Kéo nút toggle admin & mở chat khi nhấp
         setupDraggable(toggleBtn, toggleBtn, STORAGE_TOGGLE_KEY, function() {
-            openChat();
+            toggleChat();
         });
+
+        // Bổ sung sự kiện click trực tiếp để đảm bảo luôn mở được chat
+        toggleBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleChat();
+        });
+
+        function toggleChat() {
+            if (chatPopup.classList.contains('open')) {
+                closeChat();
+            } else {
+                openChat();
+            }
+        }
 
         // Kéo khung chat admin qua header
         setupDraggable(chatPopup, chatHeader, STORAGE_POPUP_KEY, null);

@@ -269,7 +269,7 @@
                                 <div class="text-muted small mb-1 fw-semibold">Ảnh chính hiện tại (bấm <span class="badge bg-danger rounded-pill px-1">x</span> để xóa):</div>
                                 <div class="image-preview-grid">
                                     <div class="image-preview-item" id="old-main-image-item">
-                                        <img src="{{ $product->image_url }}" alt="Ảnh chính">
+                                        <img src="{{ $product->image_url }}" alt="Ảnh chính" onerror="this.onerror=null;this.src='https://placehold.co/200x200?text=No+Image';">
                                         <span class="img-badge badge-main">Ảnh chính</span>
                                         <button type="button" class="btn-remove-img" id="btn-delete-main-img" title="Xóa ảnh chính này">
                                             <i class="bi bi-x-lg"></i>
@@ -289,6 +289,9 @@
                                 {{ $product->image ? 'Thay thế bằng ảnh mới:' : 'Tải lên ảnh chính:' }}
                             </label>
                             <input type="file" name="image" id="input-main-image" class="form-control form-control-sm" accept="image/*">
+                            <div class="form-text text-muted" style="font-size:0.75rem;">
+                                <i class="bi bi-info-circle me-1"></i>Sau khi chọn ảnh, bấm <strong>"Cập nhật sản phẩm"</strong> ở cuối trang để lưu thật vào hệ thống.
+                            </div>
                         </div>
 
                         <!-- Khung xem trước ảnh chính mới upload nhỏ nhỏ -->
@@ -327,7 +330,7 @@
                                 <div class="image-preview-grid" id="old-gallery-grid">
                                     @foreach ($product->images as $img)
                                         <div class="image-preview-item" id="gallery-item-{{ $img->id }}">
-                                            <img src="{{ $img->url }}" alt="Gallery image">
+                                            <img src="{{ $img->url }}" alt="Gallery image" onerror="this.onerror=null;this.src='https://placehold.co/200x200?text=No+Image';">
                                             <button type="button" class="btn-remove-img btn-delete-gallery-old" data-id="{{ $img->id }}" title="Xóa ảnh này">
                                                 <i class="bi bi-x-lg"></i>
                                             </button>
