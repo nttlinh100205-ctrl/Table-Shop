@@ -920,25 +920,6 @@
                 <form method="POST" action="{{ route('user.orders.store') }}" id="checkoutForm">
                     @csrf
                     <div class="card p-3 mb-3">
-                        <div class="d-flex align-items-center justify-content-between gap-3">
-                            <label for="use-coins-toggle" class="d-flex align-items-center gap-3 mb-0" style="cursor:pointer"><span aria-hidden="true" style="display:grid;place-items:center;width:34px;height:34px;flex-shrink:0;border:2px solid #b68a48;border-radius:50%;color:#b68a48;font-family:Georgia,serif;font-weight:bold">T</span><span>Dùng <strong id="usable-coins">0</strong> xu Table Shop</span></label>
-                            <label class="coin-switch"><input type="checkbox" id="use-coins-toggle" role="switch" aria-label="Dùng xu Table Shop" aria-describedby="coin-use-note" @checked(old('coins_to_use', 0) > 0)><span aria-hidden="true"></span></label>
-                        </div>
-                        <input type="hidden" name="coins_to_use" id="coins_to_use" value="0">
-                        <small id="coin-use-note" class="text-muted mt-2">Bật để giảm tiền hàng bằng xu. 1 xu = {{ config('coins.vnd_per_coin') }}đ.</small>
-                        <style>
-                            .coin-switch { position:relative;display:inline-block;width:48px;height:28px;flex-shrink:0;cursor:pointer; }
-                            .coin-switch input { position:absolute;opacity:0;width:100%;height:100%;margin:0;z-index:1;cursor:pointer; }
-                            .coin-switch span { display:block;width:100%;height:100%;border-radius:30px;background:#dedbd6;transition:background .2s; }
-                            .coin-switch span::before { content:'';position:absolute;width:22px;height:22px;left:3px;top:3px;border-radius:50%;background:white;box-shadow:0 1px 4px #0002;transition:transform .2s; }
-                            .coin-switch input:checked + span { background:#8a6542; }
-                            .coin-switch input:checked + span::before { transform:translateX(20px); }
-                            .coin-switch input:focus-visible + span { outline:3px solid #c29d62;outline-offset:3px; }
-                            .coin-switch input:disabled + span { opacity:.5; }
-                        </style>
-                        @error('coins_to_use')<div class="text-danger">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="card p-3 mb-3">
                         <label for="referral_code" class="form-label">Mã giới thiệu (không bắt buộc)</label>
                         <input id="referral_code" name="referral_code" maxlength="32" class="form-control" value="{{ old('referral_code') }}" placeholder="REF-XXXXXX">
                         <small>Người giới thiệu nhận điểm khi đơn hàng hoàn thành.</small>
@@ -1332,6 +1313,25 @@
                             </div>
                         </div>
 
+                    <div class="card p-3 mb-3">
+                        <div class="d-flex align-items-center justify-content-between gap-3">
+                            <label for="use-coins-toggle" class="d-flex align-items-center gap-3 mb-0" style="cursor:pointer"><span aria-hidden="true" style="display:grid;place-items:center;width:34px;height:34px;flex-shrink:0;border:2px solid #b68a48;border-radius:50%;color:#b68a48;font-family:Georgia,serif;font-weight:bold">T</span><span>Dùng <strong id="usable-coins">0</strong> xu Table Shop</span></label>
+                            <label class="coin-switch"><input type="checkbox" id="use-coins-toggle" role="switch" aria-label="Dùng xu Table Shop" aria-describedby="coin-use-note" @checked(old('coins_to_use', 0) > 0)><span aria-hidden="true"></span></label>
+                        </div>
+                        <input type="hidden" name="coins_to_use" form="checkoutForm" id="coins_to_use" value="0">
+                        <small id="coin-use-note" class="text-muted mt-2">Bật để giảm tiền hàng bằng xu. 1 xu = {{ config('coins.vnd_per_coin') }}đ.</small>
+                        <style>
+                            .coin-switch { position:relative;display:inline-block;width:48px;height:28px;flex-shrink:0;cursor:pointer; }
+                            .coin-switch input { position:absolute;opacity:0;width:100%;height:100%;margin:0;z-index:1;cursor:pointer; }
+                            .coin-switch span { display:block;width:100%;height:100%;border-radius:30px;background:#dedbd6;transition:background .2s; }
+                            .coin-switch span::before { content:'';position:absolute;width:22px;height:22px;left:3px;top:3px;border-radius:50%;background:white;box-shadow:0 1px 4px #0002;transition:transform .2s; }
+                            .coin-switch input:checked + span { background:#8a6542; }
+                            .coin-switch input:checked + span::before { transform:translateX(20px); }
+                            .coin-switch input:focus-visible + span { outline:3px solid #c29d62;outline-offset:3px; }
+                            .coin-switch input:disabled + span { opacity:.5; }
+                        </style>
+                        @error('coins_to_use')<div class="text-danger">{{ $message }}</div>@enderror
+                    </div>
                         <div class="calc-row highlight-shipping">
                             <span>Phí vận chuyển (GHN)</span>
                             <strong id="shipping_fee_text">Chọn địa chỉ</strong>
