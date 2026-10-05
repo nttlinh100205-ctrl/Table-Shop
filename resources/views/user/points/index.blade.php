@@ -5,13 +5,18 @@
 @section('content')
 <div class="container py-3">
     <div class="card p-3">
-        <h2 class="h5">Giới thiệu bạn bè</h2>
-        <p>Xu điểm danh: <strong>{{ number_format(auth()->user()->coin_balance) }}</strong> xu · <a href="{{ route('user.check-in.index') }}">Điểm danh nhận xu mỗi ngày</a></p>
-        <p>Mã của bạn: <strong>{{ auth()->user()->referral_code }}</strong> · Điểm hiện có: {{ number_format(auth()->user()->points_balance) }}</p>
-        <a href="{{ route('user.spin.index') }}">Vòng quay may mắn · {{ auth()->user()->spin_tickets }} lượt</a>
-        @foreach(auth()->user()->notifications()->latest()->limit(5)->get() as $notification)
-            <p class="mb-1 mt-2">{{ $notification->data['message'] ?? 'Thông báo điểm thưởng' }}</p>
-        @endforeach
+        <div class="d-flex align-items-center flex-wrap gap-2">
+            <span>Mã giới thiệu:</span><strong id="referral-code">{{ auth()->user()->referral_code }}</strong>
+            <button type="button" id="copy-referral" class="btn btn-sm btn-outline-dark" aria-label="Sao chép mã giới thiệu" title="Sao chép mã giới thiệu"><i class="bi bi-copy" aria-hidden="true"></i></button>
+            <span id="copy-referral-status" class="small" role="status"></span>
+        </div>
+        <script>
+        document.getElementById('copy-referral').onclick=async()=>{
+            const code=document.getElementById('referral-code').textContent, status=document.getElementById('copy-referral-status');
+            try { await navigator.clipboard.writeText(code); status.textContent='Đã sao chép'; }
+            catch(e) { status.textContent='Hãy chọn mã để sao chép.'; const range=document.createRange();range.selectNodeContents(document.getElementById('referral-code'));window.getSelection().removeAllRanges();window.getSelection().addRange(range); }
+        };
+        </script>
     </div>
 </div>
 <div class="py-4" style="background-color: #FAF6F0; min-height: 80vh;">
@@ -56,7 +61,7 @@
 
         <div class="card border-0 shadow-sm text-white mb-4 position-relative overflow-hidden" 
              style="background: {{ $cardBg }}; border-radius: 16px;">
-            <div class="position-absolute end-0 top-0 opacity-10 p-3 pe-4 pointer-events-none" style="font-size: 14rem; line-height: 1; user-select: none;">
+            <div class="position-absolute end-0 top-0 p-3 pe-4" aria-hidden="true" style="font-size: 14rem; line-height: 1; user-select: none; opacity: .1; pointer-events: none;">
                 <i class="bi bi-award"></i>
             </div>
 
@@ -143,6 +148,14 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm p-3 mb-4" style="border-radius:14px">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div><h2 class="h5 mb-1"><i class="bi bi-calendar-check me-2" aria-hidden="true"></i>Điểm danh nhận xu</h2>
+                    <span class="small">Bạn có <strong><span data-coin-balance>{{ number_format(auth()->user()->coin_balance) }}</span> xu</strong> · Nhận 100 xu mỗi ngày, lần thứ 7 nhận 200 xu.</span></div>
+                <a href="{{ route('user.check-in.index') }}" class="btn btn-dark">Điểm danh ngay</a>
             </div>
         </div>
 

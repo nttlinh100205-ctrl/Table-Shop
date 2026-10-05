@@ -122,8 +122,9 @@
                             @else
                                 <a href="{{ route('user.orders.index') }}" class="nth-account-menu__item">Đơn hàng của tôi</a>
                                 <a href="{{ route('user.points.index') }}" class="nth-account-menu__item">
-                                    <span>Điểm thưởng &amp; Hạng</span>
+                                    <span>Hồ sơ · Điểm thưởng &amp; Hạng</span>
                                 </a>
+                                <a href="{{ route('user.check-in.index') }}" class="nth-account-menu__item"><i class="bi bi-calendar-check me-2" aria-hidden="true"></i>Điểm danh nhận xu</a>
                             @endif
                             <form action="{{ route('logout') }}" method="POST" class="nth-account-menu__logout">
                                 @csrf

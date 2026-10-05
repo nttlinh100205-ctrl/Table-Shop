@@ -119,6 +119,7 @@
         });
     </script>
     @stack('scripts')
+    @include('components.daily-check-in-popup')
 
     {{-- ===== USER LIVECHAT (Hiện cho cả khách và user, ẩn với admin) ===== --}}
     @if(!auth()->check() || !auth()->user()->isAdmin())
@@ -402,6 +403,14 @@
         </style>
 
         <div id="chat-box">
+            <a id="floating-spin" href="{{ route('user.spin.index') }}" aria-label="Vòng quay may mắn" title="Vòng quay may mắn"><span aria-hidden="true"></span></a>
+            <style>
+                #floating-spin { position:fixed; bottom:94px; right:24px; width:56px; height:56px; z-index:1999; border:4px solid #e6bd70; border-radius:50%; box-shadow:0 6px 20px #49362640; background:#fff; }
+                #floating-spin span { display:block; width:100%; height:100%; border-radius:50%; background:conic-gradient(#dc6548 0deg 60deg,#f3cb79 60deg 120deg,#71a89a 120deg 180deg,#f3cb79 180deg 240deg,#718eb0 240deg 300deg,#f3cb79 300deg); animation:reward-wheel-turn 9s linear infinite; }
+                #floating-spin::after { content:'★'; position:absolute; inset:14px; display:grid; place-items:center; border-radius:50%; background:#fff8e6; color:#8d5428; font-size:16px; }
+                @keyframes reward-wheel-turn { to { transform:rotate(360deg); } }
+                @media(prefers-reduced-motion:reduce) { #floating-spin span { animation:none; } }
+            </style>
             <!-- Nút bật chat (có thể kéo di chuyển) -->
             <button id="chat-toggle" title="Chat hỗ trợ" aria-label="Mở chat hỗ trợ">
                 <i class="bi bi-chat-dots"></i>
@@ -416,9 +425,6 @@
                         <span id="chat-title-text" style="white-space:normal;line-height:1.5;">Hỗ trợ khách hàng</span>
                     </div>
                     <div class="chat-header-actions">
-                        <a href="{{ route('user.spin.index') }}" class="chat-header-btn" title="Vòng quay may mắn" aria-label="Vòng quay may mắn">
-                            <span aria-hidden="true" style="display:block;width:20px;height:20px;border:2px solid white;border-radius:50%;background:conic-gradient(#fbbf24 0deg 60deg,#ef4444 60deg 120deg,#34d399 120deg 180deg,#60a5fa 180deg 240deg,#c084fc 240deg 300deg,#fb923c 300deg)"></span>
-                        </a>
                         <button id="chat-minimize-btn" class="chat-header-btn" title="Thu nhỏ" aria-label="Thu nhỏ">
                             <i class="bi bi-dash-lg"></i>
                         </button>
@@ -504,6 +510,12 @@
                 el.style.top = clampedY + 'px';
                 el.style.right = 'auto';
                 el.style.bottom = 'auto';
+                if (el.id === 'chat-toggle') {
+                    const spin = document.getElementById('floating-spin');
+                    spin.style.left = clampedX + 'px';
+                    spin.style.top = (clampedY >= 80 ? clampedY - 70 : clampedY + h + 12) + 'px';
+                    spin.style.right = spin.style.bottom = 'auto';
+                }
 
                 return { x: clampedX, y: clampedY };
             }
