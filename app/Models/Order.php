@@ -67,6 +67,26 @@ class Order extends Model
         return $this->hasMany(PaymentTransaction::class);
     }
 
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function pointTransactions()
+    {
+        return $this->hasMany(PointTransaction::class);
+    }
+
+    public function hasReviewedProduct(int $productId): bool
+    {
+        return $this->reviews()->where('product_id', $productId)->exists();
+    }
+
+    public function getReviewForProduct(int $productId): ?Review
+    {
+        return $this->reviews()->where('product_id', $productId)->first();
+    }
+
     public function canPayMomo(): bool
     {
         return !in_array($this->status, ['paid', 'cod_ordered', 'cancelled', 'completed'], true)

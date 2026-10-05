@@ -45,8 +45,8 @@ class CartController extends Controller
             session()->save();
         }
 
-        // Lấy danh sách khuyến mãi để hiển thị cho khách hàng xem ngay tại giỏ hàng
-        $allPromotions = Promotion::active()->notExpired()->orderBy('min_order_amount', 'asc')->get();
+        // Lấy danh sách khuyến mãi để hiển thị cho khách hàng xem ngay tại giỏ hàng (mã chung + mã riêng)
+        $allPromotions = Promotion::active()->notExpired()->forUser(auth()->id())->orderBy('min_order_amount', 'asc')->get();
         $availablePromotions = collect();
         $ineligiblePromotions = collect();
 
@@ -265,7 +265,7 @@ class CartController extends Controller
         $subtotal = (float) collect($cart)->sum(fn ($item) => ($item['price'] ?? 0) * ($item['quantity'] ?? 0));
 
         $errorMsg = null;
-        if (!$promotion->isValid($subtotal, $errorMsg)) {
+        if (!$promotion->isValid($subtotal, $errorMsg, auth()->id())) {
             return response()->json([
                 'success' => false,
                 'message' => $errorMsg,
@@ -334,6 +334,7 @@ class CartController extends Controller
 
         $allPromotions = Promotion::active()
             ->notExpired()
+            ->forUser(auth()->id())
             ->orderBy('min_order_amount', 'asc')
             ->get();
 

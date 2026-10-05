@@ -15,7 +15,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Chạy lệnh quét điểm hết hạn hằng ngày lúc 00:05 sáng
+        $schedule->command('points:expire')->dailyAt('00:05');
     }
 
     /**

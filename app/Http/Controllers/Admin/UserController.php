@@ -28,11 +28,18 @@ class UserController extends Controller
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
             'role'     => 'required|in:admin,user',
+            'avatar'   => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
         ]);
+
+        $avatarUrl = null;
+        if ($request->hasFile('avatar')) {
+            $avatarUrl = \App\Services\CloudinaryService::uploadOrStore($request->file('avatar'), 'avatars');
+        }
 
         User::create([
             'name'     => $request->name,
             'email'    => $request->email,
+            'avatar'   => $avatarUrl,
             'password' => Hash::make($request->password),
             'role'     => $request->role,
         ]);
@@ -53,16 +60,25 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name'  => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'role'  => 'required|in:admin,user',
+            'name'   => 'required|string|max:255',
+            'email'  => 'required|email|unique:users,email,' . $user->id,
+            'role'   => 'required|in:admin,user',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
         ]);
 
-        $user->update([
+        $data = [
             'name'  => $request->name,
             'email' => $request->email,
             'role'  => $request->role,
-        ]);
+        ];
+
+        if ($request->hasFile('avatar')) {
+            $data['avatar'] = \App\Services\CloudinaryService::uploadOrStore($request->file('avatar'), 'avatars');
+        } elseif ($request->boolean('delete_avatar')) {
+            $data['avatar'] = null;
+        }
+
+        $user->update($data);
 
         return redirect()->route('admin.users.index')->with('success', 'Cập nhật người dùng thành công.');
     }

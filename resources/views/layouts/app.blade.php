@@ -120,9 +120,8 @@
     </script>
     @stack('scripts')
 
-    {{-- ===== USER LIVECHAT ===== --}}
-    @auth
-        @if(!auth()->user()->isAdmin())
+    {{-- ===== USER LIVECHAT (Hiện cho cả khách và user, ẩn với admin) ===== --}}
+    @if(!auth()->check() || !auth()->user()->isAdmin())
         <style>
             /* ===== DRAGGABLE USER LIVECHAT ===== */
             #chat-toggle {
@@ -247,20 +246,28 @@
                 gap: 4px;
             }
             .chat-header-btn {
-                background: rgba(255,255,255,0.12);
-                border: none;
-                color: #FAF6F0;
-                width: 26px; height: 26px;
-                border-radius: 5px;
+                background: rgba(255,255,255,0.2);
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                color: #FFFFFF;
+                width: 32px; height: 32px;
+                border-radius: 6px;
                 display: inline-flex; align-items: center; justify-content: center;
                 cursor: pointer;
-                font-size: 0.8rem;
-                transition: background 0.15s, transform 0.15s, color 0.15s;
+                font-size: 0.95rem;
+                transition: background 0.15s, transform 0.15s;
             }
             .chat-header-btn:hover {
-                background: rgba(255,255,255,0.28);
+                background: rgba(255,255,255,0.35);
                 color: #fff;
-                transform: translateY(-1px);
+                transform: scale(1.05);
+            }
+            #chat-close-btn {
+                background: #ef4444 !important;
+                color: #ffffff !important;
+                border-color: rgba(255,255,255,0.3) !important;
+            }
+            #chat-close-btn:hover {
+                background: #dc2626 !important;
             }
             .chat-drag-badge {
                 font-size: 0.65rem;
@@ -285,7 +292,7 @@
             }
             .chat-bubble {
                 max-width: 84%;
-                padding: 0.6rem 0.9rem;
+                padding: 0.65rem 0.95rem;
                 border-radius: 8px;
                 font-size: 0.875rem;
                 line-height: 1.5;
@@ -293,26 +300,26 @@
             }
             .chat-bubble.me {
                 align-self: flex-end;
-                background: #5A4536;
-                color: #FAF6F0;
+                background: #3F2F24 !important;
+                color: #FFFFFF !important;
                 border-bottom-right-radius: 2px;
-                box-shadow: 0 2px 6px rgba(90, 69, 54, 0.2);
+                box-shadow: 0 2px 6px rgba(63, 47, 36, 0.25);
             }
             .chat-bubble.admin {
                 align-self: flex-start;
-                background: #FFFFFF;
-                color: #3A2E26;
-                border: 1px solid #E6D8C8;
+                background: #F1F5F9 !important;
+                color: #0F172A !important; /* Đen đậm rõ nét */
+                border: 1px solid #CBD5E1 !important;
                 border-bottom-left-radius: 2px;
-                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             }
             .chat-sender-label {
-                font-size: 0.72rem;
-                font-weight: 600;
-                margin-bottom: 2px;
-                color: #7E7065;
+                font-size: 0.74rem;
+                font-weight: 700;
+                margin-bottom: 3px;
+                color: #475569 !important;
             }
-            .chat-sender-label.me { text-align: right; color: #5A4536; }
+            .chat-sender-label.me { text-align: right; color: #3F2F24 !important; }
 
             #chat-footer {
                 padding: 0.75rem 0.85rem;
@@ -460,7 +467,8 @@
             const chatBox     = document.getElementById('chat-messages');
             if (!toggleBtn || !chatPopup) return;
 
-            const myId = {{ (int) auth()->id() }};
+            const myId = {{ (int) (auth()->id() ?? 0) }};
+            const isGuest = {{ auth()->check() ? 'false' : 'true' }};
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
             // ===== DRAG & DROP ENGINE =====
@@ -654,6 +662,25 @@
             }
 
             function loadMessages() {
+                if (isGuest) {
+                    chatBox.innerHTML = `
+                        <div style="text-align:center;margin:auto;padding:1.5rem 1rem;">
+                            <div style="width:48px;height:48px;border-radius:50%;background:#F3E9DC;color:#5A4536;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:1.4rem;">
+                                <i class="bi bi-chat-heart-fill"></i>
+                            </div>
+                            <h6 style="font-family:var(--font-serif);font-size:1.1rem;font-weight:700;color:#3A2E26;margin-bottom:6px;">Chào mừng bạn đến với Table Shop!</h6>
+                            <p style="font-size:0.82rem;color:#7E7065;line-height:1.5;margin-bottom:14px;">Vui lòng đăng nhập để bắt đầu trò chuyện trực tiếp và nhận tư vấn chi tiết từ nhân viên hỗ trợ.</p>
+                            <a href="{{ route('login') }}" style="display:inline-block;width:100%;padding:9px 16px;background:linear-gradient(135deg, #5A4536, #3F2F24);color:#FAF6F0;text-decoration:none;border-radius:6px;font-size:0.85rem;font-weight:600;box-shadow:0 3px 10px rgba(63,47,36,0.2);">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập để chat ngay
+                            </a>
+                            <div style="margin-top:10px;font-size:0.75rem;color:#94a3b8;">
+                                Chưa có tài khoản? <a href="{{ route('register') }}" style="color:#5A4536;font-weight:600;text-decoration:none;">Đăng ký</a>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
                 fetch('{{ route('user.chat.messages') }}', { headers: { Accept: 'application/json' } })
                     .then(r => r.json())
                     .then(messages => {
@@ -691,7 +718,13 @@
 
             // Bấm câu mẫu -> gửi ngay
             quickChips.forEach(chip => {
-                chip.addEventListener('click', () => sendMessage(chip.dataset.msg));
+                chip.addEventListener('click', () => {
+                    if (isGuest) {
+                        window.location.href = "{{ route('login') }}";
+                        return;
+                    }
+                    sendMessage(chip.dataset.msg);
+                });
             });
 
             function setSending(state) {
@@ -701,6 +734,10 @@
             }
 
             function sendMessage(preset) {
+                if (isGuest) {
+                    window.location.href = "{{ route('login') }}";
+                    return;
+                }
                 const fromPreset = typeof preset === 'string';
                 const message = (fromPreset ? preset : input.value).trim();
                 if (!message) return;
@@ -730,11 +767,10 @@
             sendBtn.onclick = () => sendMessage();
             input.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
             setInterval(() => {
-                if (chatPopup.classList.contains('open')) loadMessages();
+                if (chatPopup.classList.contains('open') && !isGuest) loadMessages();
             }, 3000);
         });
         </script>
         @endif
-    @endauth
 </body>
 </html>

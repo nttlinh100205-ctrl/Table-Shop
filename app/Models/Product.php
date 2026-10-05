@@ -59,6 +59,16 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
+    public function reviews()
+    {
+        return $this->hasMany(Review::class)->latest();
+    }
+
+    public function getAverageRatingAttribute(): float
+    {
+        return (float) ($this->reviews()->avg('rating') ?? 5.0);
+    }
+
     /**
      * Encode từng segment path để URL không vỡ vì ký tự #, space, ...
      */

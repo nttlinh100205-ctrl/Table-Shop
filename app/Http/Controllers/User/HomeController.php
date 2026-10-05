@@ -77,7 +77,7 @@ class HomeController extends Controller
      */
     public function show($id)
     {
-        $product = Product::with(['category', 'variants', 'images'])
+        $product = Product::with(['category', 'variants', 'images', 'reviews.user'])
             ->findOrFail($id);
 
         return view('user.products.show', compact('product'));

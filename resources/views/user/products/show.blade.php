@@ -820,6 +820,89 @@
             @endif
         </div>
 
+        {{-- ===== ĐÁNH GIÁ & TRẢI NGHIỆM TỪ KHÁCH HÀNG ===== --}}
+        <div class="pd-card p-4 mt-4" id="danh-gia">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom pb-3 mb-4">
+                <div>
+                    <h3 class="font-serif mb-1" style="font-size: 1.6rem; color: var(--pd-primary);">
+                        <i class="bi bi-star-fill text-warning me-2"></i>Đánh giá từ khách hàng
+                    </h3>
+                    <p class="text-muted small mb-0">Nhận xét thực tế từ khách hàng đã mua và sử dụng sản phẩm</p>
+                </div>
+                <div class="d-flex align-items-center gap-3 bg-light px-3 py-2 rounded border">
+                    <div class="text-center">
+                        <div class="fs-3 fw-bold font-serif text-dark" style="line-height: 1;">
+                            {{ $product->reviews->isNotEmpty() ? number_format($product->reviews->avg('rating'), 1) : '5.0' }}
+                        </div>
+                        <div class="text-warning small">
+                            @php
+                                $avgR = round($product->reviews->isNotEmpty() ? $product->reviews->avg('rating') : 5);
+                            @endphp
+                            @for ($i = 1; $i <= 5; $i++)
+                                <i class="bi bi-star{{ $i <= $avgR ? '-fill text-warning' : ' text-muted' }}"></i>
+                            @endfor
+                        </div>
+                    </div>
+                    <div class="border-start ps-3 text-muted small">
+                        <strong>{{ $product->reviews->count() }}</strong> lượt đánh giá
+                    </div>
+                </div>
+            </div>
+
+            @if ($product->reviews->isNotEmpty())
+                <div class="d-flex flex-column gap-3">
+                    @foreach ($product->reviews as $rev)
+                        <div class="p-3 bg-light rounded border" style="border-color: #E6D8C8 !important;">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    @if (!empty($rev->user?->avatar))
+                                        <img src="{{ $rev->user->avatar }}" alt="{{ $rev->user->name }}" class="rounded-circle border" style="width: 38px; height: 38px; object-fit: cover;">
+                                    @else
+                                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px; font-size: 0.9rem;">
+                                            {{ strtoupper(mb_substr($rev->user?->name ?? 'K', 0, 1)) }}
+                                        </div>
+                                    @endif
+                                    <div>
+                                        <div class="fw-bold text-dark" style="font-size: 0.92rem;">
+                                            {{ $rev->user?->name ?? 'Khách hàng đã mua' }}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle ms-1" style="font-size: 0.68rem;">
+                                                <i class="bi bi-check-circle-fill me-1"></i>Đã mua hàng
+                                            </span>
+                                        </div>
+                                        <div class="text-warning small" style="font-size: 0.78rem;">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                <i class="bi bi-star{{ $i <= $rev->rating ? '-fill text-warning' : ' text-muted' }}"></i>
+                                            @endfor
+                                            <span class="text-muted ms-1">{{ $rev->created_at->format('d/m/Y') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="mb-2 text-dark" style="white-space: pre-line; line-height: 1.6; font-size: 0.95rem;">
+                                {{ $rev->comment }}
+                            </p>
+
+                            @if (!empty($rev->images) && is_array($rev->images))
+                                <div class="d-flex flex-wrap gap-2 mt-2 pt-2 border-top">
+                                    @foreach ($rev->images as $imgUrl)
+                                        <a href="{{ $imgUrl }}" target="_blank" rel="noopener noreferrer" class="d-inline-block rounded overflow-hidden shadow-sm border" style="width: 72px; height: 72px;">
+                                            <img src="{{ $imgUrl }}" alt="Ảnh đánh giá" style="width: 100%; height: 100%; object-fit: cover;">
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-chat-square-text fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                    Sản phẩm này hiện chưa có đánh giá nào. Khách hàng đã hoàn thành đơn có thể để lại nhận xét tại trang chi tiết đơn hàng!
+                </div>
+            @endif
+        </div>
+
     </div>
 </div>
 

@@ -10,6 +10,7 @@ use App\Models\ProductVariant;
 use App\Models\Promotion;
 use App\Services\GHNOrderService;
 use App\Services\GHNService;
+use App\Services\MembershipService;
 use App\Services\MomoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -46,9 +47,10 @@ class OrderController extends Controller
             }
         }
 
-        // Lấy danh sách khuyến mãi đang hoạt động và còn hạn sử dụng
+        // Lấy danh sách khuyến mãi đang hoạt động và còn hạn sử dụng (bao gồm mã chung + mã riêng của user)
         $allPromotions = Promotion::active()
             ->notExpired()
+            ->forUser(Auth::id())
             ->orderBy('min_order_amount', 'asc')
             ->get();
 
@@ -325,7 +327,7 @@ class OrderController extends Controller
     {
         abort_unless($order->user_id === Auth::id() || (Auth::user() && Auth::user()->isAdmin()), 403);
 
-        $order->load(['items.product']);
+        $order->load(['items.product', 'reviews']);
         if (method_exists($order, 'paymentTransactions')) {
             $order->load('paymentTransactions');
         }
@@ -384,6 +386,7 @@ class OrderController extends Controller
             'status'          => 'cancelled',
             'shipping_status' => 'cancelled',
         ]);
+        MembershipService::revokeOrderPoints($order);
 
         return back()->with('success', 'Đơn hàng đã được hủy.');
     }

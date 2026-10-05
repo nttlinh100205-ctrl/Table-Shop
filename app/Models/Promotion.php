@@ -12,6 +12,7 @@ class Promotion extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'code',
         'name',
         'description',
@@ -27,6 +28,7 @@ class Promotion extends Model
     ];
 
     protected $casts = [
+        'user_id'             => 'integer',
         'discount_value'      => 'decimal:2',
         'max_discount_amount' => 'decimal:2',
         'min_order_amount'    => 'decimal:2',
@@ -38,11 +40,32 @@ class Promotion extends Model
     ];
 
     /**
+     * User sở hữu riêng mã này (null nếu là voucher chung toàn shop)
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
      * Relationship với đơn hàng áp dụng mã này
      */
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Scope lọc khuyến mãi theo user (gồm mã chung toàn hệ thống + mã riêng của user)
+     */
+    public function scopeForUser($query, ?int $userId = null)
+    {
+        return $query->where(function ($q) use ($userId) {
+            $q->whereNull('user_id');
+            if ($userId) {
+                $q->orWhere('user_id', $userId);
+            }
+        });
     }
 
     /**
@@ -103,11 +126,20 @@ class Promotion extends Model
     /**
      * Kiểm tra mã khuyến mãi có hợp lệ hay không (có giải thích lý do cụ thể)
      */
-    public function isValid(?float $orderTotal = null, ?string &$errorMsg = null): bool
+    public function isValid(?float $orderTotal = null, ?string &$errorMsg = null, ?int $checkUserId = null): bool
     {
         if (!$this->is_active) {
             $errorMsg = 'Mã khuyến mãi hiện đang bị tạm khóa hoặc ngừng hoạt động.';
             return false;
+        }
+
+        // Nếu mã khuyến mãi được gắn riêng cho 1 user thì chỉ user đó mới được dùng
+        if (!empty($this->user_id)) {
+            $effectiveUserId = $checkUserId ?? auth()->id();
+            if (!$effectiveUserId || (int) $this->user_id !== (int) $effectiveUserId) {
+                $errorMsg = 'Mã voucher này là phần quà ưu đãi cá nhân, chỉ chủ tài khoản sở hữu mới có quyền áp dụng.';
+                return false;
+            }
         }
 
         if (!$this->hasStarted()) {

@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\PaymentTransaction;
 use App\Services\GHNOrderService;
 use App\Services\GHNService;
+use App\Services\MembershipService;
 use App\Services\MomoService;
 use App\Support\OrderStatus;
 use Carbon\Carbon;
@@ -195,6 +196,14 @@ class OrderController extends Controller
 
         if ($data) {
             $order->update($data);
+            $order->refresh();
+
+            // Nếu đơn thành hoàn thành -> cộng điểm; nếu bị huỷ -> hoàn trả điểm
+            if ($order->status === 'completed') {
+                MembershipService::awardOrderPoints($order);
+            } elseif ($order->status === 'cancelled') {
+                MembershipService::revokeOrderPoints($order);
+            }
         }
 
         $msg = 'Đã cập nhật đơn #' . $order->id;
@@ -249,6 +258,11 @@ class OrderController extends Controller
                 }
 
                 $order->update($data);
+                $order->refresh();
+
+                if ($order->status === 'completed') {
+                    MembershipService::awardOrderPoints($order);
+                }
                 $updated++;
             }
 
@@ -373,6 +387,7 @@ class OrderController extends Controller
             'status'          => 'cancelled',
             'shipping_status' => 'cancelled',
         ]);
+        MembershipService::revokeOrderPoints($order);
 
         return back()->with('success', 'Đã hủy đơn #' . $order->id . '.');
     }
@@ -434,6 +449,7 @@ class OrderController extends Controller
             'cancel_admin_note' => $note,
             'cancel_processed_at' => now(),
         ]);
+        MembershipService::revokeOrderPoints($order);
 
         $refundMsg = $this->refundPaidTransactions($order);
 
@@ -484,6 +500,7 @@ class OrderController extends Controller
                 'shipping_status'     => 'returned',
                 'status'              => 'cancelled',
             ]);
+            MembershipService::revokeOrderPoints($order);
 
             // Tự động hoàn tiền hàng nếu đã thu qua MoMo
             $refundMsg = $this->refundPaidTransactions($order);

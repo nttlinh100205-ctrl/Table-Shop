@@ -323,12 +323,23 @@
                             <th>Size / Màu</th>
                             <th class="text-center">SL</th>
                             <th class="text-end">Thành tiền</th>
+                            @if($order->status === 'completed')
+                                <th class="text-center" style="min-width: 150px;">Đánh giá</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($order->items as $item)
+                            @php
+                                $itemReview = $order->reviews->firstWhere('product_id', $item->product_id);
+                            @endphp
                             <tr>
-                                <td>{{ $item->product->name ?? ('SP #' . $item->product_id) }}</td>
+                                <td>
+                                    <div class="fw-semibold">{{ $item->product->name ?? ('SP #' . $item->product_id) }}</div>
+                                    @if(!empty($item->product->image))
+                                        <small class="text-muted">Mã SP: #{{ $item->product_id }}</small>
+                                    @endif
+                                </td>
                                 <td class="text-muted small">
                                     {{ trim(($item->size_label ?? '') . ' / ' . ($item->color ?? ''), ' /') ?: '—' }}
                                 </td>
@@ -336,19 +347,41 @@
                                 <td class="text-end">
                                     {{ number_format($item->price * $item->quantity, 0, ',', '.') }}đ
                                 </td>
+                                @if($order->status === 'completed')
+                                    <td class="text-center">
+                                        @if($itemReview)
+                                            <span class="badge bg-warning-subtle text-dark border border-warning px-2 py-1" title="Bạn đã đánh giá sản phẩm này">
+                                                @for($s = 1; $s <= 5; $s++)
+                                                    <i class="bi bi-star{{ $s <= $itemReview->rating ? '-fill text-warning' : ' text-muted' }}"></i>
+                                                @endfor
+                                                <span class="ms-1 fw-bold">{{ $itemReview->rating }}/5</span>
+                                            </span>
+                                        @else
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-warning text-dark fw-bold btn-open-review"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#reviewModal"
+                                                    data-product-id="{{ $item->product_id }}"
+                                                    data-product-name="{{ $item->product->name ?? ('SP #' . $item->product_id) }}">
+                                                <i class="bi bi-star-fill text-warning me-1"></i>Đánh giá ngay
+                                            </button>
+                                        @endif
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
+                        @php $colSpan = $order->status === 'completed' ? 4 : 3; @endphp
                         @if(($order->discount_amount ?? 0) > 0)
                             <tr>
-                                <th colspan="3" class="text-end text-muted fw-normal">Tạm tính hàng hóa</th>
+                                <th colspan="{{ $colSpan }}" class="text-end text-muted fw-normal">Tạm tính hàng hóa</th>
                                 <th class="text-end text-muted fw-normal">
                                     {{ number_format($order->total_price + $order->discount_amount, 0, ',', '.') }}đ
                                 </th>
                             </tr>
                             <tr>
-                                <th colspan="3" class="text-end text-success fw-normal">
+                                <th colspan="{{ $colSpan }}" class="text-end text-success fw-normal">
                                     <i class="bi bi-tag-fill me-1"></i>Giảm giá khuyến mãi
                                     @if($order->coupon_code)
                                         <span class="badge bg-success-subtle text-success border border-success-subtle ms-1">{{ $order->coupon_code }}</span>
@@ -360,7 +393,7 @@
                             </tr>
                         @endif
                         <tr>
-                            <th colspan="3" class="text-end">Tổng tiền hàng</th>
+                            <th colspan="{{ $colSpan }}" class="text-end">Tổng tiền hàng</th>
                             <th class="text-end text-danger fs-5">
                                 {{ number_format($order->total_price, 0, ',', '.') }}đ
                             </th>
@@ -550,6 +583,247 @@
             </div>
         </section>
     @endif
+
+    {{-- ===== SECTION: ĐÁNH GIÁ SẢN PHẨM TỪ BẠN ===== --}}
+    @if ($order->reviews->isNotEmpty())
+        <section class="card detail-section-gap border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+            <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
+                <span class="fw-bold" style="font-size: 1.05rem; color: #5A4536;">
+                    <i class="bi bi-chat-heart me-2 text-warning"></i>Đánh giá trải nghiệm của bạn ({{ $order->reviews->count() }})
+                </span>
+                <span class="badge bg-warning-subtle text-dark border border-warning">Đã xác nhận mua hàng</span>
+            </div>
+            <div class="card-body p-4" style="background: #FAF6F0;">
+                <div class="row g-3">
+                    @foreach ($order->reviews as $rev)
+                        @php
+                            $revProduct = $order->items->firstWhere('product_id', $rev->product_id)?->product;
+                        @endphp
+                        <div class="col-12">
+                            <div class="p-3 bg-white rounded-3 border" style="border-color: #E6D8C8 !important;">
+                                <div class="d-flex align-items-start justify-content-between mb-2">
+                                    <div>
+                                        <h6 class="mb-1 fw-bold text-dark">
+                                            {{ $revProduct->name ?? ('Sản phẩm #' . $rev->product_id) }}
+                                        </h6>
+                                        <div class="text-warning small mb-1">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                <i class="bi bi-star{{ $i <= $rev->rating ? '-fill text-warning' : ' text-muted' }}"></i>
+                                            @endfor
+                                            <span class="ms-1 fw-bold text-dark">{{ $rev->rating }}/5 sao</span>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ $rev->created_at->format('d/m/Y H:i') }}</small>
+                                </div>
+                                <p class="mb-2 text-secondary" style="white-space: pre-line; line-height: 1.6;">{{ $rev->comment }}</p>
+
+                                @if (!empty($rev->images) && is_array($rev->images))
+                                    <div class="d-flex flex-wrap gap-2 mt-2 pt-2 border-top">
+                                        @foreach ($rev->images as $imgUrl)
+                                            <a href="{{ $imgUrl }}" target="_blank" rel="noopener noreferrer" class="d-inline-block position-relative rounded overflow-hidden shadow-sm" style="width: 80px; height: 80px; border: 1px solid #E6D8C8;">
+                                                <img src="{{ $imgUrl }}" alt="Ảnh đánh giá" style="width: 100%; height: 100%; object-fit: cover;">
+                                                <span class="position-absolute bottom-0 end-0 bg-dark text-white px-1" style="font-size: 0.65rem; opacity: 0.85;">
+                                                    <i class="bi bi-arrows-fullscreen"></i>
+                                                </span>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
 </div>
 </div>
+
+{{-- ===== MODAL ĐÁNH GIÁ SẢN PHẨM ===== --}}
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 14px; overflow: hidden; border: 1px solid #E6D8C8;">
+            <form action="{{ route('user.reviews.store', $order->id) }}" method="POST" enctype="multipart/form-data" id="reviewForm">
+                @csrf
+                <input type="hidden" name="product_id" id="review_product_id" value="">
+
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, #5A4536, #3F2F24);">
+                    <h5 class="modal-title fw-bold" id="reviewModalLabel">
+                        <i class="bi bi-star-fill text-warning me-2"></i>Đánh giá sản phẩm
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4" style="background: #FAF6F0;">
+                    <div class="mb-3 p-2 bg-white rounded border d-flex align-items-center gap-2">
+                        <i class="bi bi-box-seam text-primary fs-4"></i>
+                        <div>
+                            <small class="text-muted d-block">Sản phẩm đánh giá:</small>
+                            <strong id="review_product_name" class="text-dark">Tên sản phẩm</strong>
+                        </div>
+                    </div>
+
+                    {{-- Chọn số sao tương tác --}}
+                    <div class="mb-3 text-center">
+                        <label class="form-label fw-bold d-block mb-1">Mức độ hài lòng của bạn</label>
+                        <div class="star-rating d-inline-flex gap-2 py-1 px-3 bg-white rounded-pill border" id="starContainer">
+                            @for ($s = 1; $s <= 5; $s++)
+                                <i class="bi bi-star-fill star-item fs-3" data-rating="{{ $s }}" style="cursor: pointer; color: #ffc107; transition: transform 0.15s;"></i>
+                            @endfor
+                        </div>
+                        <input type="hidden" name="rating" id="rating_input" value="5">
+                        <div class="small fw-bold text-muted mt-1" id="rating_label">5/5 - Rất hài lòng</div>
+                    </div>
+
+                    {{-- Nội dung trải nghiệm --}}
+                    <div class="mb-3">
+                        <label for="review_comment" class="form-label fw-bold">Chia sẻ trải nghiệm thực tế <span class="text-danger">*</span></label>
+                        <textarea name="comment" 
+                                  id="review_comment" 
+                                  class="form-control" 
+                                  rows="4" 
+                                  placeholder="Chất lượng bàn ghế, đóng gói, độ bền và cảm nhận khi sử dụng..."
+                                  required 
+                                  minlength="5" 
+                                  maxlength="2000"
+                                  style="border-color: #E6D8C8; font-size: 0.95rem;"></textarea>
+                        <div class="form-text">Tối thiểu 5 ký tự. Đóng góp của bạn giúp cộng đồng chọn được sản phẩm tốt hơn.</div>
+                    </div>
+
+                    {{-- Upload ảnh thực tế Cloudinary --}}
+                    <div class="mb-2">
+                        <label class="form-label fw-bold d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-camera me-1"></i>Hình ảnh thực tế (Tối đa 5 ảnh)</span>
+                            <small class="text-muted fw-normal">Định dạng JPG, PNG, WEBP (≤5MB)</small>
+                        </label>
+                        <input type="file" 
+                               name="images[]" 
+                               id="review_images_input" 
+                               class="form-control" 
+                               accept="image/jpeg,image/png,image/jpg,image/webp,image/gif" 
+                               multiple
+                               style="border-color: #E6D8C8;">
+                        <div id="imagePreviewContainer" class="d-flex flex-wrap gap-2 mt-2"></div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-white border-top">
+                    <button type="button" class="btn btn-outline-secondary px-3" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn text-white fw-bold px-4" id="btnSubmitReview" style="background: #5A4536;">
+                        <i class="bi bi-send me-1"></i>Gửi đánh giá
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 1. Mở modal đánh giá và gán đúng product_id + product_name
+        const reviewModal = document.getElementById('reviewModal');
+        const productIdInput = document.getElementById('review_product_id');
+        const productNameLabel = document.getElementById('review_product_name');
+
+        document.querySelectorAll('.btn-open-review').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const pid = this.getAttribute('data-product-id');
+                const pname = this.getAttribute('data-product-name');
+                if (productIdInput) productIdInput.value = pid;
+                if (productNameLabel) productNameLabel.textContent = pname;
+            });
+        });
+
+        // 2. Tương tác sao rating
+        const starLabels = {
+            1: '1/5 - Rất tệ',
+            2: '2/5 - Chưa hài lòng',
+            3: '3/5 - Bình thường',
+            4: '4/5 - Hài lòng',
+            5: '5/5 - Rất hài lòng, tuyệt vời!'
+        };
+        const stars = document.querySelectorAll('#starContainer .star-item');
+        const ratingInput = document.getElementById('rating_input');
+        const ratingLabel = document.getElementById('rating_label');
+
+        function updateStars(val) {
+            stars.forEach(function (st) {
+                const r = parseInt(st.getAttribute('data-rating'));
+                if (r <= val) {
+                    st.style.color = '#ffc107';
+                    st.classList.remove('bi-star');
+                    st.classList.add('bi-star-fill');
+                } else {
+                    st.style.color = '#cbd5e1';
+                    st.classList.remove('bi-star-fill');
+                    st.classList.add('bi-star');
+                }
+            });
+            if (ratingLabel) {
+                ratingLabel.textContent = starLabels[val] || (val + '/5 sao');
+            }
+        }
+
+        stars.forEach(function (st) {
+            st.addEventListener('mouseenter', function () {
+                const r = parseInt(this.getAttribute('data-rating'));
+                updateStars(r);
+            });
+            st.addEventListener('click', function () {
+                const r = parseInt(this.getAttribute('data-rating'));
+                if (ratingInput) ratingInput.value = r;
+                updateStars(r);
+            });
+        });
+
+        const starContainer = document.getElementById('starContainer');
+        if (starContainer) {
+            starContainer.addEventListener('mouseleave', function () {
+                const currentVal = parseInt(ratingInput ? ratingInput.value : 5);
+                updateStars(currentVal);
+            });
+        }
+
+        // 3. Xem trước ảnh tải lên (Preview)
+        const imgInput = document.getElementById('review_images_input');
+        const previewBox = document.getElementById('imagePreviewContainer');
+
+        if (imgInput && previewBox) {
+            imgInput.addEventListener('change', function () {
+                previewBox.innerHTML = '';
+                const files = Array.from(this.files);
+                if (files.length > 5) {
+                    alert('Chỉ được chọn tối đa 5 hình ảnh thực tế.');
+                    this.value = '';
+                    return;
+                }
+
+                files.forEach(function (file) {
+                    if (!file.type.startsWith('image/')) return;
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const thumb = document.createElement('div');
+                        thumb.className = 'position-relative rounded overflow-hidden shadow-sm';
+                        thumb.style.width = '64px';
+                        thumb.style.height = '64px';
+                        thumb.style.border = '1px solid #E6D8C8';
+                        thumb.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                        previewBox.appendChild(thumb);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
+
+        // 4. Form submit loading state
+        const reviewForm = document.getElementById('reviewForm');
+        const btnSubmit = document.getElementById('btnSubmitReview');
+        if (reviewForm && btnSubmit) {
+            reviewForm.addEventListener('submit', function () {
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Đang tải ảnh & gửi...`;
+            });
+        }
+    });
+</script>
 @endsection

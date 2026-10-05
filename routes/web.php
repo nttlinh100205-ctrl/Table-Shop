@@ -18,6 +18,8 @@ use App\Http\Controllers\User\OrderController;
 use App\Http\Controllers\User\GHNController;
 use App\Http\Controllers\User\MomoController;
 use App\Http\Controllers\User\ChatController as UserChatController;
+use App\Http\Controllers\User\ReviewController;
+use App\Http\Controllers\User\PointController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -191,6 +193,14 @@ Route::prefix('user')
             Route::get('/wards/{districtId}', [GHNController::class, 'getWards'])->name('wards');
             Route::post('/calculate-fee', [GHNController::class, 'getShippingFee'])->name('fee');
         });
+
+        // Đánh giá đơn hàng (Review)
+        Route::post('/orders/{order}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+
+        // Điểm thưởng & Hạng thành viên
+        Route::get('/points', [PointController::class, 'index'])->name('points.index');
+        Route::post('/points/redeem', [PointController::class, 'redeem'])->name('points.redeem');
+        Route::post('/profile/avatar', [PointController::class, 'updateAvatar'])->name('profile.avatar');
 
         // Livechat user
         Route::post('/chat/send', [UserChatController::class, 'send'])->name('chat.send');

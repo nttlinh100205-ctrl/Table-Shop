@@ -98,20 +98,32 @@
                 @auth
                     <div class="nth-account-dropdown">
                         <button type="button" class="nth-action-btn" id="nth-user-btn" aria-label="Tài khoản">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <circle cx="12" cy="8" r="4"/>
-                                <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
-                            </svg>
+                            @if(!empty(auth()->user()->avatar))
+                                <img src="{{ auth()->user()->avatar }}" alt="{{ auth()->user()->name }}" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #C29D62;">
+                            @else
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="12" cy="8" r="4"/>
+                                    <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+                                </svg>
+                            @endif
                         </button>
                         <div class="nth-account-menu" id="nth-user-menu">
                             <div class="nth-account-menu__header">
                                 <strong>{{ auth()->user()->name }}</strong>
                                 <small>{{ auth()->user()->email }}</small>
+                                @if(!auth()->user()->isAdmin())
+                                    <div class="mt-1" style="font-size: 0.75rem; color: #C29D62;">
+                                        <i class="bi bi-shield-fill-check me-1"></i>{{ auth()->user()->tier['name'] }} · {{ number_format(auth()->user()->points_balance ?? 0, 0, ',', '.') }} điểm
+                                    </div>
+                                @endif
                             </div>
                             @if(auth()->user()->isAdmin())
                                 <a href="{{ route('admin.dashboard') }}" class="nth-account-menu__item">Trang quản trị</a>
                             @else
                                 <a href="{{ route('user.orders.index') }}" class="nth-account-menu__item">Đơn hàng của tôi</a>
+                                <a href="{{ route('user.points.index') }}" class="nth-account-menu__item">
+                                    <span>Điểm thưởng &amp; Hạng</span>
+                                </a>
                             @endif
                             <form action="{{ route('logout') }}" method="POST" class="nth-account-menu__logout">
                                 @csrf

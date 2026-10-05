@@ -12,7 +12,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.users.store') }}" method="POST" class="card shadow-sm p-4">
+    <form action="{{ route('admin.users.store') }}" method="POST" enctype="multipart/form-data" class="card shadow-sm p-4">
         @csrf
         <div class="mb-3">
             <label class="form-label">Tên</label>
@@ -32,6 +32,11 @@
                 <option value="user">Người dùng</option>
                 <option value="admin">Quản trị</option>
             </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Ảnh đại diện (Avatar)</label>
+            <input type="file" name="avatar" class="form-control" accept="image/*">
+            <div class="form-text">Tải lên qua Cloudinary (JPG, PNG, WEBP &le; 5MB)</div>
         </div>
         <button type="submit" class="btn btn-success">Lưu</button>
         <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Hủy</a>
