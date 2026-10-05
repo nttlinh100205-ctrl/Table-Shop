@@ -9,9 +9,10 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::orderByDesc('id')->paginate(30);
+        $request->validate(['q'=>'nullable|string|max:100']);
+        $users = User::when($request->filled('q'), fn($q)=>$q->where(fn($q)=>$q->where('name','like','%'.$request->q.'%')->orWhere('email','like','%'.$request->q.'%')))->orderByDesc('id')->paginate(30)->withQueryString();
 
         return view('admin.users.index', compact('users'));
     }
@@ -49,7 +50,14 @@ class UserController extends Controller
 
     public function show(User $user)
     {
-        return view('admin.users.show', compact('user'));
+        return view('admin.users.show', [
+            'user'=>$user,
+            'payments'=>\App\Models\PaymentTransaction::whereHas('order',fn($q)=>$q->where('user_id',$user->id))->latest('id')->paginate(10,['*'],'payments_page'),
+            'points'=>$user->pointTransactions()->latest('id')->paginate(10,['*'],'points_page'),
+            'coins'=>\Illuminate\Support\Facades\DB::table('coin_transactions')->where('user_id',$user->id)->latest('id')->paginate(10,['*'],'coins_page'),
+            'voucherOrders'=>\App\Models\Order::where('user_id',$user->id)->whereNotNull('coupon_code')->latest('id')->paginate(10,['*'],'vouchers_page'),
+            'vouchers'=>\App\Models\Promotion::where('user_id',$user->id)->latest('id')->paginate(10,['*'],'owned_page'),
+        ]);
     }
 
     public function edit(User $user)

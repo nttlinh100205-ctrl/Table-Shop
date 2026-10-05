@@ -37,6 +37,11 @@ class QueuedVerifyEmail extends VerifyEmail implements ShouldQueue
         return $message;
     }
 
+    public function shouldSend($notifiable, $channel): bool
+    {
+        return !$notifiable->hasVerifiedEmail();
+    }
+
     /**
      * Tùy biến thông điệp email xác thực tiếng Việt.
      */

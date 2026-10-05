@@ -365,6 +365,7 @@
                                                     data-product-name="{{ $item->product->name ?? ('SP #' . $item->product_id) }}">
                                                 <i class="bi bi-star-fill text-warning me-1"></i>Đánh giá ngay
                                             </button>
+                                            <small class="d-block text-muted mt-1">Nhận thêm 200 xu đánh giá</small>
                                         @endif
                                     </td>
                                 @endif
@@ -619,6 +620,7 @@
                                     <small class="text-muted">{{ $rev->created_at->format('d/m/Y H:i') }}</small>
                                 </div>
                                 <p class="mb-2 text-secondary" style="white-space: pre-line; line-height: 1.6;">{{ $rev->comment }}</p>
+                                @include('components.review-reply')
 
                                 @if (!empty($rev->images) && is_array($rev->images))
                                     <div class="d-flex flex-wrap gap-2 mt-2 pt-2 border-top">
@@ -658,6 +660,7 @@
                 </div>
 
                 <div class="modal-body p-4" style="background: #FAF6F0;">
+                    <p class="small text-muted mb-3">Nhận thêm 200 xu đánh giá · Một lần cho mỗi đơn hàng, áp dụng với mọi mức sao.</p>
                     <div class="mb-3 p-2 bg-white rounded border d-flex align-items-center gap-2">
                         <i class="bi bi-box-seam text-primary fs-4"></i>
                         <div>

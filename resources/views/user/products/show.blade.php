@@ -882,6 +882,7 @@
                             <p class="mb-2 text-dark" style="white-space: pre-line; line-height: 1.6; font-size: 0.95rem;">
                                 {{ $rev->comment }}
                             </p>
+                            @include('components.review-reply')
 
                             @if (!empty($rev->images) && is_array($rev->images))
                                 <div class="d-flex flex-wrap gap-2 mt-2 pt-2 border-top">

@@ -17,11 +17,15 @@ class Review extends Model
         'rating',
         'comment',
         'images',
+        'admin_reply',
+        'replied_at',
+        'resolution_status',
     ];
 
     protected $casts = [
         'rating' => 'integer',
         'images' => 'array',
+        'replied_at' => 'datetime',
     ];
 
     public function order(): BelongsTo

@@ -69,7 +69,7 @@
 
                         <li class="nth-nav__item">
                             <a href="{{ route('user.home') }}#tu-van" class="nth-nav__link">
-                                Tư Vấn May Đo
+                                Tư Vấn Đo Đạc
                             </a>
                         </li>
                     @endif
@@ -280,7 +280,7 @@
                 </a>
                 <a href="{{ route('user.home') }}#tu-van" class="nth-sidebar-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    <span>Tư vấn may đo theo yêu cầu</span>
+                    <span>Tư vấn đo đạc theo yêu cầu</span>
                 </a>
 
                 <div class="nth-sidebar-divider"></div>

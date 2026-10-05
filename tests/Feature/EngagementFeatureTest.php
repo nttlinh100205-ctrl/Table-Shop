@@ -35,6 +35,8 @@ class EngagementFeatureTest extends TestCase
             '2026_10_05_120003_add_reward_idempotency',
             '2026_10_06_000001_create_daily_coins',
             '2026_09_30_082510_create_jobs_table',
+            '2026_10_05_110001_create_reviews_table',
+            '2026_10_06_120000_add_review_management',
         ] as $migration) {
             (require database_path('migrations/'.$migration.'.php'))->up();
         }
@@ -276,5 +278,77 @@ class EngagementFeatureTest extends TestCase
         $this->assertSame(0, Order::count());
         $this->assertSame(0, \App\Models\PaymentTransaction::count());
         $this->assertSame(500, $buyer->fresh()->coin_balance);
+    }
+
+    public function test_legacy_accounts_skip_verification_and_new_accounts_still_require_it(): void
+    {
+        $migration=require database_path('migrations/2026_10_06_120000_add_review_management.php');
+        $migration->down();
+        $legacy=User::factory()->unverified()->create(['role'=>'user']);
+        $migration->up();
+        $legacy->refresh();
+        $new=User::factory()->unverified()->create(['role'=>'user']);
+        $this->assertTrue($legacy->hasVerifiedEmail());
+        $this->assertFalse($new->hasVerifiedEmail());
+        $notice=new \App\Notifications\QueuedVerifyEmail();
+        $this->assertFalse($notice->shouldSend($legacy,'mail'));
+        $this->assertTrue($notice->shouldSend($new,'mail'));
+        \Illuminate\Support\Facades\Notification::fake();
+        $this->actingAs($legacy)->post(route('verification.send'))->assertRedirect(route('user.home'));
+        $this->get(route('verification.notice'))->assertRedirect(route('user.home'));
+        \Illuminate\Support\Facades\Notification::assertNothingSent();
+        $this->actingAs($new)->postJson(route('user.check-in.store'))->assertForbidden();
+        \Illuminate\Support\Facades\Auth::logout();
+        $this->post('/login',['email'=>$legacy->email,'password'=>'password'])->assertRedirect(route('user.home'));
+        \Illuminate\Support\Facades\Auth::logout();
+        $this->post('/login',['email'=>$new->email,'password'=>'password'])->assertRedirect(route('verification.notice'));
+        \Illuminate\Support\Facades\Notification::assertNothingSent();
+    }
+
+    public function test_reviews_award_200_coins_once_per_completed_order_even_for_low_rating(): void
+    {
+        $buyer=User::factory()->create(['role'=>'user']);
+        $category=\App\Models\Category::create(['name'=>'Bàn']);
+        $products=collect([1,2])->map(fn($i)=>\App\Models\Product::create(['name'=>'Bàn '.$i,'category_id'=>$category->id,'price'=>10000]));
+        $order=Order::create(['user_id'=>$buyer->id,'name'=>'Buyer','phone'=>'0912345678','address'=>'Test','total_price'=>20000,'status'=>'pending']);
+        foreach($products as $product) \App\Models\OrderItem::create(['order_id'=>$order->id,'product_id'=>$product->id,'quantity'=>1,'price'=>10000]);
+        $this->actingAs($buyer)->post(route('user.reviews.store',$order),['product_id'=>$products->first()->id,'rating'=>1,'comment'=>'Chưa giao hàng'])->assertSessionHas('error');
+        $this->assertSame(0,$buyer->fresh()->coin_balance);
+        $order->update(['status'=>'completed']);
+        foreach($products as $product) $this->actingAs($buyer)->post(route('user.reviews.store',$order),['product_id'=>$product->id,'rating'=>1,'comment'=>'Chưa hài lòng với sản phẩm'])->assertSessionHasNoErrors();
+        $this->assertSame(200,$buyer->fresh()->coin_balance);
+        $this->assertSame(2,\App\Models\Review::count());
+        $this->assertSame(1,\Illuminate\Support\Facades\DB::table('coin_transactions')->where('type','review')->count());
+        $this->post(route('user.reviews.store',$order),['product_id'=>$products->first()->id,'rating'=>5,'comment'=>'Đánh giá lại'])->assertSessionHas('error');
+        $this->assertSame(200,$buyer->fresh()->coin_balance);
+        $outsider=User::factory()->create(['role'=>'user']);
+        $this->actingAs($outsider)->post(route('user.reviews.store',$order),[])->assertForbidden();
+    }
+
+    public function test_admin_can_manage_prizes_and_reply_to_reviews_but_customer_cannot(): void
+    {
+        $user=User::factory()->create(['role'=>'user']);
+        $payload=['name'=>'100 điểm','type'=>'points','value'=>100,'probability'=>10,'quantity'=>2,'is_active'=>1];
+        $count=Prize::count();
+        $this->actingAs($user)->post(route('admin.prizes.store'),$payload)->assertRedirect(route('user.home'));
+        $this->assertSame($count,Prize::count());
+        $admin=User::factory()->create(['role'=>'admin']);
+        $this->actingAs($admin)->post(route('admin.prizes.store'),$payload)->assertRedirect(route('admin.prizes.index'));
+        $prize=\App\Models\Prize::latest('id')->first();
+        $this->put(route('admin.prizes.update',$prize),array_merge($payload,['is_active'=>0,'quantity'=>-1]))->assertSessionHasNoErrors();
+        $this->assertFalse($prize->fresh()->is_active);
+        $this->put(route('admin.prizes.update',$prize),array_merge($payload,['probability'=>-1]))->assertSessionHasErrors('probability');
+        $category=\App\Models\Category::create(['name'=>'Bàn']);
+        $product=\App\Models\Product::create(['name'=>'Bàn','category_id'=>$category->id,'price'=>10000]);
+        $order=Order::create(['user_id'=>$user->id,'name'=>'Buyer','phone'=>'0912345678','address'=>'Test','total_price'=>10000,'status'=>'completed']);
+        $review=\App\Models\Review::create(['user_id'=>$user->id,'order_id'=>$order->id,'product_id'=>$product->id,'rating'=>2,'comment'=>'Cần cải thiện']);
+        $this->put(route('admin.reviews.update',$review),['admin_reply'=>'Shop sẽ liên hệ hỗ trợ.','resolution_status'=>'resolved'])->assertSessionHasNoErrors();
+        $this->assertSame('resolved',$review->fresh()->resolution_status);
+        $this->assertStringContainsString('Shop sẽ liên hệ hỗ trợ.',view('components.review-reply',['rev'=>$review->fresh()])->render());
+        $this->get(route('admin.prizes.index'))->assertOk()->assertSee('Vòng quay may mắn');
+        $this->get(route('admin.reviews.index',['satisfaction'=>'unhappy']))->assertOk()->assertSee('Cần cải thiện');
+        $this->get(route('admin.users.show',$user))->assertOk()->assertSee('Lịch sử xu');
+        $this->actingAs($user)->put(route('admin.reviews.update',$review),['admin_reply'=>'Tự trả lời','resolution_status'=>'resolved'])->assertRedirect(route('user.home'));
+        $this->assertSame('Shop sẽ liên hệ hỗ trợ.',$review->fresh()->admin_reply);
     }
 }

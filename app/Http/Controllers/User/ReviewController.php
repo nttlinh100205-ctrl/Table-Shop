@@ -74,15 +74,29 @@ class ReviewController extends Controller
         }
 
         // 6. Lưu vào cơ sở dữ liệu
-        Review::create([
-            'order_id'   => $order->id,
-            'product_id' => $productId,
-            'user_id'    => Auth::id(),
-            'rating'     => $validated['rating'],
-            'comment'    => trim($validated['comment']),
-            'images'     => !empty($uploadedImages) ? $uploadedImages : null,
-        ]);
+        $awarded = \Illuminate\Support\Facades\DB::transaction(function () use ($order, $productId, $validated, $uploadedImages) {
+            $lockedOrder = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            if ($lockedOrder->status !== 'completed' || Review::where('order_id', $order->id)->where('product_id', $productId)->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['review' => 'Đơn chưa hoàn thành hoặc sản phẩm đã được đánh giá.']);
+            }
+            Review::create([
+                'order_id'   => $order->id,
+                'product_id' => $productId,
+                'user_id'    => Auth::id(),
+                'rating'     => $validated['rating'],
+                'comment'    => trim($validated['comment']),
+                'images'     => !empty($uploadedImages) ? $uploadedImages : null,
+            ]);
 
-        return back()->with('success', 'Gửi đánh giá trải nghiệm sản phẩm thành công! Cảm ơn bạn đã đóng góp ý kiến.');
+            $user = \App\Models\User::whereKey($lockedOrder->user_id)->lockForUpdate()->firstOrFail();
+            if (\Illuminate\Support\Facades\DB::table('coin_transactions')->where('order_id', $order->id)->where('type', 'review')->exists()) return false;
+            $user->increment('coin_balance', 200);
+            \Illuminate\Support\Facades\DB::table('coin_transactions')->insert([
+                'user_id'=>$user->id,'order_id'=>$order->id,'type'=>'review','amount'=>200,
+                'description'=>'Thưởng đánh giá đơn #'.$order->id,'created_at'=>now(),'updated_at'=>now(),
+            ]);
+            return true;
+        }, 3);
+        return back()->with('success', 'Gửi đánh giá thành công!'.($awarded ? ' Bạn được cộng 200 xu.' : ' Đơn này đã nhận thưởng đánh giá.'));
     }
 }

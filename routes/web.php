@@ -62,6 +62,7 @@ Route::match(['get', 'post'], '/logout', [LoginController::class, 'logout'])->na
 */
 // Hiển thị thông báo xác thực email
 Route::get('/email/verify', function () {
+    if (auth()->user()->hasVerifiedEmail()) return redirect()->route(auth()->user()->isAdmin() ? 'admin.dashboard' : 'user.home');
     return response()->view('auth.verify-email')->header('Cache-Control', 'no-store, private');
 })->middleware('auth')->name('verification.notice');
 
@@ -129,6 +130,9 @@ Route::prefix('admin')
 
         // Người dùng
         Route::resource('users', AdminUserController::class);
+        Route::resource('prizes', \App\Http\Controllers\Admin\PrizeController::class)->except(['show','destroy']);
+        Route::get('/reviews', [\App\Http\Controllers\Admin\ReviewController::class, 'index'])->name('reviews.index');
+        Route::put('/reviews/{review}', [\App\Http\Controllers\Admin\ReviewController::class, 'update'])->name('reviews.update');
 
         // Báo cáo
         Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
