@@ -7,10 +7,20 @@ use Illuminate\Support\Facades\Http;
 class CheckGeminiCommand extends Command
 {
     protected $signature = 'ai:check';
-    protected $description = 'Check Gemini credentials with a minimal request, without sending customer data';
+    protected $description = 'Check the selected AI provider without sending customer data';
 
     public function handle(): int
     {
+        if (config('services.ai.provider', 'groq') === 'groq') {
+            try {
+                \App\Services\GroqChatService::complete([['role'=>'user','content'=>'Reply with OK.']]);
+                $this->info('Groq connection successful.');
+                return 0;
+            } catch (\App\Exceptions\AiUnavailableException $e) {
+                $this->error('Groq: '.$e->reason.'. Check GROQ_API_KEY, GROQ_MODEL and your Groq account limits.');
+                return 1;
+            }
+        }
         $key = trim((string) config('services.gemini.api_key'));
         if (!$key) { $this->error('GEMINI_API_KEY is missing.'); return 1; }
         try {
