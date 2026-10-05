@@ -10,7 +10,6 @@
     </div>
     <button id="spin-button" class="btn btn-dark px-5" @disabled($prizes->isEmpty())>Quay ngay</button>
     <p id="spin-result" class="mt-3" role="status" aria-live="polite"></p>
-    <p class="text-muted">Các ô có kích thước bằng nhau; xác suất trúng được tính theo trọng số và giải còn trong kho.</p>
     <h2 class="h4 mt-4">Phần thưởng gần đây của bạn</h2>
     <ul id="spin-history" class="list-unstyled">@foreach($histories as $history)<li class="py-1">{{ $history->prize_name }}</li>@endforeach</ul>
     <a href="{{ route('user.points.index') }}">Xem điểm & voucher của bạn</a>

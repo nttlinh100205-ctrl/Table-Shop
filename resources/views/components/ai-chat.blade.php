@@ -54,18 +54,24 @@ async function sendAiMessage(preset) {
     setSending(true);
     aiMessages.push({text: message, user: true}); renderAiMessages();
     channelNote.textContent = 'AI đang kiểm tra câu hỏi và tư vấn…';
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 55000);
     try {
         const response = await fetch(@json(route('ai.send')), {
             method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf},
             body: JSON.stringify({message}),
+            signal: controller.signal,
         });
-        const data = await response.json();
+        if (response.status === 419) throw new Error('Phiên chat đã hết hạn. Vui lòng tải lại trang rồi gửi lại.');
+        if (response.status === 429) throw new Error('Bạn gửi hơi nhanh. Vui lòng chờ một phút rồi thử lại.');
+        const data = await response.json().catch(() => { throw new Error('Máy chủ chưa phản hồi được. Vui lòng thử lại hoặc chọn Nhân viên.'); });
         if (!response.ok) throw new Error(data.message || 'AI tạm thời không khả dụng. Bạn có thể chuyển sang Nhân viên.');
         aiMessages.push({text: data.reply, user: false});
         if (!fromPreset) input.value = '';
     } catch (error) {
-        aiMessages.push({text: error.message || 'Mất kết nối. Vui lòng thử lại hoặc chuyển sang Nhân viên.', user: false});
+        aiMessages.push({text: error.name === 'AbortError' ? 'AI phản hồi quá chậm. Vui lòng thử lại hoặc chọn Nhân viên.' : (error.message || 'Mất kết nối. Vui lòng thử lại hoặc chuyển sang Nhân viên.'), user: false});
     } finally {
+        clearTimeout(timeout);
         setSending(false); renderAiMessages(); input.focus();
         channelNote.textContent = 'AI chỉ tư vấn sản phẩm và mua hàng. Tin nhắn được gửi tới Google AI.';
     }

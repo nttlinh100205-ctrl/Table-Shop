@@ -17,6 +17,8 @@ class AiChatController extends Controller
         $history = $request->session()->get('ai_history', []);
         try {
             $reply = GeminiChatService::chat($data['message'], $request->session()->get('shopping_behavior'), $history);
+        } catch (\App\Exceptions\AiUnavailableException $e) {
+            return response()->json(['message'=>$e->getMessage(),'code'=>$e->reason],503);
         } catch (\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 503);
         }

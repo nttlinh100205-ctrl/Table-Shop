@@ -136,6 +136,26 @@ class EngagementFeatureTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    public function test_ai_denied_key_returns_actionable_code_without_saving_failed_chat(): void
+    {
+        config(['services.gemini.api_key'=>'private-test-key']);
+        Http::fake(['*'=>Http::response(['error'=>['message'=>'Your project has been denied access.','status'=>'PERMISSION_DENIED']],403)]);
+        $this->postJson(route('ai.send'),['message'=>'Tư vấn bàn ăn'])
+            ->assertStatus(503)->assertJson(['code'=>'AI_ACCESS_DENIED'])->assertDontSee('private-test-key')->assertSessionMissing('ai_history');
+        Http::assertSentCount(1);
+    }
+
+    public function test_ai_empty_scope_is_not_misreported_as_off_topic_and_thoughts_are_excluded(): void
+    {
+        config(['services.gemini.api_key'=>'test-key','services.gemini.model'=>'models/gemini-2.5-flash']);
+        Http::fake(['*'=>Http::sequence()->push(['candidates'=>[['finishReason'=>'MAX_TOKENS','content'=>['parts'=>[['thought'=>true,'text'=>'Internal thought']]]]]])
+            ->push(['candidates'=>[['content'=>['parts'=>[['thought'=>true,'text'=>'Internal thought'],['text'=>'ALLOWED']]]]]])
+            ->push(['candidates'=>[['content'=>['parts'=>[['thought'=>true,'text'=>'Internal thought'],['text'=>'Mời bạn xem các mẫu bàn.']]]]]])]);
+        $this->postJson(route('ai.send'),['message'=>'Tư vấn bàn ăn'])->assertStatus(503)->assertJson(['code'=>'AI_EMPTY_RESPONSE']);
+        $this->postJson(route('ai.send'),['message'=>'Tư vấn bàn ăn'])->assertOk()->assertJson(['reply'=>'Mời bạn xem các mẫu bàn.'])->assertDontSee('Internal thought');
+        Http::assertSent(fn($r)=>str_contains($r->url(),'/models/gemini-2.5-flash:') && $r['generationConfig']['thinkingConfig']['thinkingBudget']===0 && ($r['generationConfig']['responseMimeType']??'')==='text/x.enum');
+    }
+
     public function test_check_in_is_once_per_local_day_and_skipped_days_keep_progress(): void
     {
         $user = User::factory()->create();
