@@ -30,7 +30,8 @@ class ShopChatSupport
                 if (str_contains($text, 'bao hanh')) return $heading.': '.($product->warranty ?: 'Chưa có thông tin bảo hành cụ thể; bạn chọn Nhân viên để xác nhận.');
                 $rows = [$heading];
                 foreach ($product->variants->take(8) as $variant) {
-                    $rows[] = ($variant->color ?: 'Chưa ghi màu').' / '.($variant->size_label ?: 'Chưa ghi size').': '.($variant->stock > 0 ? 'còn '.$variant->stock.' sản phẩm' : 'hết hàng').', '.number_format($variant->price, 0, ',', '.').'đ.';
+                    $dimensions = collect(['width','depth','height'])->map(fn($axis)=>$variant->$axis === null ? null : (float)$variant->$axis)->filter(fn($n)=>$n !== null)->implode(' × ');
+                    $rows[] = ($variant->color ?: 'Chưa ghi màu').' / '.($dimensions ? $dimensions.' cm' : ($variant->size_label ?: 'Chưa ghi size')).': '.($variant->stock > 0 ? 'còn '.$variant->stock.' sản phẩm' : 'hết hàng').', '.number_format($variant->price, 0, ',', '.').'đ.';
                 }
                 if ($product->variants->isEmpty()) $rows[] = 'Chưa có dữ liệu tồn kho biến thể để xác nhận; bạn chọn Nhân viên để kiểm tra.';
                 if ($product->variants->count() > 8) $rows[] = 'Xem các biến thể còn lại tại trang sản phẩm.';
