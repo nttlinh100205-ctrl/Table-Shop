@@ -31,6 +31,13 @@ fi
 : "${APP_KEY:?Set a persistent APP_KEY before starting the application}"
 : "${APP_URL:?Set APP_URL to the public HTTPS address}"
 
+# Persistent sessions survive Render container restarts; sync queues must not block signup.
+if [[ "${RENDER:-}" == "true" && "${SESSION_DRIVER:-file}" == "file" ]]; then
+    export SESSION_DRIVER=database
+fi
+export MAIL_QUEUE_CONNECTION="${MAIL_QUEUE_CONNECTION:-database}"
+if [[ "$MAIL_QUEUE_CONNECTION" == "sync" ]]; then export MAIL_QUEUE_CONNECTION=database; fi
+
 export PORT="${PORT:-10000}"
 if [[ ! "$PORT" =~ ^[0-9]{1,5}$ ]] || (( 10#$PORT < 1 || 10#$PORT > 65535 )); then
     echo "PORT must be an integer between 1 and 65535" >&2
@@ -76,8 +83,10 @@ php-fpm -t
 # Queue worker failure is non-fatal: log a warning and let the container continue.
 server_pids=()
 queue_pid=""
+mail_pid=""
 cleanup() {
     trap - EXIT TERM INT
+    [[ -n "$mail_pid" ]] && kill -TERM "$mail_pid" 2>/dev/null || true
     [[ -n "$queue_pid" ]] && kill -QUIT "$queue_pid" 2>/dev/null || true
     if (( ${#server_pids[@]} )); then
         kill -QUIT "${server_pids[@]}" 2>/dev/null || true
@@ -91,6 +100,20 @@ php-fpm -F &
 server_pids+=("$!")
 nginx -g 'daemon off;' &
 server_pids+=("$!")
+
+# Dedicated mail worker runs even when the default application queue is sync.
+(
+    mail_worker=""
+    trap '[[ -n "$mail_worker" ]] && kill -TERM "$mail_worker" 2>/dev/null; exit 0' TERM INT
+    while true; do
+        su-exec www-data php artisan queue:work "$MAIL_QUEUE_CONNECTION" \
+            --queue=emails --tries=3 --timeout=30 --sleep=1 --max-time=3600 --no-interaction &
+        mail_worker="$!"
+        wait "$mail_worker" || true
+        sleep 2
+    done
+) &
+mail_pid="$!"
 
 # Queue worker: xử lý email verification jobs (database queue).
 # Restart tự động nếu chết (--tries=3 --sleep=3 --max-time=3600).

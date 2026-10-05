@@ -34,7 +34,7 @@ class ApiTransport extends AbstractTransport
             $html = nl2br(htmlspecialchars($text));
         }
 
-        EmailApiService::sendDirect(
+        $sent = EmailApiService::sendDirect(
             to: $toAddresses,
             subject: $subject,
             html: (string) ($html ?: $text ?: ''),
@@ -42,6 +42,9 @@ class ApiTransport extends AbstractTransport
             fromEmail: $fromEmail ?: config('mail.from.address'),
             config: $this->config
         );
+        if (!$sent) {
+            throw new \Symfony\Component\Mailer\Exception\TransportException('Email API rejected delivery. Check provider configuration; queued delivery will retry.');
+        }
     }
 
     public function __toString(): string

@@ -45,7 +45,7 @@
                         @endif
 
                         <p class="mb-4">
-                            Một email chứa link xác thực đã được gửi đến địa chỉ email của bạn.
+                            Email chứa link xác thực đang được gửi đến địa chỉ email của bạn.
                             Vui lòng kiểm tra hộp thư (kể cả thư mục Spam) và nhấn vào link để hoàn tất đăng ký.
                         </p>
 

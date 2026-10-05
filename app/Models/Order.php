@@ -10,6 +10,8 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
+        'coins_used',
+        'coin_discount_amount',
         'user_id',
         'promotion_id',
         'coupon_code',
@@ -38,6 +40,9 @@ class Order extends Model
     ];
 
     protected $casts = [
+        'coins_used' => 'integer',
+        'coin_discount_amount' => 'integer',
+        'coins_refunded_at' => 'datetime',
         'total_price'         => 'decimal:2',
         'discount_amount'     => 'decimal:2',
         'ghn_total_fee'       => 'integer',
@@ -50,7 +55,16 @@ class Order extends Model
 
     protected static function booted()
     {
+        static::updating(function ($order) {
+            if ($order->isDirty('status') && $order->status !== 'cancelled'
+                && static::whereKey($order->id)->whereNotNull('coins_refunded_at')->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['status' => 'Đơn đã hoàn xu không thể mở lại. Vui lòng tạo đơn mới.']);
+            }
+        });
         static::saved(function ($order) {
+            if ($order->status === 'cancelled' && $order->coins_used) {
+                app(\App\Services\CoinService::class)->refund($order);
+            }
             if ($order->status === 'completed') {
                 event(new \App\Events\OrderCompleted($order->id));
             }

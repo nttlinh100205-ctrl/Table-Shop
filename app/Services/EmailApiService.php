@@ -135,8 +135,7 @@ class EmailApiService
         }
 
         try {
-            $response = Http::timeout(25)
-                ->withoutVerifying()
+            $response = Http::connectTimeout(5)->timeout(15)
                 ->withToken($apiKey)
                 ->post('https://api.resend.com/emails', [
                     'from'    => $senderString,
@@ -174,8 +173,7 @@ class EmailApiService
         $toFormatted = array_map(fn ($email) => ['email' => $email], $recipients);
 
         try {
-            $response = Http::timeout(25)
-                ->withoutVerifying()
+            $response = Http::connectTimeout(5)->timeout(15)
                 ->withHeaders([
                     'api-key'      => $apiKey,
                     'Content-Type' => 'application/json',

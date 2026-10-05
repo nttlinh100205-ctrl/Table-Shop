@@ -62,7 +62,7 @@ Route::match(['get', 'post'], '/logout', [LoginController::class, 'logout'])->na
 */
 // Hiển thị thông báo xác thực email
 Route::get('/email/verify', function () {
-    return view('auth.verify-email');
+    return response()->view('auth.verify-email')->header('Cache-Control', 'no-store, private');
 })->middleware('auth')->name('verification.notice');
 
 // Xử lý link xác nhận (từ email)
@@ -87,8 +87,13 @@ Route::post('/email/verification-notification', function (Request $request) {
         return redirect()->route($user->isAdmin() ? 'admin.dashboard' : 'user.home')
             ->with('success', 'Email đã được xác thực.');
     }
-    $user->sendEmailVerificationNotification();
-    return back()->with('message', 'Đã gửi lại link xác thực!');
+    try {
+        $user->sendEmailVerificationNotification();
+        return back()->with('message', 'Email xác thực đã được xếp hàng gửi. Vui lòng kiểm tra hộp thư và mục Spam.');
+    } catch (\Throwable $e) {
+        \Illuminate\Support\Facades\Log::error('Verification enqueue failed', ['exception' => get_class($e)]);
+        return back()->with('error', 'Chưa gửi được email xác thực. Vui lòng thử lại sau ít phút.');
+    }
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 /*
@@ -223,4 +228,6 @@ Route::middleware(['auth', 'verified', 'user'])->prefix('user')->name('user.')->
     Route::get('/spin', [\App\Http\Controllers\User\SpinController::class, 'index'])->name('spin.index');
     Route::post('/spin', [\App\Http\Controllers\User\SpinController::class, 'store'])->middleware('throttle:10,1')->name('spin.store');
     Route::get('/profile', fn () => redirect()->route('user.points.index'))->name('profile');
+    Route::get('/check-in', [\App\Http\Controllers\User\CheckInController::class, 'index'])->name('check-in.index');
+    Route::post('/check-in', [\App\Http\Controllers\User\CheckInController::class, 'store'])->middleware('throttle:10,1')->name('check-in.store');
 });

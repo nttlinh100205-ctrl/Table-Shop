@@ -416,6 +416,9 @@
                         <span id="chat-title-text" style="white-space:normal;line-height:1.5;">Hỗ trợ khách hàng</span>
                     </div>
                     <div class="chat-header-actions">
+                        <a href="{{ route('user.spin.index') }}" class="chat-header-btn" title="Vòng quay may mắn" aria-label="Vòng quay may mắn">
+                            <span aria-hidden="true" style="display:block;width:20px;height:20px;border:2px solid white;border-radius:50%;background:conic-gradient(#fbbf24 0deg 60deg,#ef4444 60deg 120deg,#34d399 120deg 180deg,#60a5fa 180deg 240deg,#c084fc 240deg 300deg,#fb923c 300deg)"></span>
+                        </a>
                         <button id="chat-minimize-btn" class="chat-header-btn" title="Thu nhỏ" aria-label="Thu nhỏ">
                             <i class="bi bi-dash-lg"></i>
                         </button>
@@ -427,6 +430,7 @@
                 <div class="d-flex gap-2 p-2 border-bottom" style="flex-shrink:0" role="group" aria-label="Chọn kênh hỗ trợ">
                     <button type="button" id="chat-mode-ai" class="btn btn-sm btn-dark" aria-pressed="true">✦ Tư vấn AI</button>
                     <button type="button" id="chat-mode-staff" class="btn btn-sm btn-outline-dark" aria-pressed="false">Nhân viên</button>
+                    <a href="{{ route('user.check-in.index') }}" class="btn btn-sm btn-outline-dark ms-auto" title="Điểm danh nhận xu"><i class="bi bi-calendar-check" aria-hidden="true"></i> Nhận xu</a>
                 </div>
                 <div id="chat-mode-note" class="px-3 py-1 small text-muted" style="flex-shrink:0">AI chỉ tư vấn sản phẩm và mua hàng. Tin nhắn được gửi tới Google AI.</div>
                 <div id="chat-messages" role="log" aria-live="polite">

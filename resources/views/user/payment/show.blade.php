@@ -377,7 +377,7 @@
                             <tr>
                                 <th colspan="{{ $colSpan }}" class="text-end text-muted fw-normal">Tạm tính hàng hóa</th>
                                 <th class="text-end text-muted fw-normal">
-                                    {{ number_format($order->total_price + $order->discount_amount, 0, ',', '.') }}đ
+                                    {{ number_format($order->total_price + $order->discount_amount + $order->coin_discount_amount, 0, ',', '.') }}đ
                                 </th>
                             </tr>
                             <tr>
@@ -391,6 +391,9 @@
                                     -{{ number_format($order->discount_amount, 0, ',', '.') }}đ
                                 </th>
                             </tr>
+                        @endif
+                        @if($order->coins_used > 0)
+                        <tr><th colspan="{{ $colSpan }}" class="text-end text-success">Dùng {{ number_format($order->coins_used) }} xu</th><th class="text-end text-success">-{{ number_format($order->coin_discount_amount) }}đ</th></tr>
                         @endif
                         <tr>
                             <th colspan="{{ $colSpan }}" class="text-end">Tổng tiền hàng</th>

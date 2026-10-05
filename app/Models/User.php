@@ -47,6 +47,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array<string, string>
      */
     protected $casts = [
+        'coin_balance' => 'integer',
         'email_verified_at' => 'datetime',
         'points_balance'    => 'integer',
         'lifetime_points'   => 'integer',

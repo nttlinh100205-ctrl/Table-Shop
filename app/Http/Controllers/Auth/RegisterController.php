@@ -21,7 +21,7 @@ class RegisterController extends Controller
      */
     public function showRegistrationForm()
     {
-        return view('auth.register');
+        return response()->view('auth.register')->header('Cache-Control', 'no-store, private');
     }
 
     /**
@@ -43,25 +43,24 @@ class RegisterController extends Controller
             'password.min'          => 'Mật khẩu phải có ít nhất 6 ký tự.',
         ]);
 
-        $isEmailConfigured = \App\Services\EmailApiService::isConfigured();
-
         $user = User::create([
             'name'              => $validated['name'],
             'email'             => $validated['email'],
             'password'          => Hash::make($validated['password']),
             'role'              => 'user', // mặc định là user thường
-            'email_verified_at' => $isEmailConfigured ? null : now(),
+            'email_verified_at' => null,
         ]);
 
         Auth::login($user);
+        $request->session()->regenerate();
 
-        if ($isEmailConfigured) {
+        try {
             $user->sendEmailVerificationNotification();
             return redirect()->route('verification.notice')
-                ->with('success', 'Đăng ký thành công! Vui lòng kiểm tra hộp thư email (' . $user->email . ') để xác thực tài khoản.');
+                ->with('success', 'Đăng ký thành công! Email xác thực đang được gửi tới ' . $user->email . '. Bạn có thể kiểm tra hộp thư và mục Spam.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Could not enqueue verification email', ['user_id' => $user->id, 'exception' => get_class($e)]);
+            return redirect()->route('verification.notice')->with('error', 'Tài khoản đã được tạo nhưng chưa xếp hàng gửi được email. Vui lòng thử nút gửi lại sau ít phút.');
         }
-
-        return redirect()->route('user.home')
-            ->with('success', 'Đăng ký thành công! Chào mừng bạn.');
     }
 }

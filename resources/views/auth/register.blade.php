@@ -257,6 +257,7 @@
                     </div>
                 @endif
 
+                @if(session('error'))<div class="alert alert-warning" role="alert">{{ session('error') }}</div>@endif
                 <form method="POST" action="{{ route('register') }}">
                     @csrf
 
@@ -355,6 +356,10 @@
                 icon.className = isPass ? 'bi bi-eye-slash' : 'bi bi-eye';
             });
         }
+        document.querySelector('form').addEventListener('submit', function () {
+            const button = this.querySelector('button[type=submit]');
+            button.disabled = true; button.textContent = 'Đang tạo tài khoản…';
+        });
         setupToggle('togglePassword', 'password', 'toggleIcon');
         setupToggle('toggleConfirm', 'password_confirmation', 'toggleIconConfirm');
     </script>

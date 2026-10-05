@@ -17,6 +17,25 @@ class QueuedVerifyEmail extends VerifyEmail implements ShouldQueue
 
     public int $tries = 3;
     public int $timeout = 30;
+    public array $backoff = [30, 120, 300];
+
+    public function __construct()
+    {
+        $connection = config('mail.verification_queue_connection', 'database');
+        $this->onConnection($connection === 'sync' ? 'database' : $connection);
+        $this->onQueue('emails');
+        $this->afterCommit();
+    }
+
+    public function toMail($notifiable)
+    {
+        $message = parent::toMail($notifiable);
+        // An explicit MAIL_MAILER=smtp/log must not bypass a configured email API.
+        if (\App\Services\EmailApiService::isConfigured()) {
+            $message->mailer(\App\Services\EmailApiService::getProvider());
+        }
+        return $message;
+    }
 
     /**
      * Tùy biến thông điệp email xác thực tiếng Việt.

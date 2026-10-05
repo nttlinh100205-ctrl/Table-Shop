@@ -62,3 +62,16 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+## Điểm danh, xu và email xác thực
+
+- `/user/check-in`: 7 lần điểm danh không cần liên tiếp, tối đa một lần mỗi ngày theo giờ Việt Nam. Lần 1–6: 100 xu; lần 7: 200 xu; sau đó bắt đầu chu kỳ mới.
+- Xu điểm danh tách khỏi điểm thành viên. Mặc định 1 xu = 1đ, cấu hình tại `config/coins.php`. Xu giảm tiền hàng sau voucher, không giảm phí giao hàng; giữ tối thiểu 1.000đ tiền hàng để tương thích thanh toán. Đơn hủy/trả hàng hoàn tất được hoàn xu một lần.
+- Chạy `php artisan migrate --force` khi deploy. Docker Render tự chạy nếu `RUN_MIGRATIONS=true`.
+- Email xác thực luôn đưa vào queue `emails` trên connection `MAIL_QUEUE_CONNECTION` (mặc định `database`), kể cả khi queue ứng dụng là `sync`. Không tự xác thực tài khoản khi thiếu cấu hình mail.
+- Render: đặt `MAIL_QUEUE_CONNECTION=database`, `SESSION_DRIVER=database`, `SESSION_SECURE_COOKIE=true`, `APP_URL` đúng URL HTTPS và giữ nguyên `APP_KEY` qua các lần deploy. Không đặt `SESSION_DOMAIN` sang domain khác.
+- Resend: đặt `RESEND_API_KEY`, `MAIL_MAILER=resend`, `MAIL_FROM_ADDRESS` thuộc domain đã xác minh trên Resend. Key riêng không đủ nếu domain gửi chưa được xác minh. Không commit key.
+- Docker khởi động worker email riêng tự động. Local/hosting khác cần chạy `php artisan queue:work database --queue=emails --tries=3 --timeout=30`.
+- Kiểm tra mail thất bại bằng `php artisan queue:failed` và log của nhà cung cấp. Sau khi sửa cấu hình, có thể thử lại một job cụ thể bằng `php artisan queue:retry ID`.
+- 419 là lỗi session/CSRF; gửi mail chậm không tự chứng minh nguyên nhân 419. Luồng mới không chờ HTTP gửi mail trong request đăng ký, dùng session bền vững trên Render và đưa người dùng về form mới nếu token đăng ký/gửi lại email đã hết hạn; CSRF vẫn được kiểm tra.

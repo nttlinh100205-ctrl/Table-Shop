@@ -920,6 +920,12 @@
                 <form method="POST" action="{{ route('user.orders.store') }}" id="checkoutForm">
                     @csrf
                     <div class="card p-3 mb-3">
+                        <label for="coins_to_use" class="form-label">Dùng xu điểm danh ({{ number_format(auth()->user()->coin_balance) }} xu khả dụng)</label>
+                        <input type="number" name="coins_to_use" id="coins_to_use" min="0" step="1" max="{{ auth()->user()->coin_balance }}" value="{{ old('coins_to_use', 0) }}" class="form-control">
+                        <small>1 xu = {{ config('coins.vnd_per_coin') }}đ. Chỉ giảm tiền hàng; tiền hàng còn tối thiểu {{ number_format(config('coins.minimum_goods_payment')) }}đ.</small>
+                        @error('coins_to_use')<div class="text-danger">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="card p-3 mb-3">
                         <label for="referral_code" class="form-label">Mã giới thiệu (không bắt buộc)</label>
                         <input id="referral_code" name="referral_code" maxlength="32" class="form-control" value="{{ old('referral_code') }}" placeholder="REF-XXXXXX">
                         <small>Người giới thiệu nhận điểm khi đơn hàng hoàn thành.</small>
@@ -1327,6 +1333,7 @@
                                 {{ number_format(max(0, $totalPrice - ($discountAmount ?? 0)), 0, ',', '.') }}đ
                             </div>
                         </div>
+                        <div class="calc-row"><span>Giảm bằng xu</span><strong id="coin-discount-text" class="text-success">-0đ</strong></div>
                         <input type="hidden" id="total_price_input" value="{{ (int) $totalPrice }}">
                         <input type="hidden" id="discount_amount_input" value="{{ (int) ($discountAmount ?? 0) }}">
                     </div>
@@ -1566,6 +1573,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentDiscount = parseInt(document.getElementById('discount_amount_input')?.value || 0, 10) || 0;
     let currentFee = 0;
+    const coinInput = document.getElementById('coins_to_use');
+    const coinBalance = {{ (int) auth()->user()->coin_balance }};
+    const coinRate = {{ (int) config('coins.vnd_per_coin') }};
+    const minGoods = {{ (int) config('coins.minimum_goods_payment') }};
+    coinInput.addEventListener('input', () => updateTotals(currentFee));
 
     function fmt(n) {
         return new Intl.NumberFormat('vi-VN').format(n) + 'đ';
@@ -1573,7 +1585,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateTotals(fee) {
         currentFee = fee;
-        const finalTotal = Math.max(0, subtotal - currentDiscount + fee);
+        const maxCoins = Math.min(coinBalance, Math.floor(Math.max(0, subtotal - currentDiscount - minGoods) / coinRate));
+        coinInput.max = maxCoins;
+        const coins = Math.max(0, Math.min(maxCoins, parseInt(coinInput.value, 10) || 0));
+        if (Number(coinInput.value) > maxCoins) coinInput.value = coins;
+        const coinDiscount = coins * coinRate;
+        document.getElementById('coin-discount-text').textContent = '-' + fmt(coinDiscount);
+        const finalTotal = Math.max(0, subtotal - currentDiscount - coinDiscount + fee);
 
         if (fee > 0) {
             shippingFeeText.innerText = fmt(fee);
@@ -1594,7 +1612,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             shippingFeeText.innerText = fee === 0 ? '0đ' : 'Chọn địa chỉ';
             shippingFeeInput.value = 0;
-            finalTotalText.innerText = fmt(Math.max(0, subtotal - currentDiscount));
+            finalTotalText.innerText = fmt(Math.max(0, subtotal - currentDiscount - coinDiscount));
             checkoutButtons.forEach(button => { button.disabled = true; });
 
             if (ghnStatusBox) {

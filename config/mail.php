@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'verification_queue_connection' => env('MAIL_QUEUE_CONNECTION', 'database'),
 
     /*
     |--------------------------------------------------------------------------

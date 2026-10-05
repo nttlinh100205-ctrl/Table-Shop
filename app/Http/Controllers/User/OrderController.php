@@ -95,6 +95,7 @@ class OrderController extends Controller
             $request->merge(['referral_code' => strtoupper(trim($request->input('referral_code', '')))]);
         }
         $validated = $request->validate([
+            'coins_to_use' => 'nullable|integer|min:0|max:1000000000',
             'referral_code' => ['nullable', 'string', 'max:32', new \App\Rules\ReferralCode((int) $request->user()->id)],
             'name'           => 'required|string|max:255',
             'phone'          => ['required', 'string', 'regex:/^(0[3|5|7|8|9])[0-9]{8}$/'],
@@ -148,7 +149,14 @@ class OrderController extends Controller
 
         try {
             $order = DB::transaction(function () use ($validated, $cart, $goodsAmount, $shippingFee, $method, $promotionId, $couponCode, $discountAmount) {
+                $coinService = app(\App\Services\CoinService::class);
+                $buyer = \App\Models\User::lockForUpdate()->findOrFail(Auth::id());
+                $coins = (int) ($validated['coins_to_use'] ?? 0);
+                $coinDiscount = $coinService->discount($buyer, $coins, $goodsAmount);
+                $goodsAmount -= $coinDiscount;
                 $order = Order::create([
+                    'coins_used' => $coins,
+                    'coin_discount_amount' => $coinDiscount,
                     'user_id'         => Auth::id(),
                     'promotion_id'    => $promotionId,
                     'coupon_code'     => $couponCode,
@@ -164,6 +172,8 @@ class OrderController extends Controller
                     'to_district_id'  => $validated['to_district_id'],
                     'to_ward_code'    => $validated['to_ward_code'],
                 ]);
+
+                $coinService->spend($buyer, $order, $coins);
 
                 // Tăng số lượt đã sử dụng của mã khuyến mãi
                 if ($promotionId) {
@@ -278,6 +288,8 @@ class OrderController extends Controller
             }
 
             return $redirect;
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::error('Order store error', ['error' => $e->getMessage()]);
             return back()->withInput()->with('error', 'Lỗi đặt hàng: ' . $e->getMessage());

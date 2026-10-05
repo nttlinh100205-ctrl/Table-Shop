@@ -6,6 +6,7 @@
 <div class="container py-3">
     <div class="card p-3">
         <h2 class="h5">Giới thiệu bạn bè</h2>
+        <p>Xu điểm danh: <strong>{{ number_format(auth()->user()->coin_balance) }}</strong> xu · <a href="{{ route('user.check-in.index') }}">Điểm danh nhận xu mỗi ngày</a></p>
         <p>Mã của bạn: <strong>{{ auth()->user()->referral_code }}</strong> · Điểm hiện có: {{ number_format(auth()->user()->points_balance) }}</p>
         <a href="{{ route('user.spin.index') }}">Vòng quay may mắn · {{ auth()->user()->spin_tickets }} lượt</a>
         @foreach(auth()->user()->notifications()->latest()->limit(5)->get() as $notification)

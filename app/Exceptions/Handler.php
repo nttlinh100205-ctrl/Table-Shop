@@ -38,4 +38,17 @@ class Handler extends ExceptionHandler
             //
         });
     }
+
+    public function render($request, Throwable $e)
+    {
+        if ($e instanceof \Illuminate\Session\TokenMismatchException
+            && !$request->expectsJson()
+            && $request->is('register', 'email/verification-notification')) {
+            $destination = $request->user() ? 'verification.notice' : ($request->is('register') ? 'register' : 'login');
+            return redirect()->route($destination)
+                ->withInput($request->only('name', 'email'))
+                ->with('error', 'Phiên làm việc đã hết hạn. Trang đã được làm mới; vui lòng nhập lại mật khẩu hoặc gửi lại email xác thực.');
+        }
+        return parent::render($request, $e);
+    }
 }
