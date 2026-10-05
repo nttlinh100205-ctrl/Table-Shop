@@ -124,18 +124,27 @@
     @auth
         @if(!auth()->user()->isAdmin())
         <style>
-            #chat-box { position: fixed; bottom: 24px; right: 24px; z-index: 2000; }
+            /* ===== DRAGGABLE USER LIVECHAT ===== */
             #chat-toggle {
-                width: 54px; height: 54px;
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                z-index: 2000;
+                width: 56px;
+                height: 56px;
                 background: linear-gradient(135deg, #5A4536, #3F2F24);
-                border: 1px solid rgba(255, 255, 255, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.25);
                 border-radius: 50%;
                 color: #FAF6F0;
-                font-size: 1.25rem;
+                font-size: 1.35rem;
                 box-shadow: 0 8px 24px rgba(63, 47, 36, 0.35);
                 transition: transform 0.2s cubic-bezier(.22, .61, .36, 1), box-shadow 0.2s cubic-bezier(.22, .61, .36, 1);
-                display: flex; align-items: center; justify-content: center;
-                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: grab;
+                user-select: none;
+                touch-action: none;
             }
             #chat-toggle:hover {
                 transform: scale(1.08) translateY(-2px);
@@ -143,58 +152,127 @@
                 background: #3F2F24;
                 color: #fff;
             }
+            #chat-toggle.is-dragging {
+                cursor: grabbing !important;
+                transform: scale(1.12) !important;
+                box-shadow: 0 18px 40px rgba(63, 47, 36, 0.55), 0 0 0 3px rgba(194, 157, 98, 0.5) !important;
+                transition: none !important;
+            }
+            #chat-toggle::after {
+                content: '';
+                position: absolute;
+                inset: -3px;
+                border-radius: 50%;
+                border: 2px solid rgba(194, 157, 98, 0.5);
+                animation: chat-pulse 3s infinite;
+                pointer-events: none;
+            }
+            @keyframes chat-pulse {
+                0% { transform: scale(1); opacity: 0.8; }
+                50% { transform: scale(1.22); opacity: 0; }
+                100% { transform: scale(1.22); opacity: 0; }
+            }
+
             #chat-popup {
                 display: none;
-                position: absolute;
-                bottom: 68px;
-                right: 0;
-                width: 350px;
-                max-height: 480px;
-                border-radius: 8px;
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                width: 360px;
+                max-width: calc(100vw - 20px);
+                height: 500px;
+                max-height: calc(100vh - 36px);
+                border-radius: 12px;
                 overflow: hidden;
                 flex-direction: column;
-                box-shadow: 0 16px 48px rgba(63, 47, 36, 0.22), 0 4px 12px rgba(63, 47, 36, 0.12);
+                box-shadow: 0 18px 48px rgba(63, 47, 36, 0.26), 0 4px 14px rgba(63, 47, 36, 0.12);
                 border: 1px solid #E6D8C8;
                 background: #FAF6F0;
+                z-index: 2001;
+                transition: box-shadow 0.2s ease;
             }
             #chat-popup.open { display: flex !important; }
+            #chat-popup.is-dragging {
+                cursor: grabbing !important;
+                box-shadow: 0 24px 60px rgba(63, 47, 36, 0.42), 0 0 0 2px rgba(194, 157, 98, 0.5) !important;
+                opacity: 0.97;
+                transition: none !important;
+            }
+            #chat-popup.is-dragging #chat-messages {
+                pointer-events: none;
+            }
+
             #chat-header {
                 background: linear-gradient(135deg, #3F2F24, #5A4536);
-                padding: 0.85rem 1.1rem;
+                padding: 0.75rem 1rem;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                cursor: grab;
+                user-select: none;
+                touch-action: none;
+            }
+            #chat-header:active, #chat-popup.is-dragging #chat-header {
+                cursor: grabbing !important;
             }
             #chat-header .chat-title {
                 display: flex;
                 align-items: center;
-                gap: 0.55rem;
+                gap: 0.45rem;
                 color: #FAF6F0;
                 font-family: var(--font-serif);
                 font-weight: 600;
                 font-size: 1.05rem;
-                letter-spacing: 0.04em;
+                letter-spacing: 0.03em;
+            }
+            .chat-drag-handle-hint {
+                display: inline-flex;
+                align-items: center;
+                color: rgba(250, 246, 240, 0.55);
+                font-size: 1.15rem;
+                margin-right: 2px;
+                cursor: grab;
             }
             #chat-header .online-dot {
                 width: 8px; height: 8px;
                 background: #22c55e;
                 border-radius: 50%;
                 display: inline-block;
-                box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+                box-shadow: 0 0 6px rgba(34, 197, 94, 0.7);
             }
-            #chat-close-btn {
-                background: rgba(255,255,255,0.15);
+            .chat-header-actions {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+            .chat-header-btn {
+                background: rgba(255,255,255,0.12);
                 border: none;
                 color: #FAF6F0;
-                width: 28px; height: 28px;
-                border-radius: 4px;
-                display: flex; align-items: center; justify-content: center;
+                width: 26px; height: 26px;
+                border-radius: 5px;
+                display: inline-flex; align-items: center; justify-content: center;
                 cursor: pointer;
-                font-size: 0.85rem;
-                transition: background 0.2s;
+                font-size: 0.8rem;
+                transition: background 0.15s, transform 0.15s, color 0.15s;
             }
-            #chat-close-btn:hover { background: rgba(255,255,255,0.3); }
+            .chat-header-btn:hover {
+                background: rgba(255,255,255,0.28);
+                color: #fff;
+                transform: translateY(-1px);
+            }
+            .chat-drag-badge {
+                font-size: 0.65rem;
+                background: rgba(255,255,255,0.15);
+                color: rgba(255,255,255,0.85);
+                padding: 1px 6px;
+                border-radius: 10px;
+                letter-spacing: normal;
+                font-family: var(--font-sans);
+                font-weight: 500;
+            }
+
             #chat-messages {
                 flex: 1;
                 overflow-y: auto;
@@ -202,14 +280,13 @@
                 background: #FAF6F0;
                 display: flex;
                 flex-direction: column;
-                gap: 0.6rem;
-                min-height: 220px;
-                max-height: 300px;
+                gap: 0.65rem;
+                min-height: 200px;
             }
             .chat-bubble {
-                max-width: 82%;
-                padding: 0.55rem 0.85rem;
-                border-radius: 6px;
+                max-width: 84%;
+                padding: 0.6rem 0.9rem;
+                border-radius: 8px;
                 font-size: 0.875rem;
                 line-height: 1.5;
                 word-break: break-word;
@@ -219,6 +296,7 @@
                 background: #5A4536;
                 color: #FAF6F0;
                 border-bottom-right-radius: 2px;
+                box-shadow: 0 2px 6px rgba(90, 69, 54, 0.2);
             }
             .chat-bubble.admin {
                 align-self: flex-start;
@@ -226,6 +304,7 @@
                 color: #3A2E26;
                 border: 1px solid #E6D8C8;
                 border-bottom-left-radius: 2px;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
             }
             .chat-sender-label {
                 font-size: 0.72rem;
@@ -234,6 +313,7 @@
                 color: #7E7065;
             }
             .chat-sender-label.me { text-align: right; color: #5A4536; }
+
             #chat-footer {
                 padding: 0.75rem 0.85rem;
                 border-top: 1px solid #E6D8C8;
@@ -244,48 +324,122 @@
             #chat-input {
                 flex: 1;
                 border: 1px solid #E6D8C8;
-                border-radius: 4px;
-                padding: 0.5rem 0.8rem;
+                border-radius: 6px;
+                padding: 0.55rem 0.85rem;
                 font-size: 0.875rem;
                 outline: none;
                 font-family: inherit;
                 background: #FAF6F0;
                 color: #3A2E26;
-                transition: border-color 0.2s;
+                transition: border-color 0.2s, background-color 0.2s;
             }
             #chat-input:focus { border-color: #5A4536; background: #fff; }
             #chat-send {
                 background: #5A4536;
                 border: none;
                 color: #fff;
-                border-radius: 4px;
-                width: 40px;
+                border-radius: 6px;
+                width: 42px;
                 display: flex; align-items: center; justify-content: center;
                 cursor: pointer;
-                font-size: 0.95rem;
+                font-size: 1rem;
                 transition: background 0.2s, transform 0.15s;
                 flex-shrink: 0;
             }
             #chat-send:hover { background: #3F2F24; transform: translateY(-1px); }
+
+            /* ===== QUICK REPLIES (CÂU MẪU) ===== */
+            #chat-quick-wrap {
+                background: #FFFFFF;
+                border-top: 1px solid #E6D8C8;
+                padding: 0.5rem 0.75rem 0.4rem;
+            }
+            .chat-quick-head {
+                display: flex; align-items: center; justify-content: space-between;
+                font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em;
+                text-transform: uppercase; color: #7E7065; margin-bottom: 0.35rem;
+            }
+            #chat-quick-toggle {
+                background: none; border: none; color: #7E7065; cursor: pointer;
+                font-size: 0.75rem; padding: 0 2px; transition: transform 0.2s, color 0.2s;
+            }
+            #chat-quick-toggle:hover { color: #5A4536; }
+            #chat-quick-wrap.collapsed #chat-quick-toggle { transform: rotate(180deg); }
+            #chat-quick-wrap.collapsed #chat-quick-list { display: none; }
+            #chat-quick-wrap.collapsed .chat-quick-head { margin-bottom: 0; }
+            #chat-quick-list {
+                display: flex; flex-wrap: wrap; gap: 0.4rem;
+                max-height: 92px; overflow-y: auto;
+            }
+            .chat-quick-chip {
+                display: inline-flex; align-items: center; gap: 0.3rem;
+                background: #FAF6F0; color: #5A4536;
+                border: 1px solid #E6D8C8; border-radius: 999px;
+                padding: 0.3rem 0.7rem; font-size: 0.78rem; font-weight: 500;
+                font-family: inherit; cursor: pointer; white-space: nowrap;
+                transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.15s;
+            }
+            .chat-quick-chip i { font-size: 0.8rem; color: #C29D62; transition: color 0.18s; }
+            .chat-quick-chip:hover {
+                background: #5A4536; color: #FAF6F0; border-color: #5A4536;
+                transform: translateY(-1px);
+            }
+            .chat-quick-chip:hover i { color: #FAF6F0; }
+            .chat-quick-chip:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+            @media (max-width: 575.98px) {
+                #chat-quick-list { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; max-height: none; padding-bottom: 2px; }
+            }
         </style>
+
         <div id="chat-box">
-            <button id="chat-toggle" title="Chat hỗ trợ">
+            <!-- Nút bật chat (có thể kéo di chuyển) -->
+            <button id="chat-toggle" title="Kéo để di chuyển hoặc bấm để mở chat" aria-label="Mở chat hỗ trợ">
                 <i class="bi bi-chat-dots"></i>
             </button>
-            <div id="chat-popup">
-                <div id="chat-header">
+
+            <!-- Hộp thoại chat popup (có thể kéo di chuyển thanh tiêu đề) -->
+            <div id="chat-popup" role="dialog" aria-labelledby="chat-title-text">
+                <div id="chat-header" title="Giữ chuột hoặc chạm để kéo di chuyển hộp chat">
                     <div class="chat-title">
+                        <i class="bi bi-grip-vertical chat-drag-handle-hint" title="Kéo để di chuyển"></i>
                         <span class="online-dot"></span>
-                        Hỗ trợ khách hàng
+                        <span id="chat-title-text">Hỗ trợ khách hàng</span>
+                        <span class="chat-drag-badge d-none d-sm-inline">Kéo di chuyển</span>
                     </div>
-                    <button id="chat-close-btn" aria-label="Đóng chat">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
+                    <div class="chat-header-actions">
+                        <button id="chat-reset-btn" class="chat-header-btn" title="Đặt lại vị trí góc phải (hoặc nhấp đúp tiêu đề)" aria-label="Đặt lại vị trí">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </button>
+                        <button id="chat-minimize-btn" class="chat-header-btn" title="Thu nhỏ" aria-label="Thu nhỏ">
+                            <i class="bi bi-dash-lg"></i>
+                        </button>
+                        <button id="chat-close-btn" class="chat-header-btn" title="Đóng chat" aria-label="Đóng chat">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
                 </div>
                 <div id="chat-messages">
                     <div style="text-align:center;margin:auto;color:#94a3b8;font-size:0.82rem;">
                         <i class="bi bi-chat-square-text d-block mb-1" style="font-size:1.5rem;opacity:0.4;"></i>
                         Bắt đầu trò chuyện với Admin
+                    </div>
+                </div>
+                <div id="chat-quick-wrap">
+                    <div class="chat-quick-head">
+                        <span><i class="bi bi-lightning-charge-fill" style="color:#C29D62;"></i> Câu hỏi nhanh</span>
+                        <button type="button" id="chat-quick-toggle" title="Ẩn/hiện câu hỏi nhanh" aria-label="Ẩn/hiện câu hỏi nhanh">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div id="chat-quick-list">
+                        <button type="button" class="chat-quick-chip" data-msg="Xin chào, tôi cần tư vấn chọn bàn phù hợp."><i class="bi bi-hand-thumbs-up"></i>Tư vấn chọn bàn</button>
+                        <button type="button" class="chat-quick-chip" data-msg="Sản phẩm này hiện còn hàng không ạ?"><i class="bi bi-box-seam"></i>Còn hàng không?</button>
+                        <button type="button" class="chat-quick-chip" data-msg="Phí vận chuyển và thời gian giao hàng là bao lâu?"><i class="bi bi-truck"></i>Phí &amp; thời gian giao</button>
+                        <button type="button" class="chat-quick-chip" data-msg="Hiện shop có chương trình khuyến mãi hoặc mã giảm giá nào không?"><i class="bi bi-tag"></i>Khuyến mãi</button>
+                        <button type="button" class="chat-quick-chip" data-msg="Tôi muốn kiểm tra tình trạng đơn hàng của mình."><i class="bi bi-receipt"></i>Kiểm tra đơn hàng</button>
+                        <button type="button" class="chat-quick-chip" data-msg="Chính sách bảo hành và đổi trả của shop như thế nào?"><i class="bi bi-shield-check"></i>Bảo hành &amp; đổi trả</button>
+                        <button type="button" class="chat-quick-chip" data-msg="Shop có hỗ trợ lắp đặt tại nhà không?"><i class="bi bi-tools"></i>Lắp đặt tại nhà</button>
+                        <button type="button" class="chat-quick-chip" data-msg="Shop hỗ trợ những phương thức thanh toán nào?"><i class="bi bi-credit-card"></i>Thanh toán</button>
                     </div>
                 </div>
                 <div id="chat-footer">
@@ -296,29 +450,202 @@
                 </div>
             </div>
         </div>
+
         <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const toggleBtn = document.getElementById('chat-toggle');
-            const chatPopup = document.getElementById('chat-popup');
-            const closeBtn  = document.getElementById('chat-close-btn');
-            const sendBtn   = document.getElementById('chat-send');
-            const input     = document.getElementById('chat-input');
-            const chatBox   = document.getElementById('chat-messages');
-            if (!toggleBtn) return;
+            const toggleBtn   = document.getElementById('chat-toggle');
+            const chatPopup   = document.getElementById('chat-popup');
+            const chatHeader  = document.getElementById('chat-header');
+            const closeBtn    = document.getElementById('chat-close-btn');
+            const minimizeBtn = document.getElementById('chat-minimize-btn');
+            const resetBtn    = document.getElementById('chat-reset-btn');
+            const sendBtn     = document.getElementById('chat-send');
+            const input       = document.getElementById('chat-input');
+            const chatBox     = document.getElementById('chat-messages');
+            if (!toggleBtn || !chatPopup) return;
 
             const myId = {{ (int) auth()->id() }};
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
-            toggleBtn.onclick = () => {
+            // ===== DRAG & DROP ENGINE =====
+            const STORAGE_POPUP_KEY  = 'table_shop_chat_popup_pos';
+            const STORAGE_TOGGLE_KEY = 'table_shop_chat_toggle_pos';
+
+            function clampPosition(el, targetLeft, targetTop) {
+                const margin = 10;
+                const rect = el.getBoundingClientRect();
+                const w = rect.width || el.offsetWidth || 360;
+                const h = rect.height || el.offsetHeight || 500;
+                const maxLeft = Math.max(margin, window.innerWidth - w - margin);
+                const maxTop  = Math.max(margin, window.innerHeight - h - margin);
+
+                const clampedX = Math.round(Math.max(margin, Math.min(targetLeft, maxLeft)));
+                const clampedY = Math.round(Math.max(margin, Math.min(targetTop, maxTop)));
+
+                el.style.left = clampedX + 'px';
+                el.style.top = clampedY + 'px';
+                el.style.right = 'auto';
+                el.style.bottom = 'auto';
+
+                return { x: clampedX, y: clampedY };
+            }
+
+            function setupDraggable(targetEl, handleEl, storageKey, onJustClicked) {
+                let startX = 0, startY = 0;
+                let origLeft = 0, origTop = 0;
+                let isDragging = false;
+                let hasMoved = false;
+                const threshold = 6;
+
+                // Khôi phục vị trí đã lưu
+                try {
+                    const saved = JSON.parse(localStorage.getItem(storageKey));
+                    if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
+                        clampPosition(targetEl, saved.x, saved.y);
+                    }
+                } catch(e) {}
+
+                function onPointerDown(e) {
+                    // Bỏ qua nếu nhấn chuột phải hoặc nhấn vào nút chức năng trong header
+                    if (e.type === 'mousedown' && e.button !== 0) return;
+                    if (e.target.closest('.chat-header-btn')) return;
+
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                    const rect = targetEl.getBoundingClientRect();
+                    startX = clientX;
+                    startY = clientY;
+                    origLeft = rect.left;
+                    origTop = rect.top;
+                    hasMoved = false;
+                    isDragging = false;
+
+                    document.addEventListener('mousemove', onPointerMove, { passive: false });
+                    document.addEventListener('mouseup', onPointerUp);
+                    document.addEventListener('touchmove', onPointerMove, { passive: false });
+                    document.addEventListener('touchend', onPointerUp);
+                }
+
+                function onPointerMove(e) {
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    const dx = clientX - startX;
+                    const dy = clientY - startY;
+
+                    if (!hasMoved && Math.hypot(dx, dy) > threshold) {
+                        hasMoved = true;
+                        isDragging = true;
+                        targetEl.classList.add('is-dragging');
+                        document.body.style.userSelect = 'none';
+                    }
+
+                    if (isDragging) {
+                        if (e.cancelable) e.preventDefault();
+                        clampPosition(targetEl, origLeft + dx, origTop + dy);
+                    }
+                }
+
+                function onPointerUp() {
+                    document.removeEventListener('mousemove', onPointerMove);
+                    document.removeEventListener('mouseup', onPointerUp);
+                    document.removeEventListener('touchmove', onPointerMove);
+                    document.removeEventListener('touchend', onPointerUp);
+                    document.body.style.userSelect = '';
+
+                    if (isDragging) {
+                        targetEl.classList.remove('is-dragging');
+                        isDragging = false;
+                        const rect = targetEl.getBoundingClientRect();
+                        const pos = clampPosition(targetEl, rect.left, rect.top);
+                        try {
+                            localStorage.setItem(storageKey, JSON.stringify(pos));
+                        } catch(e) {}
+                    } else if (!hasMoved) {
+                        if (typeof onJustClicked === 'function') {
+                            onJustClicked();
+                        }
+                    }
+                }
+
+                handleEl.addEventListener('mousedown', onPointerDown);
+                handleEl.addEventListener('touchstart', onPointerDown, { passive: true });
+            }
+
+            // Kéo nút toggle (phân biệt kéo và click)
+            setupDraggable(toggleBtn, toggleBtn, STORAGE_TOGGLE_KEY, function() {
+                openChat();
+            });
+
+            // Kéo hộp chat qua thanh header
+            setupDraggable(chatPopup, chatHeader, STORAGE_POPUP_KEY, null);
+
+            // Tự động căn chỉnh khi resize màn hình
+            window.addEventListener('resize', function () {
+                [toggleBtn, chatPopup].forEach(el => {
+                    if (el.style.left && el.style.left !== 'auto') {
+                        const rect = el.getBoundingClientRect();
+                        clampPosition(el, rect.left, rect.top);
+                    }
+                });
+            });
+
+            // Mở và đóng chat
+            function openChat() {
                 chatPopup.classList.add('open');
                 toggleBtn.style.display = 'none';
+
+                // Nếu popup chưa có vị trí lưu, đặt mặc định hoặc gần nút toggle
+                const saved = localStorage.getItem(STORAGE_POPUP_KEY);
+                if (!saved) {
+                    const toggleRect = toggleBtn.getBoundingClientRect();
+                    const popupW = 360;
+                    const popupH = 500;
+                    // Đặt cạnh nút toggle nhưng đảm bảo lọt trong màn hình
+                    let initialX = window.innerWidth - popupW - 24;
+                    let initialY = window.innerHeight - popupH - 24;
+                    if (toggleRect.left < window.innerWidth / 2) {
+                        initialX = Math.max(10, toggleRect.left);
+                    }
+                    clampPosition(chatPopup, initialX, initialY);
+                } else {
+                    const rect = chatPopup.getBoundingClientRect();
+                    clampPosition(chatPopup, rect.left, rect.top);
+                }
+
                 loadMessages();
-            };
-            closeBtn.onclick = () => {
+            }
+
+            function closeChat() {
                 chatPopup.classList.remove('open');
                 toggleBtn.style.display = 'flex';
-            };
+                // Đảm bảo nút toggle nằm trong màn hình
+                const rect = toggleBtn.getBoundingClientRect();
+                clampPosition(toggleBtn, rect.left, rect.top);
+            }
 
+            closeBtn.onclick = closeChat;
+            minimizeBtn.onclick = closeChat;
+
+            // Đặt lại vị trí mặc định (góc dưới phải)
+            function resetChatPosition() {
+                try {
+                    localStorage.removeItem(STORAGE_POPUP_KEY);
+                } catch(e) {}
+                chatPopup.style.left = 'auto';
+                chatPopup.style.top = 'auto';
+                chatPopup.style.right = '24px';
+                chatPopup.style.bottom = '24px';
+            }
+            resetBtn.onclick = resetChatPosition;
+            // Nhấp đúp vào header để reset vị trí
+            chatHeader.addEventListener('dblclick', function(e) {
+                if (!e.target.closest('.chat-header-btn')) {
+                    resetChatPosition();
+                }
+            });
+
+            // ===== LOGIC TIN NHẮN =====
             function escapeHtml(s) {
                 return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
             }
@@ -346,11 +673,35 @@
                     .catch(err => console.error('Lỗi tải tin nhắn:', err));
             }
 
-            function sendMessage() {
-                const message = input.value.trim();
+            const quickWrap  = document.getElementById('chat-quick-wrap');
+            const quickChips = document.querySelectorAll('.chat-quick-chip');
+            const QUICK_COLLAPSE_KEY = 'table_shop_chat_quick_collapsed';
+
+            try {
+                if (localStorage.getItem(QUICK_COLLAPSE_KEY) === '1') quickWrap.classList.add('collapsed');
+            } catch (e) {}
+
+            document.getElementById('chat-quick-toggle').onclick = () => {
+                quickWrap.classList.toggle('collapsed');
+                try { localStorage.setItem(QUICK_COLLAPSE_KEY, quickWrap.classList.contains('collapsed') ? '1' : '0'); } catch (e) {}
+            };
+
+            // Bấm câu mẫu -> gửi ngay
+            quickChips.forEach(chip => {
+                chip.addEventListener('click', () => sendMessage(chip.dataset.msg));
+            });
+
+            function setSending(state) {
+                input.disabled = state;
+                sendBtn.disabled = state;
+                quickChips.forEach(c => c.disabled = state);
+            }
+
+            function sendMessage(preset) {
+                const fromPreset = typeof preset === 'string';
+                const message = (fromPreset ? preset : input.value).trim();
                 if (!message) return;
-                input.disabled = true;
-                sendBtn.disabled = true;
+                setSending(true);
                 fetch('{{ route('user.chat.send') }}', {
                     method: 'POST',
                     headers: {
@@ -362,20 +713,18 @@
                 })
                     .then(r => r.json())
                     .then(() => {
-                        input.value = '';
-                        input.disabled = false;
-                        sendBtn.disabled = false;
+                        if (!fromPreset) input.value = '';
+                        setSending(false);
                         input.focus();
                         loadMessages();
                     })
                     .catch(err => {
                         console.error(err);
-                        input.disabled = false;
-                        sendBtn.disabled = false;
+                        setSending(false);
                     });
             }
 
-            sendBtn.onclick = sendMessage;
+            sendBtn.onclick = () => sendMessage();
             input.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
             setInterval(() => {
                 if (chatPopup.classList.contains('open')) loadMessages();

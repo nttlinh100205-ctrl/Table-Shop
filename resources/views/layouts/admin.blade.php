@@ -279,43 +279,67 @@
         }
         .sidebar-overlay.show { display: block; }
 
-        /* ===== LIVE CHAT ===== */
-        #admin-chat-box { position: fixed; bottom: 24px; right: 24px; z-index: 2000; }
-        #admin-chat-box #chat-toggle {
+        /* ===== LIVE CHAT (DRAGGABLE) ===== */
+        #chat-toggle {
+            position: fixed; bottom: 24px; right: 24px; z-index: 2000;
             display: flex; align-items: center; gap: 0.5rem;
-            padding: 0.6rem 1.1rem;
-            background: #0f172a; color: #fff; border: none;
+            padding: 0.65rem 1.15rem;
+            background: #0f172a; color: #fff; border: 1px solid rgba(255,255,255,0.15);
             border-radius: 100px; font-size: 0.875rem; font-weight: 600;
-            cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.25);
+            cursor: grab; box-shadow: 0 6px 20px rgba(0,0,0,.3);
             transition: background 0.15s, transform 0.15s; font-family: inherit;
+            user-select: none; touch-action: none;
         }
-        #admin-chat-box #chat-toggle:hover { background: #1e293b; transform: translateY(-1px); }
-        #admin-chat-box #chat-popup {
-            display: none; position: absolute; bottom: 58px; right: 0;
-            width: 380px; height: 500px; border-radius: 14px; overflow: hidden;
-            flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+        #chat-toggle:hover { background: #1e293b; transform: translateY(-1px); }
+        #chat-toggle.is-dragging {
+            cursor: grabbing !important;
+            transform: scale(1.08) !important;
+            box-shadow: 0 16px 36px rgba(0,0,0,.45), 0 0 0 2px rgba(59, 130, 246, 0.5) !important;
+            transition: none !important;
         }
-        #admin-chat-box #chat-popup.open { display: flex !important; }
-        #admin-chat-box #user-list {
+        #chat-popup {
+            display: none; position: fixed; bottom: 24px; right: 24px;
+            width: 380px; max-width: calc(100vw - 20px); height: 520px; max-height: calc(100vh - 40px);
+            border-radius: 14px; overflow: hidden;
+            flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.25);
+            z-index: 2001; transition: box-shadow 0.2s ease;
+        }
+        #chat-popup.open { display: flex !important; }
+        #chat-popup.is-dragging {
+            cursor: grabbing !important;
+            box-shadow: 0 26px 70px rgba(0,0,0,.4), 0 0 0 2px rgba(59, 130, 246, 0.5) !important;
+            opacity: 0.98; transition: none !important;
+        }
+        #chat-popup.is-dragging #chat-messages,
+        #chat-popup.is-dragging #user-list {
+            pointer-events: none;
+        }
+        #admin-chat-header {
+            cursor: grab; user-select: none; touch-action: none;
+        }
+        #admin-chat-header:active, #chat-popup.is-dragging #admin-chat-header {
+            cursor: grabbing !important;
+        }
+        #user-list {
             max-height: 160px; overflow-y: auto;
             border-bottom: 1px solid #f1f5f9; background: #fafafa;
         }
-        #admin-chat-box .user-item {
+        .user-item {
             padding: 8px 14px; cursor: pointer;
             border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; transition: background 0.1s;
         }
-        #admin-chat-box .user-item .chat-preview { font-size: 0.75rem; color: #94a3b8; }
-        #admin-chat-box .user-item:hover { background: #eff6ff; }
-        #admin-chat-box .user-item.active { background: #eff6ff; border-left: 3px solid #3b82f6; }
-        #admin-chat-box #chat-messages {
+        .user-item .chat-preview { font-size: 0.75rem; color: #94a3b8; }
+        .user-item:hover { background: #eff6ff; }
+        .user-item.active { background: #eff6ff; border-left: 3px solid #3b82f6; }
+        #chat-messages {
             flex: 1; overflow-y: auto; padding: 14px; font-size: 0.875rem; background: #fff;
         }
-        #admin-chat-box .msg-row {
+        .msg-row {
             margin-bottom: 10px; padding: 6px 10px;
             border-radius: 8px; font-size: 0.85rem; line-height: 1.4;
         }
-        #admin-chat-box .msg-me   { background: #eff6ff; color: #1e40af; text-align: right; margin-left: 20%; }
-        #admin-chat-box .msg-other{ background: #f8fafc; color: #334155; margin-right: 20%; }
+        .msg-me   { background: #eff6ff; color: #1e40af; text-align: right; margin-left: 20%; }
+        .msg-other{ background: #f8fafc; color: #334155; margin-right: 20%; }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 991.98px) {
@@ -485,22 +509,33 @@
 
 
     <div id="admin-chat-box">
-        <button id="chat-toggle">
+        <button id="chat-toggle" title="Kéo để di chuyển hoặc bấm để mở chat" aria-label="Mở chat khách">
             <i class="bi bi-chat-dots"></i>
             Chat khách
             <span id="chat-unread-count" class="badge rounded-pill text-bg-danger d-none">0</span>
         </button>
-        <div id="chat-popup" class="card border-0">
-            <div class="card-header d-flex justify-content-between align-items-center py-2"
-                 style="background:#0f172a; border:none;">
+        <div id="chat-popup" class="card border-0" role="dialog" aria-labelledby="admin-chat-title">
+            <div id="admin-chat-header" class="card-header d-flex justify-content-between align-items-center py-2"
+                 style="background:#0f172a; border:none;" title="Giữ chuột hoặc chạm để kéo di chuyển hộp chat">
                 <div class="d-flex align-items-center gap-2">
-                    <div style="width:8px;height:8px;background:#22c55e;border-radius:50%;"></div>
-                    <strong class="text-white" style="font-size:0.875rem;">Hỗ trợ trực tuyến</strong>
+                    <i class="bi bi-grip-vertical text-secondary" style="font-size:1rem;" title="Kéo để di chuyển"></i>
+                    <div style="width:8px;height:8px;background:#22c55e;border-radius:50%;box-shadow:0 0 6px #22c55e;"></div>
+                    <strong id="admin-chat-title" class="text-white" style="font-size:0.875rem;">Hỗ trợ trực tuyến</strong>
                 </div>
-                <button id="chat-close" class="btn btn-sm text-white py-0 px-2"
-                        style="background:rgba(255,255,255,0.1);border-radius:6px;border:none;">
-                    <i class="bi bi-x-lg" style="font-size:0.75rem;"></i>
-                </button>
+                <div class="d-flex align-items-center gap-1">
+                    <button id="admin-chat-reset" class="btn btn-sm text-white py-0 px-2"
+                            title="Đặt lại vị trí góc phải (hoặc nhấp đúp tiêu đề)" style="background:rgba(255,255,255,0.12);border-radius:6px;border:none;">
+                        <i class="bi bi-arrow-counterclockwise" style="font-size:0.75rem;"></i>
+                    </button>
+                    <button id="admin-chat-minimize" class="btn btn-sm text-white py-0 px-2"
+                            title="Thu nhỏ" style="background:rgba(255,255,255,0.12);border-radius:6px;border:none;">
+                        <i class="bi bi-dash-lg" style="font-size:0.75rem;"></i>
+                    </button>
+                    <button id="chat-close" class="btn btn-sm text-white py-0 px-2"
+                            title="Đóng chat" style="background:rgba(255,255,255,0.12);border-radius:6px;border:none;">
+                        <i class="bi bi-x-lg" style="font-size:0.75rem;"></i>
+                    </button>
+                </div>
             </div>
             <div class="p-2" style="background:#fff; border-bottom:1px solid #f1f5f9;">
                 <input type="search" id="chat-user-search" class="form-control form-control-sm"
@@ -532,19 +567,183 @@
     (function () {
         let currentUserId = null;
         let chatUsers = [];
+        const toggleBtn = document.getElementById('chat-toggle');
         const chatPopup = document.getElementById('chat-popup');
+        const chatHeader = document.getElementById('admin-chat-header');
         const chatMessages = document.getElementById('chat-messages');
         const chatInput = document.getElementById('chat-input');
         const userList = document.getElementById('user-list');
         const userSearch = document.getElementById('chat-user-search');
         const unreadCount = document.getElementById('chat-unread-count');
+        const closeBtn = document.getElementById('chat-close');
+        const minimizeBtn = document.getElementById('admin-chat-minimize');
+        const resetBtn = document.getElementById('admin-chat-reset');
         const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
-        document.getElementById('chat-toggle').onclick = () => {
+        // ===== DRAG & DROP ENGINE =====
+        const STORAGE_POPUP_KEY  = 'table_shop_admin_chat_popup_pos';
+        const STORAGE_TOGGLE_KEY = 'table_shop_admin_chat_toggle_pos';
+
+        function clampPosition(el, targetLeft, targetTop) {
+            const margin = 10;
+            const rect = el.getBoundingClientRect();
+            const w = rect.width || el.offsetWidth || 380;
+            const h = rect.height || el.offsetHeight || 520;
+            const maxLeft = Math.max(margin, window.innerWidth - w - margin);
+            const maxTop  = Math.max(margin, window.innerHeight - h - margin);
+
+            const clampedX = Math.round(Math.max(margin, Math.min(targetLeft, maxLeft)));
+            const clampedY = Math.round(Math.max(margin, Math.min(targetTop, maxTop)));
+
+            el.style.left = clampedX + 'px';
+            el.style.top = clampedY + 'px';
+            el.style.right = 'auto';
+            el.style.bottom = 'auto';
+
+            return { x: clampedX, y: clampedY };
+        }
+
+        function setupDraggable(targetEl, handleEl, storageKey, onJustClicked) {
+            let startX = 0, startY = 0;
+            let origLeft = 0, origTop = 0;
+            let isDragging = false;
+            let hasMoved = false;
+            const threshold = 6;
+
+            try {
+                const saved = JSON.parse(localStorage.getItem(storageKey));
+                if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
+                    clampPosition(targetEl, saved.x, saved.y);
+                }
+            } catch(e) {}
+
+            function onPointerDown(e) {
+                if (e.type === 'mousedown' && e.button !== 0) return;
+                if (e.target.closest('button')) return;
+
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                const rect = targetEl.getBoundingClientRect();
+                startX = clientX;
+                startY = clientY;
+                origLeft = rect.left;
+                origTop = rect.top;
+                hasMoved = false;
+                isDragging = false;
+
+                document.addEventListener('mousemove', onPointerMove, { passive: false });
+                document.addEventListener('mouseup', onPointerUp);
+                document.addEventListener('touchmove', onPointerMove, { passive: false });
+                document.addEventListener('touchend', onPointerUp);
+            }
+
+            function onPointerMove(e) {
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+
+                if (!hasMoved && Math.hypot(dx, dy) > threshold) {
+                    hasMoved = true;
+                    isDragging = true;
+                    targetEl.classList.add('is-dragging');
+                    document.body.style.userSelect = 'none';
+                }
+
+                if (isDragging) {
+                    if (e.cancelable) e.preventDefault();
+                    clampPosition(targetEl, origLeft + dx, origTop + dy);
+                }
+            }
+
+            function onPointerUp() {
+                document.removeEventListener('mousemove', onPointerMove);
+                document.removeEventListener('mouseup', onPointerUp);
+                document.removeEventListener('touchmove', onPointerMove);
+                document.removeEventListener('touchend', onPointerUp);
+                document.body.style.userSelect = '';
+
+                if (isDragging) {
+                    targetEl.classList.remove('is-dragging');
+                    isDragging = false;
+                    const rect = targetEl.getBoundingClientRect();
+                    const pos = clampPosition(targetEl, rect.left, rect.top);
+                    try {
+                        localStorage.setItem(storageKey, JSON.stringify(pos));
+                    } catch(e) {}
+                } else if (!hasMoved) {
+                    if (typeof onJustClicked === 'function') {
+                        onJustClicked();
+                    }
+                }
+            }
+
+            handleEl.addEventListener('mousedown', onPointerDown);
+            handleEl.addEventListener('touchstart', onPointerDown, { passive: true });
+        }
+
+        // Kéo nút toggle admin
+        setupDraggable(toggleBtn, toggleBtn, STORAGE_TOGGLE_KEY, function() {
+            openChat();
+        });
+
+        // Kéo khung chat admin qua header
+        setupDraggable(chatPopup, chatHeader, STORAGE_POPUP_KEY, null);
+
+        window.addEventListener('resize', function () {
+            [toggleBtn, chatPopup].forEach(el => {
+                if (el.style.left && el.style.left !== 'auto') {
+                    const rect = el.getBoundingClientRect();
+                    clampPosition(el, rect.left, rect.top);
+                }
+            });
+        });
+
+        function openChat() {
             chatPopup.classList.add('open');
+            const saved = localStorage.getItem(STORAGE_POPUP_KEY);
+            if (!saved) {
+                const toggleRect = toggleBtn.getBoundingClientRect();
+                const popupW = 380;
+                const popupH = 520;
+                let initialX = window.innerWidth - popupW - 24;
+                let initialY = window.innerHeight - popupH - 24;
+                if (toggleRect.left < window.innerWidth / 2) {
+                    initialX = Math.max(10, toggleRect.left);
+                }
+                clampPosition(chatPopup, initialX, initialY);
+            } else {
+                const rect = chatPopup.getBoundingClientRect();
+                clampPosition(chatPopup, rect.left, rect.top);
+            }
             loadUsers();
-        };
-        document.getElementById('chat-close').onclick = () => chatPopup.classList.remove('open');
+        }
+
+        function closeChat() {
+            chatPopup.classList.remove('open');
+        }
+
+        closeBtn.onclick = closeChat;
+        if (minimizeBtn) minimizeBtn.onclick = closeChat;
+
+        function resetChatPosition() {
+            try {
+                localStorage.removeItem(STORAGE_POPUP_KEY);
+            } catch(e) {}
+            chatPopup.style.left = 'auto';
+            chatPopup.style.top = 'auto';
+            chatPopup.style.right = '24px';
+            chatPopup.style.bottom = '24px';
+        }
+        if (resetBtn) resetBtn.onclick = resetChatPosition;
+        chatHeader.addEventListener('dblclick', function(e) {
+            if (!e.target.closest('button')) {
+                resetChatPosition();
+            }
+        });
+
+        // ===== LOGIC CHAT ADMIN =====
 
         function loadUsers() {
             fetch('{{ route('admin.chat.users') }}', { headers: { Accept: 'application/json' } })
