@@ -454,6 +454,7 @@ class EngagementFeatureTest extends TestCase
             'Mã giới thiệu khi nào được cộng điểm?' => ['đơn hoàn thành', '10.000 điểm'],
             'Đánh giá nhận bao nhiêu xu?' => ['200 xu', 'mỗi đơn'],
             'Vòng quay may mắn ở đâu?' => [route('user.spin.index')],
+            'Shop mở cửa mấy giờ, địa chỉ ở đâu?' => [config('shop.address'), '08:00'],
         ] as $question=>$expected) {
             $reply = $this->postJson(route('ai.send'), ['message'=>$question])->assertOk()->json('reply');
             foreach ($expected as $text) $this->assertStringContainsString($text, $reply);

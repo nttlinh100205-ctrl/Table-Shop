@@ -10,6 +10,7 @@ class ShopChatSupport
     public static function policies(): array
     {
         return [
+            'contact' => 'Thông tin shop đang công bố: địa chỉ '.config('shop.address').'; hotline '.config('shop.hotline').'; email '.config('shop.email').'. Giờ mở cửa: '.collect(config('shop.hours', []))->map(fn($row)=>implode(' ', $row))->implode('; ').'. Bạn chọn Nhân viên để xác nhận địa chỉ cụ thể trước khi ghé.',
             'check_in' => 'Điểm danh không cần liên tiếp. Mỗi ngày nhận một lần, chu kỳ '.config('coins.cycle_days', 7).' lần: các lần đầu nhận '.config('coins.daily_reward', 100).' xu, lần cuối nhận '.config('coins.last_day_reward', 200).' xu. Bỏ ngày không mất tiến độ. [Điểm danh nhận xu]('.route('user.check-in.index').').',
             'coins' => 'Bật Dùng xu dưới ô voucher khi thanh toán. 1 xu = '.config('coins.vnd_per_coin', 1).'đ, giảm tiền hàng sau voucher, không giảm phí giao; tiền hàng còn tối thiểu '.number_format(config('coins.minimum_goods_payment', 1000), 0, ',', '.').'đ. Xu khác điểm thành viên.',
             'review' => 'Đánh giá đơn đã hoàn thành nhận 200 xu một lần cho mỗi đơn, kể cả đánh giá chưa hài lòng. Mở [Đơn hàng của tôi]('.route('user.orders.index').') để đánh giá.',
@@ -38,6 +39,7 @@ class ShopChatSupport
         }
         $policies = self::policies();
         $policyReplies = [];
+        if (!str_contains($text, 'don hang') && preg_match('/\b(gio mo cua|mo cua may gio|may gio.*(?:mo|dong) cua|gio hoat dong|shop mo cua|dia chi|shop o dau|hotline|so dien thoai|lien he shop)\b/', $text)) $policyReplies[] = $policies['contact'];
         foreach (['check_in'=>'diem danh', 'coins'=>'dung xu|doi xu|1 xu|xu doi', 'review'=>'danh gia.*(?:xu|thuong)|(?:xu|thuong).*danh gia', 'referral'=>'ma gioi thieu', 'spin'=>'vong quay|quay may man', 'order_points'=>'(?:don|mua).*(?:cong|nhan|doi|duoc).*diem|(?:tinh|quy doi|tich luy) diem'] as $key=>$pattern) {
             if (preg_match('/\b(?:'.$pattern.')\b/', $text)) $policyReplies[] = $policies[$key];
         }
