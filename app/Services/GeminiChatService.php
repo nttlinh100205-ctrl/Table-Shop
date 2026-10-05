@@ -97,7 +97,9 @@ class GeminiChatService
             $decision = self::responseText($scope);
             if ($decision === '' || $scope->json('candidates.0.finishReason') === 'MAX_TOKENS') throw new AiUnavailableException('AI_EMPTY_RESPONSE');
             if ($decision !== 'ALLOWED' && !ChatProductSearch::isBudgetFollowUp($message, $history, $behavior)
-                && !ChatProductSearch::isAttributeFollowUp($message, $history, $behavior)) return self::OUT_OF_SCOPE;
+                && !ChatProductSearch::isAttributeFollowUp($message, $history, $behavior)
+                && !ChatProductSearch::isNamedProductReset($message)) return self::OUT_OF_SCOPE;
+            if ($answer = ChatProductSearch::attributeReply($message, $history, $behavior)) return $answer;
             $response = Http::connectTimeout(5)->timeout(30)->withHeaders(['x-goog-api-key' => $key])
                 ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent", [
                     'systemInstruction' => ['parts' => [['text' => self::buildSystemPrompt($behavior, $message, $history)]]],

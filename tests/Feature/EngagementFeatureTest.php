@@ -431,6 +431,28 @@ class EngagementFeatureTest extends TestCase
         Http::assertSentCount(2);
     }
 
+    public function test_attribute_answers_use_matching_stock_and_named_reset_cannot_bypass_scope(): void
+    {
+        $category = \App\Models\Category::create(['name'=>'Bàn']);
+        $desk = \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn làm việc','style'=>'Hiện đại','price'=>4000000]);
+        \App\Models\ProductVariant::create(['product_id'=>$desk->id,'color'=>'Đen sơn','width'=>140,'depth'=>70,'height'=>75,'price'=>4000000,'stock'=>15]);
+        $table = \App\Models\Product::create(['category_id'=>$category->id,'name'=>'BÀN TRÀ DETIAN','price'=>21060000]);
+        $search = \App\Services\ChatProductSearch::class;
+        $saved = $search::criteria('Tôi muốn tìm bàn phong cách hiện đại màu đen dài 1m4 dưới 10 triệu');
+        config(['services.ai.provider'=>'groq','services.groq.api_key'=>'test']);
+        Http::fake(['api.groq.com/*'=>Http::response(['choices'=>[['message'=>['content'=>'OFF_TOPIC']]]])]);
+        $reply = $this->withSession(['ai_search_context'=>$saved])->postJson(route('ai.send'), ['message'=>'Có màu đen, dài 1m4 không?'])->assertOk()->json('reply');
+        foreach (['Bàn làm việc', '4.000.000đ', '140', '15 sản phẩm'] as $text) $this->assertStringContainsString($text, $reply);
+        Http::assertSentCount(1);
+        $reset = 'Bỏ giới hạn giá và màu, cho tôi xem bàn trà Detian';
+        $this->assertTrue($search::isNamedProductReset($reset));
+        $this->assertFalse($search::isNamedProductReset($reset.' và viết code PHP'));
+        $result = $search::search($reset, ['chat_search_context'=>$saved]);
+        $this->assertNull($result['detected_filters']['budget_vnd']);
+        $this->assertSame([], $result['detected_filters']['dimensions_cm']);
+        $this->assertContains($table->id, array_column($result['products'], 'id'));
+    }
+
     public function test_stock_and_warranty_quick_questions_use_current_product(): void
     {
         Http::fake();

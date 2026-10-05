@@ -65,7 +65,9 @@ class GroqChatService
             .' A short price follow-up after product advice is ALLOWED: after "sản phẩm giá tầm 20 triệu", "dưới 10 triệu thì sao" changes the budget. Do not require the user to repeat the product noun. The assistant finding no match does not end the shopping topic.'
         ]], $messages), true);
         if ($decision !== 'ALLOWED' && !ChatProductSearch::isBudgetFollowUp($message, $history, $behavior)
-            && !ChatProductSearch::isAttributeFollowUp($message, $history, $behavior)) return GeminiChatService::OUT_OF_SCOPE;
+            && !ChatProductSearch::isAttributeFollowUp($message, $history, $behavior)
+            && !ChatProductSearch::isNamedProductReset($message)) return GeminiChatService::OUT_OF_SCOPE;
+        if ($answer = ChatProductSearch::attributeReply($message, $history, $behavior)) return $answer;
         return self::complete(array_merge([
             ['role' => 'system', 'content' => GeminiChatService::buildSystemPrompt($behavior, $message, $history)],
         ], $messages));

@@ -77,6 +77,7 @@ class ChatProductSearch
         $turns[] = $message;
         foreach ($turns as $turn) {
             $text = self::normalize($turn);
+            if (self::isNamedProductReset($turn)) $state = ['types'=>[], 'colors'=>[], 'styles'=>[], 'dimensions_cm'=>[], 'budget_vnd'=>null];
             // Explicitly removing filters must not leave old constraints in the session.
             if (preg_match('/\b(bo|xoa|khong gioi han|khong can)\b/', $text)) {
                 foreach (['budget_vnd'=>'gia|ngan sach', 'colors'=>'mau', 'styles'=>'phong cach', 'dimensions_cm'=>'size|sz|kich thuoc'] as $field=>$words) {
@@ -94,6 +95,31 @@ class ChatProductSearch
             }
         }
         return $state;
+    }
+
+    public static function isNamedProductReset(string $message): bool
+    {
+        $text = self::normalize($message);
+        if (!preg_match('/^(?:bo|xoa) (?:gioi han )?(?:gia|ngan sach|mau|kich thuoc|phong cach)(?: va (?:gia|mau|kich thuoc|phong cach))*[,;]? (?:cho toi xem|xem|tim) (.+?)[?.!]*$/', $text, $match)) return false;
+        // Only allow an exact catalog name after a filter-reset request, never arbitrary instructions.
+        return Product::select('name')->get()->contains(fn($product)=>self::normalize($product->name) === trim($match[1]));
+    }
+
+    public static function attributeReply(string $message, array $history, ?array $behavior): ?string
+    {
+        if (!self::isAttributeFollowUp($message, $history, $behavior)) return null;
+        $catalog = self::search($message, $behavior, $history);
+        $rows = [];
+        foreach ($catalog['products'] as $product) {
+            foreach ($product['variants'] as $variant) {
+                if (!$variant['matches_detected_filters'] || $variant['stock'] === 0) continue;
+                $dimensions = implode(' × ', array_filter($variant['dimensions_cm'], fn($n)=>$n !== null));
+                $rows[] = '['.$product['name'].']('.$product['url'].') — '.number_format($variant['price_vnd'], 0, ',', '.').'đ; '.($variant['color'] ?: 'chưa ghi màu').'; '.($dimensions ? $dimensions.' cm' : ($variant['size_label'] ?: 'chưa ghi kích thước')).'; '.($variant['stock'] === null ? 'cần xác nhận tồn kho' : 'còn '.$variant['stock'].' sản phẩm').'.';
+                break;
+            }
+            if (count($rows) === 3) break;
+        }
+        return $rows ? "Các mẫu khớp điều kiện hiện tại:\n".implode("\n\n", $rows) : null;
     }
 
     public static function isAttributeFollowUp(string $message, array $history, ?array $behavior): bool
