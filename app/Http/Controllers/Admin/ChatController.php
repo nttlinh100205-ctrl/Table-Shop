@@ -14,20 +14,32 @@ class ChatController extends Controller
     /** Danh sách user đã từng nhắn với admin (+ tin chưa đọc) */
     public function getUsers()
     {
-        $adminId = Auth::id();
+        $adminId = (int) Auth::id();
 
-        $userIds = Message::where(function ($q) use ($adminId) {
+        // Lấy tin nhắn mới nhất giữa admin và từng khách hàng bằng subquery tối ưu
+        $sub = Message::where(function ($q) use ($adminId) {
                 $q->where('receiver_id', $adminId)->orWhere('sender_id', $adminId);
             })
-            ->orderByDesc('created_at')
+            ->selectRaw('
+                CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END as other_id,
+                MAX(id) as max_id
+            ', [$adminId])
+            ->groupBy('other_id');
+
+        $latestMessages = Message::joinSub($sub, 'latest', function ($join) {
+                $join->on('messages.id', '=', 'latest.max_id');
+            })
+            ->select('messages.id', 'messages.sender_id', 'messages.receiver_id', 'messages.content', 'messages.created_at', 'latest.other_id')
             ->get()
-            ->map(fn ($msg) => $msg->sender_id == $adminId ? $msg->receiver_id : $msg->sender_id)
-            ->unique()
-            ->values()
-            ->all();
+            ->keyBy('other_id');
+
+        $userIds = $latestMessages->keys()->filter(fn ($id) => (int) $id !== $adminId)->values();
+
+        if ($userIds->isEmpty()) {
+            return response()->json([]);
+        }
 
         $users = User::whereIn('id', $userIds)
-            ->where('id', '!=', $adminId)
             ->select('id', 'name')
             ->get();
 
@@ -38,20 +50,15 @@ class ChatController extends Controller
             ->groupBy('sender_id')
             ->pluck('cnt', 'sender_id');
 
-        $lastMsg = Message::where(function ($q) use ($adminId) {
-                $q->where('receiver_id', $adminId)->orWhere('sender_id', $adminId);
-            })
-            ->orderByDesc('id')
-            ->get()
-            ->groupBy(fn ($m) => $m->sender_id == $adminId ? $m->receiver_id : $m->sender_id)
-            ->map(fn ($group) => $group->first());
-
-        return $users->map(function ($u) use ($unread, $lastMsg) {
+        $result = $users->map(function ($u) use ($unread, $latestMessages) {
+            $msg = $latestMessages->get($u->id);
             $u->unread = (int) ($unread[$u->id] ?? 0);
-            $u->last_message = optional($lastMsg->get($u->id))->content;
-            $u->last_at = optional($lastMsg->get($u->id))->created_at;
+            $u->last_message = $msg ? $msg->content : null;
+            $u->last_at = $msg ? $msg->created_at : null;
             return $u;
         })->sortByDesc(fn ($u) => $u->last_at)->values();
+
+        return response()->json($result);
     }
 
     /** Lịch sử chat với 1 user */

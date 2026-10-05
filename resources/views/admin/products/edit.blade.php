@@ -133,46 +133,6 @@
     background: #dc2626;
     transform: scale(1.15);
 }
-.image-preview-item.marked-deleted {
-    border-color: #ef4444;
-    background: #fef2f2;
-}
-.image-preview-item.marked-deleted img {
-    opacity: 0.35;
-    filter: grayscale(100%);
-}
-.image-preview-item .deleted-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(239, 68, 68, 0.7);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 0.7rem;
-    font-weight: 600;
-    z-index: 4;
-    text-align: center;
-    padding: 2px;
-}
-.image-preview-item .deleted-overlay .undo-btn {
-    font-size: 0.65rem;
-    background: #fff;
-    color: #ef4444;
-    border: none;
-    border-radius: 4px;
-    padding: 2px 6px;
-    margin-top: 3px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    transition: background 0.1s, transform 0.1s;
-}
-.image-preview-item .deleted-overlay .undo-btn:hover {
-    background: #f1f5f9;
-    transform: scale(1.05);
-}
 .image-preview-item .img-badge {
     position: absolute;
     bottom: 3px;
@@ -296,10 +256,6 @@
                                             <i class="bi bi-x-lg"></i>
                                         </button>
                                         <input type="hidden" name="delete_main_image" id="input-delete-main-img" value="0">
-                                        <div class="deleted-overlay d-none" id="overlay-main-deleted">
-                                            <span style="font-size:0.68rem;"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
-                                            <button type="button" class="undo-btn" id="btn-undo-main-img">Hoàn tác</button>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -349,7 +305,7 @@
                         @if ($product->images->count())
                             <div class="mb-3">
                                 <div class="text-muted small mb-1 fw-semibold">
-                                    Ảnh gallery hiện tại (bấm <span class="badge bg-danger rounded-pill px-1">x</span> trên ảnh để xóa):
+                                    Ảnh gallery hiện tại:
                                 </div>
                                 <div class="image-preview-grid" id="old-gallery-grid">
                                     @foreach ($product->images as $img)
@@ -359,10 +315,6 @@
                                                 <i class="bi bi-x-lg"></i>
                                             </button>
                                             <input type="checkbox" name="delete_images[]" value="{{ $img->id }}" id="del-chk-{{ $img->id }}" class="d-none">
-                                            <div class="deleted-overlay d-none" id="overlay-gallery-{{ $img->id }}">
-                                                <span style="font-size:0.68rem;"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
-                                                <button type="button" class="undo-btn btn-undo-gallery-old" data-id="{{ $img->id }}">Hoàn tác</button>
-                                            </div>
                                         </div>
                                     @endforeach
                                 </div>
@@ -832,49 +784,26 @@ document.getElementById('sizeBlocks')?.addEventListener('click', function (e) {
 <script>
 // ===== QUẢN LÝ XÓA ẢNH CŨ VÀ XEM TRƯỚC ẢNH MỚI UPLOAD =====
 (function () {
-    // 1. Xóa ảnh chính cũ
+    // 1. Xóa ảnh chính cũ: bấm x thì biến mất ngay lập tức và đánh dấu xóa
     const btnDelMain = document.getElementById('btn-delete-main-img');
-    const btnUndoMain = document.getElementById('btn-undo-main-img');
     const inputDelMain = document.getElementById('input-delete-main-img');
-    const cardOldMain = document.getElementById('old-main-image-item');
-    const overlayMain = document.getElementById('overlay-main-deleted');
+    const wrapOldMain = document.getElementById('wrap-old-main-image');
 
     if (btnDelMain) {
         btnDelMain.addEventListener('click', function () {
-            inputDelMain.value = '1';
-            cardOldMain.classList.add('marked-deleted');
-            overlayMain.classList.remove('d-none');
-        });
-    }
-    if (btnUndoMain) {
-        btnUndoMain.addEventListener('click', function () {
-            inputDelMain.value = '0';
-            cardOldMain.classList.remove('marked-deleted');
-            overlayMain.classList.add('d-none');
+            if (inputDelMain) inputDelMain.value = '1';
+            if (wrapOldMain) wrapOldMain.style.display = 'none';
         });
     }
 
-    // 2. Xóa ảnh gallery cũ
+    // 2. Xóa ảnh gallery cũ: bấm x thì biến mất ngay lập tức và đánh dấu xóa
     document.querySelectorAll('.btn-delete-gallery-old').forEach(function (btn) {
         btn.addEventListener('click', function () {
             const id = this.dataset.id;
             const chk = document.getElementById('del-chk-' + id);
             const card = document.getElementById('gallery-item-' + id);
-            const overlay = document.getElementById('overlay-gallery-' + id);
             if (chk) chk.checked = true;
-            if (card) card.classList.add('marked-deleted');
-            if (overlay) overlay.classList.remove('d-none');
-        });
-    });
-    document.querySelectorAll('.btn-undo-gallery-old').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            const id = this.dataset.id;
-            const chk = document.getElementById('del-chk-' + id);
-            const card = document.getElementById('gallery-item-' + id);
-            const overlay = document.getElementById('overlay-gallery-' + id);
-            if (chk) chk.checked = false;
-            if (card) card.classList.remove('marked-deleted');
-            if (overlay) overlay.classList.add('d-none');
+            if (card) card.style.display = 'none';
         });
     });
 

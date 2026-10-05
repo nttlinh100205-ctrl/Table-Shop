@@ -557,15 +557,22 @@
                         try {
                             localStorage.setItem(storageKey, JSON.stringify(pos));
                         } catch(e) {}
-                    } else if (!hasMoved) {
-                        if (typeof onJustClicked === 'function') {
-                            onJustClicked();
-                        }
                     }
                 }
 
                 handleEl.addEventListener('mousedown', onPointerDown);
                 handleEl.addEventListener('touchstart', onPointerDown, { passive: true });
+
+                if (typeof onJustClicked === 'function') {
+                    handleEl.addEventListener('click', function(e) {
+                        if (hasMoved) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return;
+                        }
+                        onJustClicked(e);
+                    });
+                }
             }
 
             // Kéo nút toggle (phân biệt kéo và click)

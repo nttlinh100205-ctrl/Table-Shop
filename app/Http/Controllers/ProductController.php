@@ -8,6 +8,7 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use App\Services\CloudinaryService;
 
 class ProductController extends Controller
 {
@@ -69,7 +70,7 @@ class ProductController extends Controller
             $data['price'] = $data['price'] ?? 0;
 
             if ($request->hasFile('image')) {
-                $data['image'] = $request->file('image')->store('products', 'public');
+                $data['image'] = CloudinaryService::uploadOrStore($request->file('image'), 'products');
             }
 
             $product = Product::create($data);
@@ -77,7 +78,7 @@ class ProductController extends Controller
             // Gallery nhiều ảnh
             if ($request->hasFile('gallery')) {
                 foreach ($request->file('gallery') as $i => $file) {
-                    $path = $file->store('products', 'public');
+                    $path = CloudinaryService::uploadOrStore($file, 'products');
                     $product->images()->create(['path' => $path, 'sort_order' => $i]);
                 }
             }
@@ -172,10 +173,10 @@ class ProductController extends Controller
             $data['price'] = $data['price'] ?? $product->price;
 
             if ($request->hasFile('image')) {
-                if ($product->image && Storage::disk('public')->exists($product->image)) {
+                if ($product->image && !str_starts_with($product->image, 'http') && Storage::disk('public')->exists($product->image)) {
                     Storage::disk('public')->delete($product->image);
                 }
-                $data['image'] = $request->file('image')->store('products', 'public');
+                $data['image'] = CloudinaryService::uploadOrStore($request->file('image'), 'products');
             }
 
             $product->update($data);
@@ -184,7 +185,7 @@ class ProductController extends Controller
             if ($request->hasFile('gallery')) {
                 $maxOrder = $product->images()->max('sort_order') ?? 0;
                 foreach ($request->file('gallery') as $i => $file) {
-                    $path = $file->store('products', 'public');
+                    $path = CloudinaryService::uploadOrStore($file, 'products');
                     $product->images()->create(['path' => $path, 'sort_order' => $maxOrder + $i + 1]);
                 }
             }

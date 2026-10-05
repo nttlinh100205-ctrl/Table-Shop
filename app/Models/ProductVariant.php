@@ -77,4 +77,9 @@ class ProductVariant extends Model
 
         return 'Mặc định';
     }
+
+    public function getImageUrlAttribute()
+    {
+        return Product::storageUrl($this->image);
+    }
 }

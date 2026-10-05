@@ -719,25 +719,26 @@
                     try {
                         localStorage.setItem(storageKey, JSON.stringify(pos));
                     } catch(e) {}
-                } else if (!hasMoved) {
-                    if (typeof onJustClicked === 'function') {
-                        onJustClicked();
-                    }
                 }
             }
 
             handleEl.addEventListener('mousedown', onPointerDown);
             handleEl.addEventListener('touchstart', onPointerDown, { passive: true });
+
+            if (typeof onJustClicked === 'function') {
+                handleEl.addEventListener('click', function(e) {
+                    if (hasMoved) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return;
+                    }
+                    onJustClicked(e);
+                });
+            }
         }
 
-        // Kéo nút toggle admin & mở chat khi nhấp
+        // Kéo nút toggle admin & mở chat khi nhấp (1 click duy nhất mở được ngay)
         setupDraggable(toggleBtn, toggleBtn, STORAGE_TOGGLE_KEY, function() {
-            toggleChat();
-        });
-
-        // Bổ sung sự kiện click trực tiếp để đảm bảo luôn mở được chat
-        toggleBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
             toggleChat();
         });
 
@@ -778,7 +779,7 @@
                 const rect = chatPopup.getBoundingClientRect();
                 clampPosition(chatPopup, rect.left, rect.top);
             }
-            loadUsers();
+            loadUsers(true);
         }
 
         function closeChat() {
@@ -804,9 +805,25 @@
             }
         });
 
-        // ===== LOGIC CHAT ADMIN =====
+        // ===== LOGIC CHAT ADMIN (TỐI ƯU CỰC NHANH, KHÔNG LAG) =====
+        const messagesCache = {};
 
-        function loadUsers() {
+        function renderMessages(messages) {
+            let html = '';
+            const myId = {{ (int) auth()->id() }};
+            (messages || []).forEach(msg => {
+                const isMe = msg.sender_id == myId;
+                const name = isMe ? 'Bạn' : (msg.sender?.name || 'Khách');
+                html += `<div class="msg-row ${isMe ? 'msg-me' : 'msg-other'}">
+                    <strong style="font-size:0.72rem;display:block;margin-bottom:2px;opacity:0.7;">${escapeHtml(name)}</strong>
+                    ${escapeHtml(msg.content)}
+                </div>`;
+            });
+            chatMessages.innerHTML = html || '<div class="text-muted text-center" style="margin-top:3rem;font-size:0.85rem;"><i class="bi bi-chat-square-text d-block mb-2" style="font-size:1.5rem;opacity:0.3;"></i>Chưa có tin nhắn</div>';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function loadUsers(autoSelectFirst = false) {
             fetch('{{ route('admin.chat.users') }}', { headers: { Accept: 'application/json' } })
                 .then(r => r.json())
                 .then(users => {
@@ -815,6 +832,11 @@
                     unreadCount.textContent = unreadTotal;
                     unreadCount.classList.toggle('d-none', unreadTotal === 0);
                     renderUsers();
+
+                    // Tự động chọn khách hàng đầu tiên nếu chưa chọn ai
+                    if (autoSelectFirst && !currentUserId && chatUsers.length > 0) {
+                        selectUser(chatUsers[0].id);
+                    }
                 })
                 .catch(err => console.error(err));
         }
@@ -844,39 +866,58 @@
         userSearch.addEventListener('input', renderUsers);
 
         function selectUser(userId, el) {
+            if (currentUserId === userId && chatMessages.children.length > 0) return;
             currentUserId = userId;
-            document.querySelectorAll('#user-list .user-item').forEach(e => e.classList.remove('active'));
-            el.classList.add('active');
+
+            // Highlight khách hàng được chọn ngay lập tức (0ms lag)
+            document.querySelectorAll('#user-list .user-item').forEach(e => {
+                e.classList.toggle('active', parseInt(e.dataset.id, 10) === userId);
+            });
+
+            // Xóa badge tin chưa đọc tức thì trên giao diện
+            const u = chatUsers.find(x => x.id === userId);
+            if (u) u.unread = 0;
+            const targetEl = el || document.querySelector(`#user-list .user-item[data-id="${userId}"]`);
+            if (targetEl) {
+                const badge = targetEl.querySelector('.badge');
+                if (badge) badge.remove();
+            }
+            const unreadTotal = chatUsers.reduce((total, user) => total + Number(user.unread || 0), 0);
+            unreadCount.textContent = unreadTotal;
+            unreadCount.classList.toggle('d-none', unreadTotal === 0);
+
+            // Hiển thị tin nhắn từ bộ nhớ cache ngay tức thì
+            if (messagesCache[userId]) {
+                renderMessages(messagesCache[userId]);
+            } else {
+                chatMessages.innerHTML = '<div class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Đang tải tin nhắn...</div>';
+            }
+
+            // Tải tin nhắn mới nhất từ server
             loadMessages();
-            loadUsers();
         }
 
         function loadMessages() {
             if (!currentUserId) return;
-            fetch(`/admin/chat/messages/${currentUserId}`, { headers: { Accept: 'application/json' } })
+            const fetchUserId = currentUserId;
+            fetch(`/admin/chat/messages/${fetchUserId}`, { headers: { Accept: 'application/json' } })
                 .then(r => r.json())
                 .then(messages => {
-                    let html = '';
-                    const myId = {{ (int) auth()->id() }};
-                    (messages || []).forEach(msg => {
-                        const isMe = msg.sender_id == myId;
-                        const name = isMe ? 'Bạn' : (msg.sender?.name || 'Khách');
-                        html += `<div class="msg-row ${isMe ? 'msg-me' : 'msg-other'}">
-                            <strong style="font-size:0.72rem;display:block;margin-bottom:2px;opacity:0.7;">${name}</strong>
-                            ${escapeHtml(msg.content)}
-                        </div>`;
-                    });
-                    chatMessages.innerHTML = html || '<div class="text-muted text-center" style="margin-top:3rem;font-size:0.85rem;"><i class="bi bi-chat-square-text d-block mb-2" style="font-size:1.5rem;opacity:0.3;"></i>Chưa có tin nhắn</div>';
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    messagesCache[fetchUserId] = messages || [];
+                    if (currentUserId === fetchUserId) {
+                        renderMessages(messagesCache[fetchUserId]);
 
-                    // Gợi ý câu trả lời khớp với tin nhắn mới nhất của khách
-                    const lastCustomer = [...(messages || [])].reverse().find(m => m.sender_id != myId);
-                    const lastMsg = messages && messages.length ? messages[messages.length - 1] : null;
-                    const needsReply = lastCustomer && lastMsg && lastMsg.sender_id != myId;
-                    const text = needsReply ? String(lastCustomer.content).trim() : '';
-                    const match = QUICK_REPLIES.find(r => r.q && r.q === text);
-                    renderQuickReplies(match ? match.key : null);
-                });
+                        // Gợi ý câu trả lời khớp với tin nhắn mới nhất của khách
+                        const myId = {{ (int) auth()->id() }};
+                        const lastCustomer = [...(messages || [])].reverse().find(m => m.sender_id != myId);
+                        const lastMsg = messages && messages.length ? messages[messages.length - 1] : null;
+                        const needsReply = lastCustomer && lastMsg && lastMsg.sender_id != myId;
+                        const text = needsReply ? String(lastCustomer.content).trim() : '';
+                        const match = QUICK_REPLIES.find(r => r.q && r.q === text);
+                        highlightSuggestedReply(match ? match.key : null);
+                    }
+                })
+                .catch(err => console.error(err));
         }
 
         // ===== CÂU TRẢ LỜI MẪU (khớp với câu hỏi mẫu của khách) =====
@@ -907,8 +948,6 @@
         const quickWrap = document.getElementById('admin-quick-wrap');
         const quickList = document.getElementById('admin-quick-list');
         const QUICK_COLLAPSE_KEY = 'table_shop_admin_quick_collapsed';
-        let lastSuggestedKey = undefined;
-        let isSending = false;
 
         try { if (localStorage.getItem(QUICK_COLLAPSE_KEY) === '1') quickWrap.classList.add('collapsed'); } catch (e) {}
         document.getElementById('admin-quick-toggle').onclick = () => {
@@ -916,33 +955,41 @@
             try { localStorage.setItem(QUICK_COLLAPSE_KEY, quickWrap.classList.contains('collapsed') ? '1' : '0'); } catch (e) {}
         };
 
-        function renderQuickReplies(suggestedKey) {
-            if (suggestedKey === lastSuggestedKey && quickList.childElementCount) {
-                updateQuickDisabled();
-                return;
-            }
-            lastSuggestedKey = suggestedKey;
-            const ordered = suggestedKey
-                ? [QUICK_REPLIES.find(r => r.key === suggestedKey), ...QUICK_REPLIES.filter(r => r.key !== suggestedKey)]
-                : QUICK_REPLIES;
-            quickList.innerHTML = ordered.map(r =>
-                `<button type="button" class="admin-quick-chip ${r.key === suggestedKey ? 'suggested' : ''}" data-key="${r.key}" title="${escapeHtml(r.a)}"><i class="bi ${r.icon}"></i>${escapeHtml(r.label)}</button>`
+        function renderQuickReplies() {
+            quickList.innerHTML = QUICK_REPLIES.map(r =>
+                `<button type="button" class="admin-quick-chip" data-key="${r.key}" title="${escapeHtml(r.a)}"><i class="bi ${r.icon}"></i>${escapeHtml(r.label)}</button>`
             ).join('');
-            quickList.scrollTop = 0;
+
             quickList.querySelectorAll('.admin-quick-chip').forEach(btn => {
-                btn.onclick = () => {
+                btn.onclick = (e) => {
+                    e.preventDefault();
                     const reply = QUICK_REPLIES.find(r => r.key === btn.dataset.key);
-                    if (reply) sendMessage(reply.a);
+                    if (!reply) return;
+
+                    // Nếu chưa chọn khách nhưng có khách trong danh sách -> tự động chọn khách đầu tiên
+                    if (!currentUserId) {
+                        if (chatUsers.length > 0) {
+                            selectUser(chatUsers[0].id);
+                        } else {
+                            chatInput.value = reply.a;
+                            chatInput.focus();
+                            alert('Chưa có cuộc trò chuyện nào. Tin nhắn mẫu đã được đưa vào ô nhập.');
+                            return;
+                        }
+                    }
+
+                    sendMessage(reply.a);
                 };
             });
-            updateQuickDisabled();
         }
 
-        function updateQuickDisabled() {
-            quickList.querySelectorAll('.admin-quick-chip').forEach(b => b.disabled = !currentUserId || isSending);
+        function highlightSuggestedReply(suggestedKey) {
+            quickList.querySelectorAll('.admin-quick-chip').forEach(btn => {
+                btn.classList.toggle('suggested', btn.dataset.key === suggestedKey);
+            });
         }
 
-        renderQuickReplies(null);
+        renderQuickReplies();
 
         function escapeHtml(s) {
             return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -951,9 +998,45 @@
         function sendMessage(preset) {
             const fromPreset = typeof preset === 'string';
             const message = (fromPreset ? preset : chatInput.value).trim();
-            if (!message || !currentUserId || isSending) return;
-            isSending = true;
-            updateQuickDisabled();
+            if (!message) return;
+
+            if (!currentUserId) {
+                if (chatUsers.length > 0) {
+                    selectUser(chatUsers[0].id);
+                } else {
+                    chatInput.value = message;
+                    chatInput.focus();
+                    alert('Vui lòng chọn khách hàng để gửi tin nhắn.');
+                    return;
+                }
+            }
+
+            const sendingUserId = currentUserId;
+            if (!fromPreset) chatInput.value = '';
+
+            // Hiển thị tin nhắn ngay lập tức (Optimistic UI - 0ms)
+            const myId = {{ (int) auth()->id() }};
+            const optimisticMsg = {
+                id: 'temp_' + Date.now(),
+                sender_id: myId,
+                receiver_id: sendingUserId,
+                content: message,
+                created_at: new Date().toISOString(),
+                sender: { name: 'Bạn' }
+            };
+
+            if (!messagesCache[sendingUserId]) messagesCache[sendingUserId] = [];
+            messagesCache[sendingUserId].push(optimisticMsg);
+            renderMessages(messagesCache[sendingUserId]);
+
+            // Cập nhật preview trong danh sách người dùng
+            const u = chatUsers.find(x => x.id === sendingUserId);
+            if (u) {
+                u.last_message = message;
+                const userCard = document.querySelector(`#user-list .user-item[data-id="${sendingUserId}"] .chat-preview`);
+                if (userCard) userCard.textContent = message;
+            }
+
             fetch('{{ route('admin.chat.send') }}', {
                 method: 'POST',
                 headers: {
@@ -961,12 +1044,17 @@
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': csrf,
                 },
-                body: JSON.stringify({ message, user_id: currentUserId }),
+                body: JSON.stringify({ message, user_id: sendingUserId }),
             })
                 .then(r => r.json())
-                .then(() => { if (!fromPreset) chatInput.value = ''; loadMessages(); })
-                .catch(err => console.error(err))
-                .finally(() => { isSending = false; updateQuickDisabled(); });
+                .then(saved => {
+                    if (messagesCache[sendingUserId]) {
+                        const idx = messagesCache[sendingUserId].findIndex(m => m.id === optimisticMsg.id);
+                        if (idx !== -1) messagesCache[sendingUserId][idx] = saved;
+                    }
+                    loadMessages();
+                })
+                .catch(err => console.error(err));
         }
 
         document.getElementById('send-btn').onclick = () => sendMessage();
@@ -975,7 +1063,7 @@
         setInterval(() => {
             if (chatPopup.classList.contains('open')) {
                 loadMessages();
-                loadUsers();
+                loadUsers(false);
             }
         }, 3000);
     })();
