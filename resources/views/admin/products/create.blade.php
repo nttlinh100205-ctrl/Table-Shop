@@ -19,6 +19,83 @@
     border-radius: 2px; border: 1px solid #bbb; margin-right: 6px;
     vertical-align: middle;
 }
+
+/* Image Manager Styles */
+.image-box-wrapper {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 14px;
+}
+.image-preview-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+.image-preview-item {
+    position: relative;
+    width: 86px;
+    height: 86px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    transition: transform 0.15s, border-color 0.15s, opacity 0.2s;
+}
+.image-preview-item:hover {
+    transform: translateY(-2px);
+    border-color: #94a3b8;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.image-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.image-preview-item .btn-remove-img {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+    transition: background 0.15s, transform 0.15s;
+    z-index: 5;
+    padding: 0;
+    line-height: 1;
+}
+.image-preview-item .btn-remove-img:hover {
+    background: #dc2626;
+    transform: scale(1.15);
+}
+.image-preview-item .img-badge {
+    position: absolute;
+    bottom: 3px;
+    left: 3px;
+    font-size: 0.6rem;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: 600;
+    pointer-events: none;
+    z-index: 3;
+    line-height: 1.2;
+}
+.image-preview-item .badge-new {
+    background: rgba(34, 197, 94, 0.9);
+    color: #fff;
+}
 </style>
 
 <div class="container">
@@ -107,14 +184,58 @@
                     <label class="form-label"><strong>Hướng dẫn sử dụng</strong></label>
                     <textarea name="usage_guide" class="form-control" rows="3" placeholder="Hướng dẫn lắp đặt, sử dụng, bảo quản...">{{ old('usage_guide') }}</textarea>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label"><strong>Ảnh chính</strong></label>
-                    <input type="file" name="image" class="form-control" accept="image/*">
+                <!-- Ảnh chính -->
+                <div class="mb-4">
+                    <label class="form-label d-flex align-items-center justify-content-between">
+                        <strong>Ảnh chính</strong>
+                        <span class="text-muted small">Ảnh đại diện sản phẩm</span>
+                    </label>
+                    <div class="image-box-wrapper">
+                        <div>
+                            <input type="file" name="image" id="input-main-image" class="form-control form-control-sm" accept="image/*">
+                        </div>
+
+                        <!-- Khung xem trước ảnh chính mới upload nhỏ nhỏ -->
+                        <div id="new-main-image-preview-wrap" class="d-none mt-2">
+                            <div class="text-muted small mb-1 fw-semibold">Ảnh đã chọn:</div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="image-preview-item" id="new-main-image-item">
+                                    <img id="new-main-image-thumb" src="" alt="Ảnh mới">
+                                    <span class="img-badge badge-new">Mới</span>
+                                    <button type="button" class="btn-remove-img" id="btn-cancel-new-main" title="Hủy chọn ảnh này">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <span id="new-main-filename" class="small fw-semibold text-truncate" style="max-width:260px;"></span>
+                                    <span id="new-main-filesize" class="text-muted" style="font-size:0.75rem;"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Thư viện ảnh (Gallery) -->
                 <div class="mb-3">
-                    <label class="form-label"><strong>Thư viện ảnh (nhiều ảnh)</strong></label>
-                    <input type="file" name="gallery[]" class="form-control" accept="image/*" multiple>
-                    <div class="form-text">Có thể chọn nhiều ảnh. Ảnh sẽ hiện dạng thumbnail dưới ảnh chính.</div>
+                    <label class="form-label d-flex align-items-center justify-content-between">
+                        <strong>Thư viện ảnh (nhiều ảnh)</strong>
+                        <span class="text-muted small">Nhiều góc chụp hoặc chi tiết sản phẩm</span>
+                    </label>
+                    <div class="image-box-wrapper">
+                        <div>
+                            <input type="file" name="gallery[]" id="input-gallery-images" class="form-control form-control-sm" accept="image/*" multiple>
+                            <div class="form-text small">Có thể giữ Ctrl / Shift để chọn nhiều ảnh cùng lúc.</div>
+                        </div>
+
+                        <!-- Khung xem trước các ảnh gallery mới upload nhỏ nhỏ -->
+                        <div id="new-gallery-preview-wrap" class="d-none mt-3">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <span class="text-muted small fw-semibold">Các ảnh đã chọn (<span id="new-gallery-count">0</span> ảnh):</span>
+                                <button type="button" class="btn btn-link btn-sm text-danger p-0 text-decoration-none" style="font-size:0.75rem;" id="btn-clear-all-gallery">Hủy tất cả</button>
+                            </div>
+                            <div class="image-preview-grid" id="new-gallery-grid"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -422,6 +543,125 @@ document.getElementById('variantsBody').addEventListener('click', function (e) {
             });
         });
         obs.observe(body, { childList: true, subtree: true });
+    }
+})();
+</script>
+
+<script>
+// ===== XEM TRƯỚC VÀ XÓA ẢNH UPLOAD CHO TRANG TẠO MỚI =====
+(function () {
+    function formatBytes(bytes) {
+        if (!bytes) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    // 1. Ảnh chính
+    const inputMain = document.getElementById('input-main-image');
+    const wrapMainPreview = document.getElementById('new-main-image-preview-wrap');
+    const imgMainThumb = document.getElementById('new-main-image-thumb');
+    const txtMainName = document.getElementById('new-main-filename');
+    const txtMainSize = document.getElementById('new-main-filesize');
+    const btnCancelMain = document.getElementById('btn-cancel-new-main');
+
+    if (inputMain) {
+        inputMain.addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                imgMainThumb.src = URL.createObjectURL(file);
+                txtMainName.textContent = file.name;
+                txtMainSize.textContent = formatBytes(file.size);
+                wrapMainPreview.classList.remove('d-none');
+            } else {
+                wrapMainPreview.classList.add('d-none');
+                imgMainThumb.src = '';
+            }
+        });
+    }
+    if (btnCancelMain) {
+        btnCancelMain.addEventListener('click', function () {
+            if (inputMain) inputMain.value = '';
+            wrapMainPreview.classList.add('d-none');
+            imgMainThumb.src = '';
+        });
+    }
+
+    // 2. Thư viện ảnh (nhiều ảnh)
+    const inputGallery = document.getElementById('input-gallery-images');
+    const wrapGalleryPreview = document.getElementById('new-gallery-preview-wrap');
+    const gridGallery = document.getElementById('new-gallery-grid');
+    const countGallery = document.getElementById('new-gallery-count');
+    const btnClearAllGallery = document.getElementById('btn-clear-all-gallery');
+
+    let galleryFilesArray = [];
+
+    function renderGalleryPreviews() {
+        gridGallery.innerHTML = '';
+        if (galleryFilesArray.length === 0) {
+            wrapGalleryPreview.classList.add('d-none');
+            countGallery.textContent = '0';
+            return;
+        }
+
+        wrapGalleryPreview.classList.remove('d-none');
+        countGallery.textContent = galleryFilesArray.length;
+
+        galleryFilesArray.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'image-preview-item';
+            item.title = file.name + ' (' + formatBytes(file.size) + ')';
+
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.alt = file.name;
+
+            const badge = document.createElement('span');
+            badge.className = 'img-badge badge-new';
+            badge.textContent = '#' + (index + 1);
+
+            const btnRemove = document.createElement('button');
+            btnRemove.type = 'button';
+            btnRemove.className = 'btn-remove-img';
+            btnRemove.title = 'Bỏ chọn ảnh này';
+            btnRemove.innerHTML = '<i class="bi bi-x-lg"></i>';
+            btnRemove.addEventListener('click', function () {
+                galleryFilesArray.splice(index, 1);
+                syncGalleryInput();
+                renderGalleryPreviews();
+            });
+
+            item.appendChild(img);
+            item.appendChild(badge);
+            item.appendChild(btnRemove);
+            gridGallery.appendChild(item);
+        });
+    }
+
+    function syncGalleryInput() {
+        if (!inputGallery) return;
+        const dt = new DataTransfer();
+        galleryFilesArray.forEach(file => dt.items.add(file));
+        inputGallery.files = dt.files;
+    }
+
+    if (inputGallery) {
+        inputGallery.addEventListener('change', function () {
+            if (this.files && this.files.length) {
+                Array.from(this.files).forEach(f => galleryFilesArray.push(f));
+                syncGalleryInput();
+                renderGalleryPreviews();
+            }
+        });
+    }
+
+    if (btnClearAllGallery) {
+        btnClearAllGallery.addEventListener('click', function () {
+            galleryFilesArray = [];
+            if (inputGallery) inputGallery.value = '';
+            renderGalleryPreviews();
+        });
     }
 })();
 </script>
