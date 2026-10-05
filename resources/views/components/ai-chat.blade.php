@@ -1,5 +1,6 @@
 // Shared chatbox AI channel. This partial is included inside DOMContentLoaded.
 let chatMode = 'ai', sending = false, aiLoaded = false, greetingPending = false;
+let aiLoadPromise = null;
 const aiMessages = [];
 const channelDrafts = { ai: '', staff: '' };
 const aiModeButton = document.getElementById('chat-mode-ai');
@@ -33,25 +34,30 @@ function renderAiMessages() {
     });
     chatBox.scrollTop = chatBox.scrollHeight;
 }
-async function loadAiMessages() {
+function loadAiMessages() {
     renderAiMessages();
-    if (aiLoaded || greetingPending) return;
+    if (aiLoaded) return Promise.resolve();
+    if (aiLoadPromise) return aiLoadPromise;
     greetingPending = true;
+    aiLoadPromise = (async () => {
     try {
-        const response = await fetch(@json(route('ai.greeting')), {headers: {Accept: 'application/json'}});
+        const response = await fetch(@json(route('ai.greeting')), {cache: 'no-store', headers: {Accept: 'application/json'}});
         if (!response.ok) throw new Error();
         const data = await response.json();
-        aiMessages.unshift({text: data.reply, user: false}); aiLoaded = true;
+        aiMessages.splice(0, aiMessages.length, ...(data.messages || [{text: data.reply, user: false}])); aiLoaded = true;
     } catch (e) {
-        aiMessages.unshift({text: 'Chào bạn! Mình chỉ tư vấn sản phẩm và mua hàng tại Table Shop. Bạn cần tìm mẫu nào?', user: false});
-        aiLoaded = true;
-    } finally { greetingPending = false; renderAiMessages(); }
+        channelNote.textContent = 'Chưa tải được lịch sử chat. Vui lòng thử lại.';
+    } finally { greetingPending = false; aiLoadPromise = null; renderAiMessages(); }
+    })();
+    return aiLoadPromise;
 }
 async function sendAiMessage(preset) {
     const fromPreset = typeof preset === 'string';
     const message = (fromPreset ? preset : input.value).trim();
-    if (!message) return;
+    if (!message || sending) return;
     setSending(true);
+    await loadAiMessages();
+    if (!aiLoaded) { setSending(false); return; }
     aiMessages.push({text: message, user: true}); renderAiMessages();
     channelNote.textContent = 'AI đang kiểm tra câu hỏi và tư vấn…';
     const controller = new AbortController();
@@ -65,9 +71,13 @@ async function sendAiMessage(preset) {
         if (response.status === 419) throw new Error('Phiên chat đã hết hạn. Vui lòng tải lại trang rồi gửi lại.');
         if (response.status === 429) throw new Error('Bạn gửi hơi nhanh. Vui lòng chờ một phút rồi thử lại.');
         const data = await response.json().catch(() => { throw new Error('Máy chủ chưa phản hồi được. Vui lòng thử lại hoặc chọn Nhân viên.'); });
-        if (!response.ok) throw new Error(data.message || 'AI tạm thời không khả dụng. Bạn có thể chuyển sang Nhân viên.');
-        aiMessages.push({text: data.reply, user: false});
-        if (!fromPreset) input.value = '';
+        if (Array.isArray(data.messages)) {
+            aiMessages.splice(0, aiMessages.length, ...data.messages);
+        } else {
+            if (!response.ok) throw new Error(data.message || 'AI tạm thời không khả dụng. Bạn có thể chuyển sang Nhân viên.');
+            aiMessages.push({text: data.reply, user: false});
+        }
+        if (response.ok && !fromPreset) input.value = '';
     } catch (error) {
         aiMessages.push({text: error.name === 'AbortError' ? 'AI phản hồi quá chậm. Vui lòng thử lại hoặc chọn Nhân viên.' : (error.message || 'Mất kết nối. Vui lòng thử lại hoặc chuyển sang Nhân viên.'), user: false});
     } finally {

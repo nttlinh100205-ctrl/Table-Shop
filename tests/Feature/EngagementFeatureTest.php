@@ -231,7 +231,11 @@ class EngagementFeatureTest extends TestCase
             ->assertOk()->assertSee('ABC123')->assertDontSee('Private address')->assertSessionMissing('ai_history');
         $this->postJson(route('ai.send'),['message'=>'Tra cứu vận đơn ABC123'])->assertOk()->assertSee('ABC123');
         foreach (['Tra cứu đơn #'.$foreign->id,'Tra cứu vận đơn SECRET456'] as $message) {
-            $response = $this->postJson(route('ai.send'),compact('message'))->assertOk()->assertDontSee('SECRET456');
+            $response = $this->postJson(route('ai.send'),compact('message'))->assertOk();
+            $this->assertStringNotContainsString('SECRET456', $response->json('reply'));
+            foreach ($response->json('messages', []) as $entry) {
+                if (!$entry['user']) $this->assertStringNotContainsString('SECRET456', $entry['text']);
+            }
             $this->assertStringContainsString('Không tìm thấy đơn phù hợp', $response->json('reply'));
         }
         Http::assertNothingSent();
@@ -266,6 +270,60 @@ class EngagementFeatureTest extends TestCase
             $this->assertNotSame(GeminiChatService::OUT_OF_SCOPE, $response->json('reply'));
         }
         Http::assertNothingSent();
+    }
+
+    public function test_chat_transcript_restores_all_replies_on_navigation_without_duplicate_greetings(): void
+    {
+        Http::fake();
+        $first = $this->getJson(route('ai.greeting'))->assertOk()->json('messages');
+        $this->assertCount(1, $first);
+        $this->postJson(route('ai.send'), ['message'=>'Shop hỗ trợ những phương thức thanh toán nào?'])->assertOk();
+        $this->postJson(route('ai.send'), ['message'=>'Tôi muốn kiểm tra đơn hàng'])->assertOk();
+        $restored = $this->getJson(route('ai.greeting'))->assertOk()->json('messages');
+        $this->assertCount(5, $restored);
+        $this->assertSame($first[0], $restored[0]);
+        $this->assertSame('Shop hỗ trợ những phương thức thanh toán nào?', $restored[1]['text']);
+        $this->assertSame($restored, $this->getJson(route('ai.greeting'))->json('messages'));
+        $this->assertFalse($restored[4]['user']);
+        Http::assertNothingSent();
+    }
+
+    public function test_private_chat_transcript_is_never_used_as_model_context(): void
+    {
+        config(['services.ai.provider'=>'groq','services.groq.api_key'=>'test']);
+        Http::fake(['api.groq.com/*'=>Http::sequence()
+            ->push(['choices'=>[['message'=>['content'=>'ALLOWED']]]])
+            ->push(['choices'=>[['message'=>['content'=>'Mời bạn xem bàn ăn.']]]])]);
+        $user = User::factory()->create(['points_balance'=>987654]);
+        $this->actingAs($user)->postJson(route('ai.send'), ['message'=>'Kiểm tra điểm'])->assertOk();
+        $result = $this->postJson(route('ai.send'), ['message'=>'Tư vấn bàn ăn'])->assertOk();
+        $this->assertCount(5, $result->json('messages'));
+        Http::assertSent(fn($r)=>!str_contains(json_encode($r->data()), '987.654') && count($r['messages']) === 2);
+        $this->assertCount(2, session('ai_history'));
+    }
+
+    public function test_chat_history_is_cleared_on_account_change_and_logout(): void
+    {
+        $first = User::factory()->create(['points_balance'=>987654]);
+        $second = User::factory()->create();
+        $this->actingAs($first)->postJson(route('ai.send'), ['message'=>'Kiểm tra điểm'])->assertOk();
+        $this->actingAs($second);
+        $messages = $this->getJson(route('ai.greeting'))->assertOk()->json('messages');
+        $this->assertCount(1, $messages);
+        $this->assertStringNotContainsString('987.654', json_encode($messages));
+        $this->postJson(route('ai.send'), ['message'=>'Kiểm tra điểm'])->assertOk();
+        $this->post(route('logout'))->assertRedirect();
+        $this->assertCount(1, $this->getJson(route('ai.greeting'))->assertOk()->json('messages'));
+    }
+
+    public function test_chat_transcript_preserves_refusals_and_provider_errors_but_not_ai_context(): void
+    {
+        config(['services.ai.provider'=>'groq','services.groq.api_key'=>'test']);
+        Http::fake(['api.groq.com/*'=>Http::sequence()
+            ->push(['choices'=>[['message'=>['content'=>'OFF_TOPIC']]]])->push([],429)]);
+        $this->postJson(route('ai.send'), ['message'=>'Viết code ngoài lề'])->assertOk();
+        $this->postJson(route('ai.send'), ['message'=>'Tư vấn bàn ăn'])->assertStatus(503)->assertSessionMissing('ai_history');
+        $this->assertCount(5, $this->getJson(route('ai.greeting'))->assertOk()->json('messages'));
     }
 
     public function test_check_in_is_once_per_local_day_and_skipped_days_keep_progress(): void
