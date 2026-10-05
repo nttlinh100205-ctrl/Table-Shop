@@ -11,8 +11,8 @@
     <button id="spin-button" class="btn btn-dark px-5" @disabled($prizes->isEmpty())>Quay ngay</button>
     <p id="spin-result" class="mt-3" role="status" aria-live="polite"></p>
     <p class="text-muted">Các ô có kích thước bằng nhau; xác suất trúng được tính theo trọng số và giải còn trong kho.</p>
-    <h2 class="h4 mt-4">20 lượt quay gần nhất</h2>
-    <ul id="spin-history" class="list-unstyled">@foreach($histories as $history)<li>{{ $history->created_at->format('d/m/Y H:i') }} — {{ $history->prize_name }}: {{ $history->reward_detail }}</li>@endforeach</ul>
+    <h2 class="h4 mt-4">Phần thưởng gần đây của bạn</h2>
+    <ul id="spin-history" class="list-unstyled">@foreach($histories as $history)<li class="py-1">{{ $history->prize_name }}</li>@endforeach</ul>
     <a href="{{ route('user.points.index') }}">Xem điểm & voucher của bạn</a>
 </div>
 @php($wheelPrizes = $prizes->map->only(['id', 'name'])->values())
@@ -47,8 +47,11 @@
             pending=null;const index=prizes.findIndex(p=>p.id===data.result.prize_id);
             const target=index<0?0:360-(index+.5)*step;rotation+=1800+((target-rotation%360+360)%360);wheel.style.transform=`rotate(${rotation}deg)`;
             await new Promise(resolve=>setTimeout(resolve,4100));
-            document.getElementById('spin-tickets').textContent=data.tickets;result.textContent=data.result.prize_name+' — '+data.result.reward_detail;
-            const li=document.createElement('li');li.textContent=result.textContent;document.getElementById('spin-history').prepend(li);
+            document.getElementById('spin-tickets').textContent=data.tickets;
+            result.textContent=data.result.prize_name+(data.result.reward_detail && data.result.reward_detail!==data.result.prize_name?' — '+data.result.reward_detail:'');
+            const li=document.createElement('li');li.className='py-1';li.textContent=data.result.prize_name;
+            const history=document.getElementById('spin-history');history.prepend(li);
+            while(history.children.length>20)history.lastElementChild.remove();
         }catch(error){result.textContent=(error.message||'Mất kết nối.')+(pending?' Nhấn quay để kiểm tra lại cùng lượt.':'');}
         finally{button.disabled=false;}
     };
