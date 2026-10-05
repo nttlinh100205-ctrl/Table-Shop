@@ -33,15 +33,20 @@ class ChatController extends Controller
             ->get()
             ->keyBy('other_id');
 
-        $userIds = $latestMessages->keys()->filter(fn ($id) => (int) $id !== $adminId)->values();
-
-        if ($userIds->isEmpty()) {
-            return response()->json([]);
-        }
-
-        $users = User::whereIn('id', $userIds)
-            ->select('id', 'name')
+        // Lấy tất cả khách hàng (ngoại trừ tài khoản admin hiện tại)
+        $users = User::where('id', '!=', $adminId)
+            ->where(function ($q) {
+                $q->where('role', '!=', 'admin')->orWhereNull('role');
+            })
+            ->select('id', 'name', 'email', 'created_at')
             ->get();
+
+        // Gộp thêm bất kỳ đối tác nào từng có tin nhắn (phòng trường hợp tài khoản đặc biệt)
+        $extraIds = $latestMessages->keys()->filter(fn ($id) => (int) $id !== $adminId)->diff($users->pluck('id'));
+        if ($extraIds->isNotEmpty()) {
+            $extraUsers = User::whereIn('id', $extraIds)->select('id', 'name', 'email', 'created_at')->get();
+            $users = $users->concat($extraUsers);
+        }
 
         // Đếm tin chưa đọc từ mỗi user
         $unread = Message::where('receiver_id', $adminId)
@@ -56,7 +61,17 @@ class ChatController extends Controller
             $u->last_message = $msg ? $msg->content : null;
             $u->last_at = $msg ? $msg->created_at : null;
             return $u;
-        })->sortByDesc(fn ($u) => $u->last_at)->values();
+        })
+        // Sắp xếp: Khách có tin nhắn mới nhất lên đầu, sau đó đến các khách chưa nhắn tin (ưu tiên mới tạo)
+        ->sort(function ($a, $b) {
+            if ($a->last_at && $b->last_at) {
+                return $b->last_at <=> $a->last_at;
+            }
+            if ($a->last_at) return -1;
+            if ($b->last_at) return 1;
+            return $b->created_at <=> $a->created_at;
+        })
+        ->values();
 
         return response()->json($result);
     }

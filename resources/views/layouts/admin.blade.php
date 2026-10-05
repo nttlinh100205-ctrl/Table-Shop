@@ -299,10 +299,11 @@
         }
         #chat-popup {
             display: none; position: fixed; bottom: 24px; right: 24px;
-            width: 380px; max-width: calc(100vw - 20px); height: 590px; max-height: calc(100vh - 40px);
+            width: 780px; max-width: calc(100vw - 20px); height: 600px; max-height: calc(100vh - 40px);
             border-radius: 14px; overflow: hidden;
             flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.25);
             z-index: 2001; transition: box-shadow 0.2s ease;
+            background: #fff;
         }
         #chat-popup.open { display: flex !important; }
         #chat-popup.is-dragging {
@@ -320,26 +321,73 @@
         #admin-chat-header:active, #chat-popup.is-dragging #admin-chat-header {
             cursor: grabbing !important;
         }
+
+        /* Khung 2 cột: Trái (Danh sách khách) - Phải (Hội thoại) */
+        #admin-chat-body {
+            display: flex; flex-direction: row; flex: 1; min-height: 0; overflow: hidden;
+        }
+        #admin-chat-sidebar {
+            width: 275px; min-width: 240px; max-width: 320px;
+            display: flex; flex-direction: column;
+            border-right: 1px solid #e2e8f0; background: #f8fafc;
+        }
+        #admin-chat-main {
+            flex: 1; display: flex; flex-direction: column; min-width: 0; background: #fff;
+        }
+
+        /* Danh sách khách hàng bên trái */
         #user-list {
-            max-height: 160px; overflow-y: auto;
-            border-bottom: 1px solid #f1f5f9; background: #fafafa;
+            flex: 1; overflow-y: auto; background: #fff;
         }
         .user-item {
-            padding: 8px 14px; cursor: pointer;
-            border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; transition: background 0.1s;
+            padding: 9px 12px; cursor: pointer;
+            border-bottom: 1px solid #f1f5f9; font-size: 0.85rem;
+            transition: all 0.15s ease;
+            display: flex; align-items: center; gap: 10px;
         }
-        .user-item .chat-preview { font-size: 0.75rem; color: #94a3b8; }
-        .user-item:hover { background: #eff6ff; }
-        .user-item.active { background: #eff6ff; border-left: 3px solid #3b82f6; }
+        .user-item:hover { background: #f8fafc; }
+        .user-item.active { background: #eff6ff; border-left: 3.5px solid #2563eb; }
+        .user-avatar-circle {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: #e2e8f0; color: #475569;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
+            text-transform: uppercase;
+        }
+        .user-item.active .user-avatar-circle {
+            background: #2563eb; color: #fff;
+        }
+        .user-item .user-info-col { flex: 1; min-width: 0; }
+        .user-item .chat-preview {
+            font-size: 0.72rem; color: #64748b; margin-top: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .user-item .user-email-text {
+            font-size: 0.68rem; color: #94a3b8;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* Cột phải: Chat messages */
+        #active-user-header {
+            background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+            padding: 8px 14px;
+        }
+        .active-user-avatar {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: #dbeafe; color: #1e40af;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+        }
         #chat-messages {
             flex: 1; overflow-y: auto; padding: 14px; font-size: 0.875rem; background: #fff;
         }
         .msg-row {
-            margin-bottom: 10px; padding: 6px 10px;
-            border-radius: 8px; font-size: 0.85rem; line-height: 1.4;
+            margin-bottom: 10px; padding: 7px 12px;
+            border-radius: 10px; font-size: 0.85rem; line-height: 1.4;
+            max-width: 80%;
         }
-        .msg-me   { background: #eff6ff; color: #1e40af; text-align: right; margin-left: 20%; }
-        .msg-other{ background: #f8fafc; color: #334155; margin-right: 20%; }
+        .msg-me   { background: #eff6ff; color: #1e40af; text-align: left; margin-left: auto; border-bottom-right-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .msg-other{ background: #f1f5f9; color: #1e293b; margin-right: auto; border-bottom-left-radius: 2px; }
 
         /* ===== ADMIN QUICK REPLIES ===== */
         #admin-quick-wrap {
@@ -380,6 +428,13 @@
         .admin-quick-chip.suggested::before {
             content: 'Gợi ý'; font-size: 0.6rem; font-weight: 700;
             background: #3b82f6; color: #fff; border-radius: 999px; padding: 0 5px;
+        }
+
+        @media (max-width: 768px) {
+            #chat-popup { width: calc(100vw - 16px) !important; height: 560px !important; }
+            #admin-chat-sidebar { width: 170px !important; min-width: 150px !important; }
+            .user-item { padding: 6px 8px; }
+            .user-avatar-circle { width: 28px; height: 28px; font-size: 0.7rem; }
         }
 
         /* ===== RESPONSIVE ===== */
@@ -556,12 +611,13 @@
             <span id="chat-unread-count" class="badge rounded-pill text-bg-danger d-none">0</span>
         </button>
         <div id="chat-popup" class="card border-0" role="dialog" aria-labelledby="admin-chat-title">
-            <div id="admin-chat-header" class="card-header d-flex justify-content-between align-items-center py-2"
-                 style="background:#0f172a; border:none;">
+            <!-- Header chung có thể kéo thả toàn bộ popup -->
+            <div id="admin-chat-header" class="card-header d-flex justify-content-between align-items-center py-2 px-3">
                 <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-grip-vertical text-secondary" style="font-size:1rem;"></i>
+                    <i class="bi bi-grip-vertical text-secondary" style="font-size:1.1rem;"></i>
                     <div style="width:8px;height:8px;background:#22c55e;border-radius:50%;box-shadow:0 0 6px #22c55e;"></div>
-                    <strong id="admin-chat-title" class="text-white" style="font-size:0.875rem;">Hỗ trợ trực tuyến</strong>
+                    <strong id="admin-chat-title" class="text-white" style="font-size:0.875rem;">Hỗ trợ khách hàng trực tuyến</strong>
+                    <span class="badge bg-secondary-subtle text-white-50 px-2 py-0.5 rounded-pill" style="font-size:0.7rem;" id="chat-total-customers-badge">0 khách</span>
                 </div>
                 <div class="d-flex align-items-center gap-1">
                     <button id="admin-chat-minimize" class="btn btn-sm text-white py-0 px-2"
@@ -574,37 +630,76 @@
                     </button>
                 </div>
             </div>
-            <div class="p-2" style="background:#fff; border-bottom:1px solid #f1f5f9;">
-                <input type="search" id="chat-user-search" class="form-control form-control-sm"
-                       placeholder="Tìm khách hàng..." aria-label="Tìm khách hàng"
-                       style="border-radius:8px; font-size:0.8rem;">
-            </div>
-            <div id="user-list">
-                <div class="p-3 text-center text-muted"><small>Đang tải...</small></div>
-            </div>
-            <div id="chat-messages">
-                <div class="text-center mt-5 text-muted" style="font-size:0.85rem;">
-                    <i class="bi bi-chat-square-text d-block mb-2" style="font-size:2rem;opacity:0.3;"></i>
-                    Chọn khách hàng để xem tin nhắn
+
+            <!-- Khung 2 cột: Cột trái (Tất cả khách hàng) - Cột phải (Hội thoại) -->
+            <div id="admin-chat-body">
+                <!-- CỘT TRÁI: Tìm kiếm và Danh sách khách hàng -->
+                <div id="admin-chat-sidebar">
+                    <div class="p-2 border-bottom bg-white">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light border-end-0 text-muted ps-2 pe-1"><i class="bi bi-search"></i></span>
+                            <input type="text" id="chat-user-search" class="form-control form-control-sm border-start-0 ps-1"
+                                   placeholder="Tìm tên, email..." aria-label="Tìm khách hàng"
+                                   style="font-size:0.8rem;">
+                            <button class="btn btn-outline-secondary btn-sm border-start-0 d-none" id="chat-search-clear" type="button" title="Xóa tìm kiếm">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-1 px-1 text-muted" style="font-size:0.68rem;">
+                            <span id="chat-user-count-label">Tất cả khách hàng</span>
+                            <span id="chat-user-unread-badge" class="badge rounded-pill text-bg-danger d-none">0 tin mới</span>
+                        </div>
+                    </div>
+                    <div id="user-list">
+                        <div class="p-3 text-center text-muted"><small>Đang tải danh sách...</small></div>
+                    </div>
                 </div>
-            </div>
-            <div id="admin-quick-wrap">
-                <div class="admin-quick-head">
-                    <span><i class="bi bi-lightning-charge-fill text-warning"></i> Trả lời nhanh</span>
-                    <button type="button" id="admin-quick-toggle" title="Ẩn/hiện trả lời nhanh" aria-label="Ẩn/hiện trả lời nhanh">
-                        <i class="bi bi-chevron-down"></i>
-                    </button>
-                </div>
-                <div id="admin-quick-list"></div>
-            </div>
-            <div class="card-footer p-2" style="background:#fff; border-top:1px solid #f1f5f9;">
-                <div class="input-group input-group-sm">
-                    <input type="text" id="chat-input" class="form-control"
-                           placeholder="Nhập câu trả lời..." autocomplete="off" maxlength="2000"
-                           style="border-radius:8px 0 0 8px; font-size:0.85rem;">
-                    <button id="send-btn" class="btn btn-primary" style="border-radius:0 8px 8px 0;">
-                        <i class="bi bi-send"></i>
-                    </button>
+
+                <!-- CỘT PHẢI: Khung hội thoại và trả lời -->
+                <div id="admin-chat-main">
+                    <div id="active-user-header" class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2 overflow-hidden">
+                            <div class="active-user-avatar" id="active-user-avatar">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                                <div class="d-flex align-items-center gap-2">
+                                    <strong id="active-user-name" class="text-truncate text-dark" style="font-size:0.85rem;">Chưa chọn khách hàng</strong>
+                                    <span id="active-user-badge" class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill d-none" style="font-size:0.65rem;">Khách hàng</span>
+                                </div>
+                                <div id="active-user-email" class="text-muted text-truncate" style="font-size:0.72rem;">Chọn khách hàng bên trái để xem cuộc trò chuyện</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="chat-messages">
+                        <div class="text-center mt-5 text-muted" style="font-size:0.85rem;">
+                            <i class="bi bi-people d-block mb-2 text-primary" style="font-size:2.5rem;opacity:0.3;"></i>
+                            <strong>Chọn khách hàng bên trái</strong>
+                            <div class="small text-secondary mt-1">Danh sách bên trái chứa toàn bộ khách hàng (kể cả khách chưa từng nhắn tin)</div>
+                        </div>
+                    </div>
+
+                    <div id="admin-quick-wrap">
+                        <div class="admin-quick-head">
+                            <span><i class="bi bi-lightning-charge-fill text-warning"></i> Câu trả lời nhanh</span>
+                            <button type="button" id="admin-quick-toggle" title="Ẩn/hiện trả lời nhanh" aria-label="Ẩn/hiện trả lời nhanh">
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                        <div id="admin-quick-list"></div>
+                    </div>
+
+                    <div class="card-footer p-2 bg-white border-top">
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="chat-input" class="form-control"
+                                   placeholder="Nhập câu trả lời..." autocomplete="off" maxlength="2000"
+                                   style="border-radius:8px 0 0 8px; font-size:0.85rem;">
+                            <button id="send-btn" class="btn btn-primary px-3" style="border-radius:0 8px 8px 0;" title="Gửi tin nhắn">
+                                <i class="bi bi-send-fill me-1"></i> Gửi
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -626,6 +721,15 @@
         const resetBtn = document.getElementById('admin-chat-reset');
         const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
+        const searchClearBtn = document.getElementById('chat-search-clear');
+        const userCountLabel = document.getElementById('chat-user-count-label');
+        const totalBadge     = document.getElementById('chat-total-customers-badge');
+        const sidebarUnreadBadge = document.getElementById('chat-user-unread-badge');
+        const activeAvatar   = document.getElementById('active-user-avatar');
+        const activeName     = document.getElementById('active-user-name');
+        const activeEmail    = document.getElementById('active-user-email');
+        const activeBadge    = document.getElementById('active-user-badge');
+
         // ===== DRAG & DROP ENGINE =====
         const STORAGE_POPUP_KEY  = 'table_shop_admin_chat_popup_pos';
         const STORAGE_TOGGLE_KEY = 'table_shop_admin_chat_toggle_pos';
@@ -633,8 +737,8 @@
         function clampPosition(el, targetLeft, targetTop) {
             const margin = 10;
             const rect = el.getBoundingClientRect();
-            const w = rect.width || el.offsetWidth || 380;
-            const h = rect.height || el.offsetHeight || 520;
+            const w = rect.width || el.offsetWidth || 780;
+            const h = rect.height || el.offsetHeight || 600;
             const maxLeft = Math.max(margin, window.innerWidth - w - margin);
             const maxTop  = Math.max(margin, window.innerHeight - h - margin);
 
@@ -767,8 +871,8 @@
             const saved = localStorage.getItem(STORAGE_POPUP_KEY);
             if (!saved) {
                 const toggleRect = toggleBtn.getBoundingClientRect();
-                const popupW = 380;
-                const popupH = 520;
+                const popupW = 780;
+                const popupH = 600;
                 let initialX = window.innerWidth - popupW - 24;
                 let initialY = window.innerHeight - popupH - 24;
                 if (toggleRect.left < window.innerWidth / 2) {
@@ -805,21 +909,49 @@
             }
         });
 
+        // ===== HÀM CHUYỂN TIẾNG VIỆT CÓ DẤU SANG KHÔNG DẤU ĐỂ TÌM KIẾM CHUẨN XÁC =====
+        function removeVietnameseTones(str) {
+            str = String(str || '');
+            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+            str = str.replace(/đ/g, "d");
+            str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+            str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+            str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+            str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+            str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+            str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+            str = str.replace(/Đ/g, "D");
+            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        }
+
         // ===== LOGIC CHAT ADMIN (TỐI ƯU CỰC NHANH, KHÔNG LAG) =====
         const messagesCache = {};
 
         function renderMessages(messages) {
             let html = '';
             const myId = {{ (int) auth()->id() }};
-            (messages || []).forEach(msg => {
-                const isMe = msg.sender_id == myId;
-                const name = isMe ? 'Bạn' : (msg.sender?.name || 'Khách');
-                html += `<div class="msg-row ${isMe ? 'msg-me' : 'msg-other'}">
-                    <strong style="font-size:0.72rem;display:block;margin-bottom:2px;opacity:0.7;">${escapeHtml(name)}</strong>
-                    ${escapeHtml(msg.content)}
+            if (messages && messages.length > 0) {
+                messages.forEach(msg => {
+                    const isMe = msg.sender_id == myId;
+                    const name = isMe ? 'Bạn' : (msg.sender?.name || 'Khách');
+                    html += `<div class="msg-row ${isMe ? 'msg-me' : 'msg-other'}">
+                        <strong style="font-size:0.72rem;display:block;margin-bottom:2px;opacity:0.7;">${escapeHtml(name)}</strong>
+                        ${escapeHtml(msg.content)}
+                    </div>`;
+                });
+            } else {
+                html = `<div class="text-center mt-5 text-muted" style="font-size:0.85rem;">
+                    <i class="bi bi-chat-heart d-block mb-2 text-primary" style="font-size:2.2rem;opacity:0.4;"></i>
+                    <strong>Bắt đầu cuộc trò chuyện</strong>
+                    <div class="small text-secondary mt-1">Khách hàng này chưa gửi tin nhắn. Bạn có thể gửi lời chào hoặc câu trả lời nhanh bên dưới!</div>
                 </div>`;
-            });
-            chatMessages.innerHTML = html || '<div class="text-muted text-center" style="margin-top:3rem;font-size:0.85rem;"><i class="bi bi-chat-square-text d-block mb-2" style="font-size:1.5rem;opacity:0.3;"></i>Chưa có tin nhắn</div>';
+            }
+            chatMessages.innerHTML = html;
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
@@ -831,6 +963,10 @@
                     const unreadTotal = chatUsers.reduce((total, user) => total + Number(user.unread || 0), 0);
                     unreadCount.textContent = unreadTotal;
                     unreadCount.classList.toggle('d-none', unreadTotal === 0);
+                    if (sidebarUnreadBadge) {
+                        sidebarUnreadBadge.textContent = `${unreadTotal} tin mới`;
+                        sidebarUnreadBadge.classList.toggle('d-none', unreadTotal === 0);
+                    }
                     renderUsers();
 
                     // Tự động chọn khách hàng đầu tiên nếu chưa chọn ai
@@ -842,32 +978,90 @@
         }
 
         function renderUsers() {
-            const query = userSearch.value.trim().toLocaleLowerCase();
-            const filteredUsers = chatUsers.filter(user => String(user.name).toLocaleLowerCase().includes(query));
+            const rawQuery = userSearch ? userSearch.value.trim() : '';
+            const cleanQ = removeVietnameseTones(rawQuery);
+
+            const filteredUsers = chatUsers.filter(u => {
+                if (!cleanQ) return true;
+                const nameClean = removeVietnameseTones(u.name);
+                const emailClean = removeVietnameseTones(u.email);
+                return nameClean.includes(cleanQ) || emailClean.includes(cleanQ);
+            });
+
+            if (userCountLabel) {
+                userCountLabel.textContent = rawQuery
+                    ? `Tìm thấy ${filteredUsers.length}/${chatUsers.length} khách`
+                    : `Tất cả khách hàng (${chatUsers.length})`;
+            }
+            if (totalBadge) {
+                totalBadge.textContent = `${chatUsers.length} khách`;
+            }
+
             let html = '';
             filteredUsers.forEach(user => {
                 const active = currentUserId == user.id ? 'active' : '';
                 const unread = Number(user.unread || 0);
-                const preview = user.last_message || 'Chưa có tin nhắn';
+                const hasMsg = !!user.last_message;
+                const preview = hasMsg ? escapeHtml(user.last_message) : '<span class="text-secondary opacity-75">Chưa có tin nhắn</span>';
+                const initial = (user.name || 'K').trim().charAt(0).toUpperCase();
+                const emailText = user.email ? escapeHtml(user.email) : '';
+
                 html += `<div class="user-item ${active}" data-id="${user.id}">
-                    <div class="d-flex justify-content-between align-items-center gap-2">
-                        <strong class="text-truncate">${escapeHtml(user.name)}</strong>
-                        ${unread ? `<span class="badge rounded-pill text-bg-danger">${unread}</span>` : ''}
+                    <div class="user-avatar-circle">${escapeHtml(initial)}</div>
+                    <div class="user-info-col">
+                        <div class="d-flex justify-content-between align-items-center gap-1">
+                            <strong class="text-truncate text-dark" style="font-size:0.83rem;">${escapeHtml(user.name)}</strong>
+                            ${unread ? `<span class="badge rounded-pill text-bg-danger" style="font-size:0.65rem;">${unread}</span>` : (!hasMsg ? `<span class="badge bg-light text-secondary border" style="font-size:0.6rem;padding:2px 5px;">Mới</span>` : '')}
+                        </div>
+                        ${emailText ? `<div class="user-email-text">${emailText}</div>` : ''}
+                        <div class="chat-preview">${preview}</div>
                     </div>
-                    <div class="chat-preview text-muted text-truncate">${escapeHtml(preview)}</div>
                 </div>`;
             });
-            userList.innerHTML = html || `<div class="p-2 text-muted">${query ? 'Không tìm thấy hội thoại' : 'Chưa có hội thoại'}</div>`;
+
+            userList.innerHTML = html || `<div class="p-3 text-center text-muted small">${rawQuery ? 'Không tìm thấy khách hàng nào' : 'Chưa có khách hàng'}</div>`;
             userList.querySelectorAll('.user-item').forEach(el => {
                 el.onclick = () => selectUser(parseInt(el.dataset.id, 10), el);
             });
         }
 
-        userSearch.addEventListener('input', renderUsers);
+        if (userSearch) {
+            userSearch.addEventListener('input', function () {
+                if (searchClearBtn) {
+                    searchClearBtn.classList.toggle('d-none', !this.value);
+                }
+                renderUsers();
+            });
+        }
+        if (searchClearBtn) {
+            searchClearBtn.addEventListener('click', function () {
+                if (userSearch) {
+                    userSearch.value = '';
+                    searchClearBtn.classList.add('d-none');
+                    userSearch.focus();
+                    renderUsers();
+                }
+            });
+        }
 
         function selectUser(userId, el) {
             if (currentUserId === userId && chatMessages.children.length > 0) return;
             currentUserId = userId;
+
+            const u = chatUsers.find(x => x.id === userId);
+            if (u) {
+                if (activeName) activeName.textContent = u.name;
+                if (activeEmail) activeEmail.textContent = u.email || 'Khách hàng';
+                if (activeAvatar) {
+                    const initial = (u.name || 'K').trim().charAt(0).toUpperCase();
+                    activeAvatar.textContent = initial;
+                }
+                if (activeBadge) {
+                    activeBadge.classList.remove('d-none');
+                    activeBadge.textContent = u.last_message ? 'Có hội thoại' : 'Khách mới';
+                }
+                u.unread = 0;
+            }
 
             // Highlight khách hàng được chọn ngay lập tức (0ms lag)
             document.querySelectorAll('#user-list .user-item').forEach(e => {
@@ -875,16 +1069,18 @@
             });
 
             // Xóa badge tin chưa đọc tức thì trên giao diện
-            const u = chatUsers.find(x => x.id === userId);
-            if (u) u.unread = 0;
             const targetEl = el || document.querySelector(`#user-list .user-item[data-id="${userId}"]`);
             if (targetEl) {
-                const badge = targetEl.querySelector('.badge');
+                const badge = targetEl.querySelector('.badge.text-bg-danger');
                 if (badge) badge.remove();
             }
             const unreadTotal = chatUsers.reduce((total, user) => total + Number(user.unread || 0), 0);
             unreadCount.textContent = unreadTotal;
             unreadCount.classList.toggle('d-none', unreadTotal === 0);
+            if (sidebarUnreadBadge) {
+                sidebarUnreadBadge.textContent = `${unreadTotal} tin mới`;
+                sidebarUnreadBadge.classList.toggle('d-none', unreadTotal === 0);
+            }
 
             // Hiển thị tin nhắn từ bộ nhớ cache ngay tức thì
             if (messagesCache[userId]) {
