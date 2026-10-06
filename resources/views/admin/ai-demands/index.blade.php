@@ -25,7 +25,8 @@
         <h5 class="mb-3">Khách quan tâm đến điều gì?</h5>
         <div class="row g-3">@forelse($topics as $topic)<div class="col-sm-6 col-lg-4"><div class="d-flex justify-content-between small mb-2"><span>{{ \App\Services\AiDemandAnalytics::TOPICS[$topic->topic] ?? $topic->topic }}</span><strong>{{ $topic->total }} lượt</strong></div><div class="progress" style="height:6px" role="progressbar" aria-label="{{ \App\Services\AiDemandAnalytics::TOPICS[$topic->topic] ?? $topic->topic }}" aria-valuenow="{{ $topic->total }}" aria-valuemin="0" aria-valuemax="{{ $total }}"><div class="progress-bar" style="width:{{ $total ? round(100*$topic->total/$total) : 0 }}%;background:#9b7953"></div></div></div>@empty<p class="text-muted mb-0">Chưa có câu hỏi được ghi nhận. Dữ liệu sẽ xuất hiện khi khách sử dụng tư vấn AI.</p>@endforelse</div>
     </div></div>
-    <div class="d-flex align-items-center justify-content-between gap-3 mb-3"><div><h4 class="mb-1">Gợi ý bổ sung sản phẩm</h4><p class="text-muted small mb-0">Gợi ý theo thống kê, chưa phải đề xuất do AI tự viết. Ưu tiên lượt tìm chưa khớp, sau đó đến số tài khoản / phiên hỏi trong {{ $days }} ngày; không phải dự báo doanh số.</p></div></div>
+    @include('admin.ai-demands.ai-report')
+    <div class="d-flex align-items-center justify-content-between gap-3 mb-3"><div><h4 class="mb-1">Thống kê nhu cầu & kế hoạch xử lý</h4><p class="text-muted small mb-0">Đối chiếu các nhóm nhu cầu và ghi lại kế hoạch sau khi xem phân tích AI. Ưu tiên lượt tìm chưa khớp, sau đó đến số tài khoản / phiên hỏi trong {{ $days }} ngày.</p></div></div>
     <div class="row g-3 mb-4">
     @forelse($demands as $demand)
         <div class="col-xl-6"><div class="card border-0 shadow-sm h-100"><div class="card-body p-4">

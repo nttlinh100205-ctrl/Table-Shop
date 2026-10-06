@@ -41,10 +41,90 @@ class EngagementFeatureTest extends TestCase
             '2026_09_21_000001_create_messages_table',
             '2026_10_07_000001_create_ai_demand_analytics',
             '2026_10_07_000002_add_ai_question_import_source',
+            '2026_10_07_000003_create_ai_product_reports',
         ] as $migration) {
             (require database_path('migrations/'.$migration.'.php'))->up();
         }
         Prize::query()->update(['is_active' => false]);
+    }
+
+    public function test_ai_product_advisor_uses_only_product_evidence_and_saves_grounded_report(): void
+    {
+        config(['services.groq.api_key'=>'test']);
+        $category = \App\Models\Category::create(['name'=>'Bàn']);
+        $product = \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn đen có sẵn','price'=>3000000]);
+        \App\Models\ProductVariant::create(['product_id'=>$product->id,'color'=>'Đen','price'=>3000000,'stock'=>2]);
+        $state = \App\Services\ChatProductSearch::criteria('bàn màu đen dưới 5 triệu');
+        $state['colors'][] = 'UNEXPECTED_PRIVATE_ATTRIBUTE';
+        \App\Models\AiQuestionEvent::create(['question'=>'bàn màu đen dưới 5 triệu test@example.com 0912345678 PRIVATE_NAME PRIVATE_ADDRESS','question_key'=>hash('sha256','budget'),
+            'visitor_key'=>hash('sha256','private-customer-id'),'topic'=>'product','criteria'=>$state,'demand_key'=>hash('sha256',json_encode($state)),'match_count'=>0]);
+        foreach (['orders','off_topic','error'] as $topic) \App\Models\AiQuestionEvent::create([
+            'question'=>'PRIVATE '.$topic,'question_key'=>hash('sha256',$topic),'visitor_key'=>'private','topic'=>$topic,
+        ]);
+        $output = ['summary'=>'Khách quan tâm bàn đen dưới 5 triệu.','recommendations'=>[[
+            'title'=>'Bàn làm việc đen','specs'=>'Màu đen, dưới 5 triệu','reason'=>'Khách hỏi trực tiếp về màu và ngân sách.',
+            'action'=>'Kiểm tra các mẫu có sẵn trước khi bổ sung biến thể.','priority'=>'high','evidence_ids'=>['Q1'],
+        ]]];
+        Http::fake(['api.groq.com/*'=>Http::response(['choices'=>[['message'=>['content'=>json_encode($output)]]]])]);
+        $customer = User::factory()->create(['role'=>'user']);
+        $this->actingAs($customer)->post(route('admin.ai-demands.analyze'),['days'=>30])->assertRedirect();
+        Http::assertNothingSent();
+        $admin = User::factory()->create(['role'=>'admin']);
+        $this->actingAs($admin)->post(route('admin.ai-demands.analyze'),['days'=>30])->assertRedirect(route('admin.ai-demands.index',['days'=>30]))->assertSessionHas('success');
+        $report = \App\Models\AiProductReport::sole();
+        $this->assertEquals(1,$report->question_count);
+        $this->assertSame('low',$report->result['recommendations'][0]['priority']);
+        $this->assertSame('Bàn đen có sẵn',$report->evidence[0]['current_candidates'][0]['name']);
+        Http::assertSent(function ($request) {
+            $content = $request['messages'][1]['content'];
+            $data = json_decode($content,true);
+            return $data['total_product_questions']===1 && count($data['evidence'])===1
+                && !str_contains($content,'PRIVATE') && !str_contains($content,'private-customer-id')
+                && !str_contains($content,'test@example.com') && !str_contains($content,'0912345678')
+                && !str_contains($content,'Bàn đen có sẵn') && !array_key_exists('question',$data['evidence'][0])
+                && array_keys($data['evidence'][0]['current_candidates'][0]) === ['price_vnd','stock']
+                && $data['evidence'][0]['current_candidates'][0]['stock']===2;
+        });
+        $this->get(route('admin.ai-demands.index',['days'=>30]))->assertOk()->assertSee('Bàn làm việc đen')->assertSee('Xem câu hỏi làm căn cứ');
+        $this->get(route('admin.ai-demands.index',['days'=>7]))->assertOk()->assertDontSee('Bàn làm việc đen');
+        Http::assertSentCount(1); // Reading a saved report never incurs another AI request.
+    }
+
+    public function test_ai_product_advisor_handles_empty_invalid_and_unavailable_answers_without_losing_report(): void
+    {
+        config(['services.groq.api_key'=>'test']);
+        Http::fake();
+        $admin = User::factory()->create(['role'=>'admin']);
+        $this->actingAs($admin)->post(route('admin.ai-demands.analyze'),['days'=>30])->assertSessionHas('error');
+        Http::assertNothingSent();
+        \App\Models\AiQuestionEvent::create(['question'=>'Tư vấn sản phẩm','question_key'=>'q','visitor_key'=>'v','topic'=>'product']);
+        $old = \App\Models\AiProductReport::create(['days'=>30,'period_start'=>now()->subDays(30),'period_end'=>now(),
+            'question_count'=>1,'sampled_count'=>1,'evidence'=>[],'result'=>['summary'=>'Bản đã lưu','recommendations'=>[]]]);
+        $invalid = ['summary'=>'Invalid reference','recommendations'=>[[
+            'title'=>'Bàn','specs'=>'Đen','reason'=>'Test','action'=>'Test','priority'=>'high','evidence_ids'=>['Q999'],
+        ]]];
+        Http::fake(['api.groq.com/*'=>Http::response(['choices'=>[['message'=>['content'=>json_encode($invalid)]]]])]);
+        $this->post(route('admin.ai-demands.analyze'),['days'=>30])->assertSessionHas('error');
+        $this->assertSame(1,\App\Models\AiProductReport::count());
+        Http::fake(['api.groq.com/*'=>Http::response([],429)]);
+        $this->actingAs(User::factory()->create(['role'=>'admin']))->post(route('admin.ai-demands.analyze'),['days'=>30])->assertSessionHas('error');
+        $this->assertSame('Bản đã lưu',$old->fresh()->result['summary']);
+        $this->assertSame(1,\App\Models\AiProductReport::count());
+    }
+
+    public function test_ai_product_report_bounds_input_and_respects_selected_period(): void
+    {
+        config(['services.groq.api_key'=>'test']);
+        for ($i=0;$i<16;$i++) \App\Models\AiQuestionEvent::create([
+            'question'=>'Tìm sản phẩm '.$i,'question_key'=>'q'.$i,'visitor_key'=>'v'.$i,'topic'=>'product',
+        ]);
+        \App\Models\AiQuestionEvent::create(['question'=>'Old excluded question','question_key'=>'old','visitor_key'=>'old','topic'=>'product','created_at'=>now()->subDays(10)]);
+        Http::fake(['api.groq.com/*'=>Http::response(['choices'=>[['message'=>['content'=>json_encode(['summary'=>'Cần hỏi thêm thuộc tính cụ thể.','recommendations'=>[]])]]]])]);
+        $report = (new \App\Services\AiProductAdvisor)->generate(7);
+        $this->assertEquals(16,$report->question_count);
+        $this->assertEquals(15,$report->sampled_count);
+        $this->assertCount(15,$report->evidence);
+        Http::assertSent(fn($request)=>!str_contains($request['messages'][1]['content'],'Old excluded question'));
     }
 
     public function test_table_advice_preset_asks_needs_without_ai_and_preserves_followup_context(): void
@@ -150,7 +230,7 @@ class EngagementFeatureTest extends TestCase
         $this->put(route('admin.ai-demands.update',$events[0]->demand_key),['status'=>'done'])->assertRedirect();
         $admin = User::factory()->create(['role'=>'admin']);
         $this->actingAs($admin)->get(route('admin.ai-demands.index'))->assertOk()
-            ->assertSee('Gợi ý bổ sung sản phẩm')->assertSee('màu đen')->assertSee('5.000.000đ')
+            ->assertSee('AI đề xuất sản phẩm nên bổ sung')->assertSee('màu đen')->assertSee('5.000.000đ')
             ->assertViewHas('gaps',2)->assertViewHas('visitors',1);
         $this->put(route('admin.ai-demands.update',$events[1]->demand_key),['status'=>'planned','note'=>'Tìm bàn đen giá dưới 5 triệu'])->assertSessionHas('success');
         $this->assertDatabaseHas('ai_demand_plans',['demand_key'=>$events[1]->demand_key,'status'=>'planned']);

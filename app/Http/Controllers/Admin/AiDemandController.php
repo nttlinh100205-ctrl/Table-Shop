@@ -18,6 +18,7 @@ class AiDemandController extends Controller
         $visitors = (clone $base)->distinct()->count('visitor_key');
         $gaps = (clone $base)->where('topic', 'product')->where('match_count', 0)->count();
         $imported = (clone $base)->where('source','session_import')->count();
+        $aiReport = \App\Models\AiProductReport::where('days',$days)->latest('id')->first();
         $topics = (clone $base)->selectRaw('topic, COUNT(*) as total')->groupBy('topic')->orderByDesc('total')->get();
         $questions = (clone $base)->when($data['topic'] ?? null, fn($q,$topic)=>$q->where('topic',$topic))
             ->selectRaw("question_key, topic, MIN(question) as question, COUNT(*) as total, COUNT(DISTINCT visitor_key) as visitors, MAX(created_at) as last_at, SUM(CASE WHEN source = 'session_import' THEN 1 ELSE 0 END) as imported_count")
@@ -31,7 +32,7 @@ class AiDemandController extends Controller
             $demand->label = AiDemandAnalytics::label($samples[$demand->sample_id]->criteria);
             $demand->plan = $plans[$demand->demand_key] ?? null;
         }
-        return response()->view('admin.ai-demands.index', compact('days','total','visitors','gaps','imported','topics','questions','demands'))
+        return response()->view('admin.ai-demands.index', compact('days','total','visitors','gaps','imported','topics','questions','demands','aiReport'))
             ->header('Cache-Control','no-store, private');
     }
 
@@ -47,5 +48,26 @@ class AiDemandController extends Controller
     {
         $result = $importer->run();
         return back()->with($result['failed'] ? 'error' : 'success', 'Đã nhập '.$result['imported'].' câu hỏi cũ; bỏ qua '.$result['skipped'].' câu đã có. Có '.$result['failed'].' phiên không đọc được. Phiên đã bị xóa không thể khôi phục.');
+    }
+
+    public function analyze(Request $request, \App\Services\AiProductAdvisor $advisor)
+    {
+        $data = $request->validate(['days'=>'required|in:7,30,90']);
+        try {
+            $advisor->generate((int)$data['days']);
+            return redirect()->route('admin.ai-demands.index',['days'=>$data['days']])->with('success','AI đã phân tích nhu cầu và lưu đề xuất bổ sung sản phẩm.');
+        } catch (\App\Exceptions\AiUnavailableException $e) {
+            $message = match ($e->reason) {
+                'AI_RATE_LIMIT'=>'Groq đang hết hạn mức hoặc quá tải. Hãy thử lại sau.',
+                'AI_TIMEOUT'=>'AI phản hồi quá chậm. Hãy thử lại sau.',
+                'AI_KEY_MISSING','AI_INVALID_KEY','AI_ACCESS_DENIED','AI_MODEL_UNAVAILABLE'=>'Chưa kết nối được Groq. Kiểm tra GROQ_API_KEY và GROQ_MODEL trên Render.',
+                default=>'AI tạm thời không khả dụng. Hãy thử lại sau.',
+            };
+            return back()->with('error',$message.' Bản phân tích trước vẫn được giữ.');
+        } catch (\DomainException $e) {
+            return back()->with('error',$e->getMessage());
+        } catch (\UnexpectedValueException $e) {
+            return back()->with('error','AI chưa trả đề xuất hợp lệ. Hãy thử lại; bản phân tích trước vẫn được giữ.');
+        }
     }
 }
