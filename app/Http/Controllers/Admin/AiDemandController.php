@@ -17,9 +17,10 @@ class AiDemandController extends Controller
         $total = (clone $base)->count();
         $visitors = (clone $base)->distinct()->count('visitor_key');
         $gaps = (clone $base)->where('topic', 'product')->where('match_count', 0)->count();
+        $imported = (clone $base)->where('source','session_import')->count();
         $topics = (clone $base)->selectRaw('topic, COUNT(*) as total')->groupBy('topic')->orderByDesc('total')->get();
         $questions = (clone $base)->when($data['topic'] ?? null, fn($q,$topic)=>$q->where('topic',$topic))
-            ->selectRaw('question_key, topic, MIN(question) as question, COUNT(*) as total, COUNT(DISTINCT visitor_key) as visitors, MAX(created_at) as last_at')
+            ->selectRaw("question_key, topic, MIN(question) as question, COUNT(*) as total, COUNT(DISTINCT visitor_key) as visitors, MAX(created_at) as last_at, SUM(CASE WHEN source = 'session_import' THEN 1 ELSE 0 END) as imported_count")
             ->groupBy('question_key', 'topic')->orderByDesc('total')->orderByDesc('last_at')->orderBy('question_key')->paginate(15)->withQueryString();
         $demands = (clone $base)->where('topic','product')->whereNotNull('demand_key')
             ->selectRaw('demand_key, MIN(id) as sample_id, COUNT(*) as total, COUNT(DISTINCT visitor_key) as visitors, SUM(CASE WHEN match_count = 0 THEN 1 ELSE 0 END) as missing')
@@ -30,7 +31,7 @@ class AiDemandController extends Controller
             $demand->label = AiDemandAnalytics::label($samples[$demand->sample_id]->criteria);
             $demand->plan = $plans[$demand->demand_key] ?? null;
         }
-        return response()->view('admin.ai-demands.index', compact('days','total','visitors','gaps','topics','questions','demands'))
+        return response()->view('admin.ai-demands.index', compact('days','total','visitors','gaps','imported','topics','questions','demands'))
             ->header('Cache-Control','no-store, private');
     }
 
@@ -40,5 +41,11 @@ class AiDemandController extends Controller
         $data = $request->validate(['status'=>'required|in:reviewing,planned,done,dismissed','note'=>'nullable|string|max:1000']);
         AiDemandPlan::updateOrCreate(['demand_key'=>$key], $data);
         return back()->with('success','Đã lưu kế hoạch cho nhu cầu này.');
+    }
+
+    public function import(\App\Services\AiSessionImporter $importer)
+    {
+        $result = $importer->run();
+        return back()->with($result['failed'] ? 'error' : 'success', 'Đã nhập '.$result['imported'].' câu hỏi cũ; bỏ qua '.$result['skipped'].' câu đã có. Có '.$result['failed'].' phiên không đọc được. Phiên đã bị xóa không thể khôi phục.');
     }
 }

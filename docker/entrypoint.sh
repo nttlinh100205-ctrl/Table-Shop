@@ -76,6 +76,9 @@ esac
 su-exec www-data php artisan route:cache
 su-exec www-data php artisan view:cache
 
+# Recover surviving AI history before session garbage collection removes it.
+su-exec www-data php artisan ai:import-sessions || echo "AI history import incomplete; retry from the admin demand page."
+
 nginx -t
 php-fpm -t
 

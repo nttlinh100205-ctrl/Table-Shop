@@ -40,10 +40,85 @@ class EngagementFeatureTest extends TestCase
             '2026_10_06_180000_add_ai_review_replies',
             '2026_09_21_000001_create_messages_table',
             '2026_10_07_000001_create_ai_demand_analytics',
+            '2026_10_07_000002_add_ai_question_import_source',
         ] as $migration) {
             (require database_path('migrations/'.$migration.'.php'))->up();
         }
         Prize::query()->update(['is_active' => false]);
+    }
+
+    public function test_table_advice_preset_asks_needs_without_ai_and_preserves_followup_context(): void
+    {
+        Http::fake();
+        $reply = $this->withSession(['ai_search_context'=>\App\Services\ChatProductSearch::criteria('sofa đỏ dưới 20 triệu')])
+            ->postJson(route('ai.send'),['message'=>'Xin chào, tôi cần tư vấn chọn bàn phù hợp.'])->assertOk()->json('reply');
+        $this->assertStringContainsString('ngân sách',$reply);
+        $this->assertStringContainsString('làm việc, ăn uống hay bàn trà',$reply);
+        $this->assertSame(['ban'],session('ai_search_context.types'));
+        $this->assertNull(session('ai_search_context.budget_vnd'));
+        $this->assertSame([],session('ai_search_context.colors'));
+        $this->assertCount(2,session('ai_history'));
+        $this->assertTrue(\App\Services\ChatProductSearch::isBudgetFollowUp('dưới 5 triệu',session('ai_history'),null));
+        $this->assertFalse(\App\Services\ShopChatSupport::isTableAdviceStarter('Xin chào, tôi cần tư vấn chọn bàn phù hợp. Viết code cho tôi'));
+        Http::assertNothingSent();
+    }
+
+    public function test_old_ai_sessions_import_real_questions_once_and_skip_live_events_and_admins(): void
+    {
+        $customer = User::factory()->create(['role'=>'user']);
+        $category = \App\Models\Category::create(['name'=>'Bàn']);
+        \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn đắt','price'=>8000000]);
+        $data = ['ai_transcript_owner'=>(string)$customer->id,'ai_transcript'=>[
+            ['user'=>false,'text'=>'Chào bạn'],
+            ['user'=>true,'text'=>'sản phẩm dưới 5 triệu'],
+            ['user'=>false,'text'=>\App\Services\AiChatService::OUT_OF_SCOPE],
+            ['user'=>true,'text'=>'màu đen thì sao'],
+            ['user'=>false,'text'=>'Không có mẫu'],
+        ]];
+        $importer = new \App\Services\AiSessionImporter;
+        $dry = $importer->importSession('old-session',$data,time(),null,true);
+        $this->assertSame(2,$dry['questions']);
+        $this->assertSame(0,\App\Models\AiQuestionEvent::count());
+        $result = $importer->importSession('old-session',$data,time());
+        $this->assertSame(2,$result['imported']);
+        $this->assertSame(0,$importer->importSession('old-session',$data,time())['imported']);
+        $events = \App\Models\AiQuestionEvent::orderBy('id')->get();
+        $this->assertSame('session_import',$events[0]->source);
+        $this->assertSame('product',$events[0]->topic);
+        $this->assertSame(0,$events[0]->match_count);
+        $this->assertSame(['den'],$events[1]->criteria['colors']);
+        $this->assertEquals(5000000,$events[1]->criteria['budget_vnd']['max']);
+        // A transcript still containing a newly recorded live question must not inflate totals.
+        $this->actingAs($customer)->postJson(route('ai.send'),['message'=>'Tôi muốn tra cứu đơn hàng.'])->assertOk();
+        $liveData = ['ai_transcript_owner'=>(string)$customer->id,'ai_history'=>[['role'=>'user','text'=>'Tôi muốn tra cứu đơn hàng.']]];
+        $this->assertSame(0,$importer->importSession('new-session',$liveData,time())['imported']);
+        $admin = User::factory()->create(['role'=>'admin']);
+        $data['ai_transcript_owner']=(string)$admin->id;
+        $this->assertSame(0,$importer->importSession('admin-session',$data,time())['imported']);
+        $this->actingAs($admin)->get(route('admin.ai-demands.index'))->assertOk()->assertViewHas('imported',2);
+    }
+
+    public function test_admin_import_reads_database_sessions_without_changing_them(): void
+    {
+        (require database_path('migrations/2026_09_21_000000_create_sessions_table.php'))->up();
+        config(['session.connection'=>'sqlite','session.files'=>storage_path('framework/no-session-import-fixtures')]);
+        $payload = base64_encode(serialize(['_token'=>'do-not-copy-token','ai_transcript'=>[
+            ['user'=>true,'text'=>'sản phẩm dưới 5 triệu'], ['user'=>false,'text'=>'AI đang gặp lỗi cấu hình kết nối. Bạn vui lòng chọn Nhân viên để được tư vấn.'],
+        ]]));
+        \Illuminate\Support\Facades\DB::table('sessions')->insert(['id'=>str_repeat('a',40),'payload'=>$payload,'last_activity'=>time()-86400,'user_id'=>null]);
+        $customer = User::factory()->create(['role'=>'user']);
+        $this->actingAs($customer)->post(route('admin.ai-demands.import'))->assertRedirect();
+        $this->assertSame(0,\App\Models\AiQuestionEvent::count());
+        $admin = User::factory()->create(['role'=>'admin']);
+        $this->actingAs($admin)->post(route('admin.ai-demands.import'))->assertSessionHas('success');
+        $event = \App\Models\AiQuestionEvent::sole();
+        $this->assertSame('error',$event->topic);
+        $this->assertNull($event->demand_key);
+        $this->assertSame('session_import',$event->source);
+        $this->assertStringNotContainsString('do-not-copy-token',$event->toJson());
+        $this->assertSame($payload,\Illuminate\Support\Facades\DB::table('sessions')->value('payload'));
+        $this->post(route('admin.ai-demands.import'))->assertSessionHas('success');
+        $this->assertSame(1,\App\Models\AiQuestionEvent::count());
     }
 
     public function test_ai_demand_records_budget_followups_and_aggregates_admin_opportunities(): void

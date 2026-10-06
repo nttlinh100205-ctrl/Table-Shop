@@ -44,6 +44,15 @@ class AiChatController extends Controller
     {
         $data = $request->validate(['message' => 'required|string|max:2000']);
         $this->transcript($request);
+        if (\App\Services\ShopChatSupport::isTableAdviceStarter($data['message'])) {
+            $reply = \App\Services\ShopChatSupport::tableAdviceStarter();
+            // Start a fresh consultation; old colour/price filters must not constrain it.
+            $request->session()->put('ai_search_context', \App\Services\ChatProductSearch::criteria('bàn'));
+            $request->session()->put('ai_history', [
+                ['role'=>'user','text'=>$data['message']], ['role'=>'model','text'=>$reply],
+            ]);
+            return $this->reply($request, $data['message'], $reply, 200, null, 'answer');
+        }
         $support = \App\Services\ShopChatSupport::reply($data['message'], $request->user(), $request->session()->get('shopping_behavior', []));
         if ($support !== null) return $this->reply($request, $data['message'], $support);
         $history = $request->session()->get('ai_history', []);

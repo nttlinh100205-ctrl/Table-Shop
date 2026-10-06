@@ -13,6 +13,8 @@
         </form>
     </div>
     @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
+    @if(session('error'))<div class="alert alert-warning" role="alert">{{ session('error') }}</div>@endif
+    <div class="card border-0 shadow-sm mb-4"><div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3"><div><strong>{{ number_format($imported) }} câu hỏi từ hội thoại cũ trong khoảng đã chọn</strong><div class="small text-muted">Chỉ khôi phục phiên còn lưu. Không tạo dữ liệu minh họa hay nhập trùng câu đã thống kê.</div></div><form method="post" action="{{ route('admin.ai-demands.import') }}">@csrf<button class="btn btn-outline-primary btn-sm">Nhập hội thoại cũ còn lưu</button></form></div></div>
     @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
     <div class="row g-3 mb-4">
         @foreach(['Lượt hỏi AI'=>$total,'Tài khoản / phiên riêng biệt'=>$visitors,'Lượt tìm chưa có kết quả khớp'=>$gaps] as $label=>$value)
@@ -23,7 +25,7 @@
         <h5 class="mb-3">Khách quan tâm đến điều gì?</h5>
         <div class="row g-3">@forelse($topics as $topic)<div class="col-sm-6 col-lg-4"><div class="d-flex justify-content-between small mb-2"><span>{{ \App\Services\AiDemandAnalytics::TOPICS[$topic->topic] ?? $topic->topic }}</span><strong>{{ $topic->total }} lượt</strong></div><div class="progress" style="height:6px" role="progressbar" aria-label="{{ \App\Services\AiDemandAnalytics::TOPICS[$topic->topic] ?? $topic->topic }}" aria-valuenow="{{ $topic->total }}" aria-valuemin="0" aria-valuemax="{{ $total }}"><div class="progress-bar" style="width:{{ $total ? round(100*$topic->total/$total) : 0 }}%;background:#9b7953"></div></div></div>@empty<p class="text-muted mb-0">Chưa có câu hỏi được ghi nhận. Dữ liệu sẽ xuất hiện khi khách sử dụng tư vấn AI.</p>@endforelse</div>
     </div></div>
-    <div class="d-flex align-items-center justify-content-between gap-3 mb-3"><div><h4 class="mb-1">Gợi ý bổ sung sản phẩm</h4><p class="text-muted small mb-0">Ưu tiên nhu cầu có lượt tìm chưa khớp, sau đó đến số tài khoản / phiên hỏi. Dựa trên dữ liệu trong {{ $days }} ngày, không phải dự báo doanh số.</p></div></div>
+    <div class="d-flex align-items-center justify-content-between gap-3 mb-3"><div><h4 class="mb-1">Gợi ý bổ sung sản phẩm</h4><p class="text-muted small mb-0">Gợi ý theo thống kê, chưa phải đề xuất do AI tự viết. Ưu tiên lượt tìm chưa khớp, sau đó đến số tài khoản / phiên hỏi trong {{ $days }} ngày; không phải dự báo doanh số.</p></div></div>
     <div class="row g-3 mb-4">
     @forelse($demands as $demand)
         <div class="col-xl-6"><div class="card border-0 shadow-sm h-100"><div class="card-body p-4">
@@ -41,10 +43,10 @@
     @empty<div class="col-12"><div class="card border-0 shadow-sm p-4 text-muted">Chưa đủ dữ liệu nhu cầu sản phẩm. Các câu hỏi có loại sản phẩm, tầm giá, màu, phong cách hoặc kích thước sẽ được tổng hợp tại đây.</div></div>@endforelse
     </div>
     <div class="card border-0 shadow-sm mb-3"><div class="card-header py-3"><h5 class="mb-1">Câu hỏi được hỏi nhiều nhất</h5><small class="text-muted">Gộp câu giống nhau không phân biệt hoa thường, dấu và dấu câu. Bộ lọc chủ đề áp dụng cho danh sách này.</small></div>
-        <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Câu hỏi</th><th>Chủ đề</th><th>Lượt hỏi</th><th>Tài khoản / phiên</th><th>Gần nhất</th></tr></thead><tbody>
-        @forelse($questions as $question)<tr><td style="min-width:240px;max-width:500px;overflow-wrap:anywhere">{{ $question->question }}</td><td>{{ \App\Services\AiDemandAnalytics::TOPICS[$question->topic] ?? $question->topic }}</td><td><strong>{{ $question->total }}</strong></td><td>{{ $question->visitors }}</td><td class="text-nowrap">{{ \Carbon\Carbon::parse($question->last_at)->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}</td></tr>@empty<tr><td colspan="5" class="text-center text-muted p-4">Chưa có câu hỏi trong khoảng thời gian và chủ đề đã chọn.</td></tr>@endforelse
+        <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Câu hỏi</th><th>Chủ đề</th><th>Lượt hỏi</th><th>Tài khoản / phiên</th><th>Nguồn dữ liệu</th><th>Mốc ghi nhận</th></tr></thead><tbody>
+        @forelse($questions as $question)<tr><td style="min-width:240px;max-width:500px;overflow-wrap:anywhere">{{ $question->question }}</td><td>{{ \App\Services\AiDemandAnalytics::TOPICS[$question->topic] ?? $question->topic }}</td><td><strong>{{ $question->total }}</strong></td><td>{{ $question->visitors }}</td><td class="small text-muted">{{ $question->imported_count }} cũ · {{ $question->total - $question->imported_count }} mới</td><td class="text-nowrap">{{ \Carbon\Carbon::parse($question->last_at)->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}</td></tr>@empty<tr><td colspan="6" class="text-center text-muted p-4">Chưa có câu hỏi trong khoảng thời gian và chủ đề đã chọn.</td></tr>@endforelse
         </tbody></table></div><div class="card-footer">{{ $questions->links() }}</div>
     </div>
-    <p class="small text-muted">Thống kê bắt đầu từ khi triển khai tính năng; không lấy lại hội thoại cũ chỉ lưu trong phiên. Lượt chưa khớp phản ánh kết quả tìm kiếm tại lúc hỏi, không khẳng định toàn bộ kho không có hàng. Email và số điện thoại được che tự động; không lưu nội dung AI trả lời hay danh tính tài khoản trong báo cáo. Phiên khách chưa đăng nhập có thể được tính riêng khi đổi trình duyệt. Câu ngoài phạm vi và lỗi AI không được dùng để gợi ý nhập hàng.</p>
+    <p class="small text-muted">Dữ liệu cũ lấy từ phiên còn lưu; thời gian dùng mốc hoạt động cuối của phiên vì không có giờ hỏi từng câu, và sản phẩm được đối chiếu với danh mục tại lúc nhập. Dữ liệu mới ghi nhận tại lúc hỏi. Lượt chưa khớp không khẳng định toàn bộ kho không có hàng. Email và số điện thoại được che tự động; không lưu nội dung AI trả lời hay danh tính tài khoản trong báo cáo. Phiên khách chưa đăng nhập có thể được tính riêng khi đổi trình duyệt. Câu ngoài phạm vi và lỗi AI không được dùng để gợi ý nhập hàng.</p>
 </div>
 @endsection

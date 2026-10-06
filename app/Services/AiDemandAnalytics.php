@@ -24,6 +24,20 @@ class AiDemandAnalytics
         // Analytics must never prevent the customer from receiving a chat reply.
         try {
             if ($request->user()?->isAdmin()) return;
+            AiQuestionEvent::create(self::attributes($question, $kind, $request->session()->get('ai_search_context', []),
+                self::visitorKey($request->user() ? 'user:'.$request->user()->id : 'session:'.$request->session()->getId())));
+        } catch (\Throwable $e) {
+            Log::warning('AI demand analytics unavailable', ['exception'=>get_class($e)]);
+        }
+    }
+
+    public static function visitorKey(string $identity): string
+    {
+        return hash_hmac('sha256', $identity, (string)config('app.key'));
+    }
+
+    public static function attributes(string $question, string $kind, array $state, string $visitor): array
+    {
             $safe = self::redact($question);
             $text = Str::lower(Str::ascii($safe));
             $topic = $kind;
@@ -34,7 +48,6 @@ class AiDemandAnalytics
                     : (preg_match('/diem|hang thanh vien|xu|voucher|khuyen mai|khuyen ma[iy]|gioi thieu|vong quay/', $text) ? 'rewards'
                         : (preg_match('/con hang|ton kho|kich thuoc/', $text) ? 'product' : 'policies'));
             } elseif ($kind === 'answer') {
-                $state = $request->session()->get('ai_search_context', []);
                 $productText = Str::lower(Str::ascii(preg_replace('/\bbạn\b/ui', '', $safe)));
                 $behavior = ['chat_search_context'=>$state];
                 $topic = preg_match('/\b(san pham|ban|ghe|sofa|giuong|noi that)\b/', $productText)
@@ -50,16 +63,13 @@ class AiDemandAnalytics
                 }
             }
             $normalized = trim(preg_replace('/[^a-z0-9]+/', ' ', $text));
-            AiQuestionEvent::create([
+            return [
                 'question'=>$safe, 'question_key'=>hash('sha256', $normalized),
-                'visitor_key'=>hash_hmac('sha256', $request->user() ? 'user:'.$request->user()->id : 'session:'.$request->session()->getId(), (string)config('app.key')),
+                'visitor_key'=>$visitor,
                 'topic'=>$topic, 'criteria'=>$criteria,
                 'demand_key'=>$criteria ? hash('sha256', json_encode($criteria)) : null,
                 'match_count'=>$matches,
-            ]);
-        } catch (\Throwable $e) {
-            Log::warning('AI demand analytics unavailable', ['exception'=>get_class($e)]);
-        }
+            ];
     }
 
     public static function label(array $criteria): string

@@ -7,6 +7,18 @@ use Illuminate\Support\Str;
 
 class ShopChatSupport
 {
+    public static function isTableAdviceStarter(string $message): bool
+    {
+        $text = trim(preg_replace('/[^a-z0-9 ]+/', ' ', strtolower(Str::ascii($message))));
+        $text = preg_replace('/\s+/', ' ', $text);
+        return in_array($text, ['xin chao toi can tu van chon ban phu hop', 'toi can tu van chon ban phu hop', 'tu van chon ban', 'tu van chon ban phu hop'], true);
+    }
+
+    public static function tableAdviceStarter(): string
+    {
+        return "Chào bạn! Mình sẽ giúp bạn chọn bàn phù hợp.\n\nBạn cần bàn để làm việc, ăn uống hay bàn trà? Bạn cho mình biết thêm ngân sách dự kiến, kích thước không gian và màu hoặc phong cách yêu thích nhé.\n\nVí dụ: bàn làm việc dưới 5 triệu, dài 1m2, màu đen.";
+    }
+
     public static function policies(): array
     {
         return [
