@@ -31,11 +31,13 @@ class ChatProductSearch
     public static function catalogReply(string $message, array $history, ?array $behavior): ?string
     {
         $text = self::normalize($message);
-        if (!preg_match('/\b(goi y|gioi thieu|cho (?:toi |minh )?xem|tim (?:giup )?(?:toi |minh )?)\b/', $text)
-            || !self::productTypes($text)) return null;
+        $hasSearchIntent = preg_match('/\b(goi y|gioi thieu|cho (?:toi |minh )?xem|tim (?:giup )?(?:toi |minh )?)\b/', $text)
+            || self::budget($message) !== null
+            || preg_match('/^(?:cac|nhung|mot so)\s+(?:(?:loai|mau)\s+)?/', $text);
+        if (!$hasSearchIntent || !self::productTypes($text)) return null;
         // Only serve a fully understood shopping request directly. Mixed instructions go to scope checking.
         $remainder = preg_replace('/\b\d+m\d{1,2}\b|\b\d+(?:[.,]\d+)*\s*(?:trieu|tr|nghin|ngan|k|vnd|dong|d|cm|mm|m)?\b/', ' ', $text);
-        foreach (array_merge(self::STYLES,self::COLORS, ['ban van phong','ban an','ban tra','ban cafe','goi y','gioi thieu','mot so','ngan sach','toi da','khong qua','it hon','toi thieu','tro len','tro xuong','thi sao','phong cach','kich thuoc','san pham','ban','ghe','sofa','giuong','tim','giup','toi','minh','cho','xem','mau','dai','rong','cao','sau','size','sz','gia','duoi','tren','tam','khoang','tu','den','va','so','mau','chiec','bo','vai','muon','can','shop','voi','nhe','a']) as $word) {
+        foreach (array_merge(self::STYLES,self::COLORS, ['ban van phong','ban an','ban tra','ban cafe','goi y','gioi thieu','mot so','ngan sach','toi da','khong qua','it hon','toi thieu','tro len','tro xuong','thi sao','phong cach','kich thuoc','san pham','ban','ghe','sofa','giuong','tim','giup','toi','minh','cho','xem','cac','nhung','loai','mau','dai','rong','cao','sau','size','sz','gia','duoi','tren','tam','khoang','tu','den','va','so','mau','chiec','bo','vai','muon','can','shop','voi','nhe','a']) as $word) {
             $remainder = preg_replace('/\b'.preg_quote($word,'/').'\b/', ' ', $remainder);
         }
         if (trim(preg_replace('/[\s?!.,×*x-]+/','',$remainder)) !== '') return null;

@@ -79,6 +79,28 @@ class EngagementFeatureTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_product_price_queries_without_recommendation_verbs_use_database_and_strict_boundaries(): void
+    {
+        Http::fake();
+        $category = \App\Models\Category::create(['name'=>'Bàn']);
+        foreach ([9000000,10000000,12000000] as $price) {
+            \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn ăn '.$price,'price'=>$price]);
+        }
+        \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn trà đắt','price'=>15000000]);
+        foreach (['các loại bàn ăn giá trên 10 triệu','bàn ăn trên 10tr','những mẫu bàn ăn trên 10 triệu'] as $question) {
+            $reply = $this->postJson(route('ai.send'),['message'=>$question])->assertOk()->json('reply');
+            $this->assertStringContainsString('Bàn ăn 12000000',$reply);
+            $this->assertStringNotContainsString('Bàn ăn 10000000',$reply);
+            $this->assertStringNotContainsString('Bàn ăn 9000000',$reply);
+            $this->assertStringNotContainsString('Bàn trà đắt',$reply);
+        }
+        $reply = $this->postJson(route('ai.send'),['message'=>'bàn ăn dưới 10 triệu'])->assertOk()->json('reply');
+        $this->assertStringContainsString('Bàn ăn 9000000',$reply);
+        $this->assertStringNotContainsString('Bàn ăn 10000000',$reply);
+        $this->assertNull(\App\Services\ChatProductSearch::catalogReply('các loại bàn ăn trên 10 triệu và viết code',[],null));
+        Http::assertNothingSent();
+    }
+
     public function test_catalog_recommendation_no_match_is_honest_and_mixed_requests_are_not_bypassed(): void
     {
         Http::fake();
@@ -267,8 +289,6 @@ class EngagementFeatureTest extends TestCase
         $category = \App\Models\Category::create(['name'=>'Bàn']);
         \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn lớn','price'=>6000000]);
         Http::fake(['api.groq.com/*'=>Http::sequence()
-            ->push(['choices'=>[['message'=>['content'=>'ALLOWED']]]])
-            ->push(['choices'=>[['message'=>['content'=>'Chưa có mẫu phù hợp.']]]])
             ->push(['choices'=>[['message'=>['content'=>'ALLOWED']]]])
             ->push(['choices'=>[['message'=>['content'=>'Chưa có mẫu phù hợp.']]]])
             ->push(['choices'=>[['message'=>['content'=>'OFF_TOPIC']]]])]);
