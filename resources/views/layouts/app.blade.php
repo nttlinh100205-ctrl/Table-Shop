@@ -364,6 +364,8 @@
                 background: #FFFFFF;
                 border-top: 1px solid #E6D8C8;
                 padding: 0.5rem 0.75rem 0.4rem;
+                flex-shrink: 0;
+                min-width: 0;
             }
             .chat-quick-head {
                 display: flex; align-items: center; justify-content: space-between;
@@ -379,11 +381,19 @@
             #chat-quick-wrap.collapsed #chat-quick-list { display: none; }
             #chat-quick-wrap.collapsed .chat-quick-head { margin-bottom: 0; }
             #chat-quick-list {
-                display: flex; flex-wrap: wrap; gap: 0.4rem;
-                max-height: 92px; overflow-y: auto;
+                display: flex; flex-wrap: nowrap; gap: 0.4rem;
+                overflow-x: auto; overflow-y: hidden;
+                padding: 2px 0 5px;
+                scrollbar-color: #9B8B7E #F5F1EC;
+                scrollbar-width: thin;
+                overscroll-behavior-x: contain;
             }
+            #chat-quick-list::-webkit-scrollbar { height: 8px; }
+            #chat-quick-list::-webkit-scrollbar-track { background: #F5F1EC; border-radius: 8px; }
+            #chat-quick-list::-webkit-scrollbar-thumb { background: #9B8B7E; border-radius: 8px; }
             .chat-quick-chip {
                 display: inline-flex; align-items: center; gap: 0.3rem;
+                flex: 0 0 auto;
                 background: #FAF6F0; color: #5A4536;
                 border: 1px solid #E6D8C8; border-radius: 999px;
                 padding: 0.3rem 0.7rem; font-size: 0.78rem; font-weight: 500;
@@ -397,9 +407,6 @@
             }
             .chat-quick-chip:hover i { color: #FAF6F0; }
             .chat-quick-chip:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
-            @media (max-width: 575.98px) {
-                #chat-quick-list { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; max-height: none; padding-bottom: 2px; }
-            }
         </style>
 
         <div id="chat-box">
