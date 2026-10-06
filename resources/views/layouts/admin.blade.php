@@ -1008,6 +1008,8 @@
 
         // ===== LOGIC CHAT ADMIN (TỐI ƯU CỰC NHANH, KHÔNG LAG) =====
         const messagesCache = {};
+        let pendingMessageCounter = 0;
+        @include('components.chat-message-state')
 
         function renderMessages(messages) {
             let html = '';
@@ -1173,10 +1175,10 @@
         function loadMessages() {
             if (!currentUserId) return;
             const fetchUserId = currentUserId;
-            fetch(`/admin/chat/messages/${fetchUserId}`, { headers: { Accept: 'application/json' } })
-                .then(r => r.json())
+            fetch(`/admin/chat/messages/${fetchUserId}`, { cache: 'no-store', headers: { Accept: 'application/json' } })
+                .then(async r => { if (!r.ok) throw new Error('Không tải được chat'); const data = await r.json(); if (!Array.isArray(data)) throw new Error('Dữ liệu chat không hợp lệ'); return data; })
                 .then(messages => {
-                    messagesCache[fetchUserId] = messages || [];
+                    messagesCache[fetchUserId] = mergeChatMessages(messagesCache[fetchUserId] || [], messages);
                     if (currentUserId === fetchUserId) {
                         renderMessages(messagesCache[fetchUserId]);
 
@@ -1290,7 +1292,7 @@
             // Hiển thị tin nhắn ngay lập tức (Optimistic UI - 0ms)
             const myId = {{ (int) auth()->id() }};
             const optimisticMsg = {
-                id: 'temp_' + Date.now(),
+                id: 'temp_' + Date.now() + '_' + (++pendingMessageCounter),
                 sender_id: myId,
                 receiver_id: sendingUserId,
                 content: message,
@@ -1319,15 +1321,17 @@
                 },
                 body: JSON.stringify({ message, user_id: sendingUserId }),
             })
-                .then(r => r.json())
+                .then(async r => { const data = await r.json(); if (!r.ok || !data.id) throw new Error(data.message || 'Không gửi được tin nhắn.'); return data; })
                 .then(saved => {
-                    if (messagesCache[sendingUserId]) {
-                        const idx = messagesCache[sendingUserId].findIndex(m => m.id === optimisticMsg.id);
-                        if (idx !== -1) messagesCache[sendingUserId][idx] = saved;
-                    }
+                    messagesCache[sendingUserId] = mergeChatMessages((messagesCache[sendingUserId] || []).filter(m => m.id !== optimisticMsg.id), [saved]);
+                    if (currentUserId === sendingUserId) renderMessages(messagesCache[sendingUserId]);
                     loadMessages();
                 })
-                .catch(err => console.error(err));
+                .catch(err => {
+                    messagesCache[sendingUserId] = (messagesCache[sendingUserId] || []).filter(m => m.id !== optimisticMsg.id);
+                    if (currentUserId === sendingUserId) { renderMessages(messagesCache[sendingUserId]); if (!fromPreset && !chatInput.value) chatInput.value = message; }
+                    alert(err.message || 'Không gửi được tin nhắn. Vui lòng thử lại.');
+                });
         }
 
         document.getElementById('send-btn').onclick = () => sendMessage();

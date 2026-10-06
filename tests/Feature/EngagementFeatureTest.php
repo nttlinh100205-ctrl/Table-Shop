@@ -38,6 +38,7 @@ class EngagementFeatureTest extends TestCase
             '2026_10_05_110001_create_reviews_table',
             '2026_10_06_120000_add_review_management',
             '2026_10_06_180000_add_ai_review_replies',
+            '2026_09_21_000001_create_messages_table',
         ] as $migration) {
             (require database_path('migrations/'.$migration.'.php'))->up();
         }
@@ -725,6 +726,33 @@ class EngagementFeatureTest extends TestCase
         \Illuminate\Support\Facades\Auth::logout();
         $this->post('/login',['email'=>$new->email,'password'=>'password'])->assertRedirect(route('verification.notice'));
         \Illuminate\Support\Facades\Notification::assertNothingSent();
+    }
+
+    public function test_customer_chat_keeps_replies_from_all_admins_without_exposing_other_conversations(): void
+    {
+        $customer = User::factory()->create(['role'=>'user']);
+        $other = User::factory()->create(['role'=>'user']);
+        $admins = [User::factory()->create(['role'=>'admin']), User::factory()->create(['role'=>'admin'])];
+        foreach ($admins as $admin) {
+            $this->actingAs($admin)->postJson(route('admin.chat.send'), ['user_id'=>$customer->id,'message'=>'Phản hồi '.$admin->id])->assertOk();
+        }
+        \App\Models\Message::create(['sender_id'=>$admins[0]->id,'receiver_id'=>$other->id,'content'=>'Private other customer']);
+        $first = $this->actingAs($customer)->getJson(route('user.chat.messages'))->assertOk()->assertJsonCount(2)->assertDontSee('Private other customer');
+        $this->assertStringContainsString('no-store', $first->headers->get('Cache-Control'));
+        $this->getJson(route('user.chat.messages'))->assertJson($first->json());
+        $this->getJson(route('user.chat.messages', ['after_id'=>$first->json('0.id')]))->assertJsonCount(1);
+    }
+
+    public function test_ai_adds_clickable_links_when_product_answer_omits_them(): void
+    {
+        $category = \App\Models\Category::create(['name'=>'Bàn']);
+        $product = \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn Alpha','price'=>4000000]);
+        $reply = \App\Services\ChatProductSearch::ensureProductLinks('Bạn có thể chọn Bàn Alpha giá 4 triệu.', 'Bàn dưới 5 triệu', null, []);
+        $url = route('products.show', $product->id);
+        $this->assertStringContainsString(']('.$url.')', $reply);
+        $again = \App\Services\ChatProductSearch::ensureProductLinks($reply, 'Bàn dưới 5 triệu', null, []);
+        $this->assertSame($reply, $again);
+        $this->assertSame('Không có mẫu phù hợp.', \App\Services\ChatProductSearch::ensureProductLinks('Không có mẫu phù hợp.', 'Bàn dưới 5 triệu', null, []));
     }
 
     public function test_reviews_award_200_coins_once_per_completed_order_even_for_low_rating(): void

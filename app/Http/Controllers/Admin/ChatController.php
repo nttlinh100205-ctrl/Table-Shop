@@ -101,7 +101,7 @@ class ChatController extends Controller
             $query->where('id', '>', $afterId);
         }
 
-        return $query->orderBy('created_at', 'asc')->get();
+        return response()->json($query->orderBy('id', 'asc')->get())->header('Cache-Control', 'no-store, private');
     }
 
     /** Admin gửi tin */

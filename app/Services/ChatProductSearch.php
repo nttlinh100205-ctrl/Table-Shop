@@ -227,4 +227,15 @@ class ChatProductSearch
         foreach ($best as &$product) unset($product['_score']);
         return ['detected_filters'=>$criteria, 'products'=>$best];
     }
+
+    public static function ensureProductLinks(string $reply, string $message, ?array $behavior, array $history): string
+    {
+        $text = self::normalize($reply);
+        foreach (self::search($message, $behavior, $history)['products'] as $product) {
+            if (str_contains($text, self::normalize($product['name'])) && !preg_match('~'.preg_quote($product['url'], '~').'(?=[)\s?#]|$)~', $reply)) {
+                $reply .= "\n\n[Xem sản phẩm: ".$product['name'].']('.$product['url'].')';
+            }
+        }
+        return $reply;
+    }
 }

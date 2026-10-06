@@ -58,6 +58,7 @@ class AiChatController extends Controller
         if ($reply === AiChatService::OUT_OF_SCOPE) {
             return $this->reply($request, $data['message'], $reply);
         }
+        $reply = \App\Services\ChatProductSearch::ensureProductLinks($reply, $data['message'], $behavior, $history);
         $request->session()->put('ai_search_context', \App\Services\ChatProductSearch::criteria($data['message'], $history, $behavior['chat_search_context']));
         $history[] = ['role' => 'user', 'text' => $data['message']];
         $history[] = ['role' => 'model', 'text' => $reply];

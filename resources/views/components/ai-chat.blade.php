@@ -43,7 +43,13 @@ function renderAiMessages() {
             bubble.append(document.createTextNode(content.slice(last, match.index)));
             let url; try { url = new URL(match[2]); } catch (e) {}
             if (url && url.origin === location.origin && (/^\/(?:user\/)?products\/\d+$/.test(url.pathname) || /^\/(?:user\/orders(?:\/\d+)?|user\/points|user\/check-in|user\/spin|login|email\/verify)$/.test(url.pathname))) {
-                const a = document.createElement('a'); a.href = url.href; a.textContent = match[1]; bubble.append(a);
+                const a = document.createElement('a'); a.href = url.href; a.textContent = match[1];
+                if (/^\/(?:user\/)?products\/\d+$/.test(url.pathname)) {
+                    a.className = 'd-block mt-2 mb-1 px-2 py-2 rounded border';
+                    a.style.background = '#f8f3eb'; a.style.color = '#5a4536'; a.style.fontWeight = '600';
+                    a.textContent = 'Xem sản phẩm → ' + match[1];
+                }
+                bubble.append(a);
             } else bubble.append(document.createTextNode(match[1]));
             last = pattern.lastIndex;
         }

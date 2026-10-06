@@ -46,15 +46,14 @@ class ChatController extends Controller
     public function getMessages(Request $request)
     {
         $userId  = Auth::id();
-        $adminId = $this->adminId();
         $afterId = (int) $request->query('after_id', 0);
 
         $query = Message::with(['sender', 'receiver'])
-            ->where(function ($q) use ($userId, $adminId) {
-                $q->where(function ($q2) use ($userId, $adminId) {
-                    $q2->where('sender_id', $userId)->where('receiver_id', $adminId);
-                })->orWhere(function ($q2) use ($userId, $adminId) {
-                    $q2->where('sender_id', $adminId)->where('receiver_id', $userId);
+            ->where(function ($q) use ($userId) {
+                $q->where(function ($q2) use ($userId) {
+                    $q2->where('sender_id', $userId)->whereHas('receiver', fn($admin)=>$admin->where('role', 'admin'));
+                })->orWhere(function ($q2) use ($userId) {
+                    $q2->where('receiver_id', $userId)->whereHas('sender', fn($admin)=>$admin->where('role', 'admin'));
                 });
             });
 
@@ -62,9 +61,9 @@ class ChatController extends Controller
             $query->where('id', '>', $afterId);
         }
 
-        $messages = $query->orderBy('created_at', 'asc')->get();
+        $messages = $query->orderBy('id', 'asc')->get();
 
-        return response()->json($messages);
+        return response()->json($messages)->header('Cache-Control', 'no-store, private');
     }
 
     /**

@@ -689,6 +689,8 @@
                 return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
             }
 
+            @include('components.chat-message-state')
+            let staffMessages = [];
             function loadMessages() {
                 if (chatMode === 'ai') { loadAiMessages(); return; }
                 if (isGuest) {
@@ -710,10 +712,12 @@
                     return;
                 }
 
-                fetch('{{ route('user.chat.messages') }}', { headers: { Accept: 'application/json' } })
-                    .then(r => r.json())
+                fetch('{{ route('user.chat.messages') }}', { cache: 'no-store', headers: { Accept: 'application/json' } })
+                    .then(async r => { if (!r.ok) throw new Error('Không tải được chat'); const data = await r.json(); if (!Array.isArray(data)) throw new Error('Dữ liệu chat không hợp lệ'); return data; })
                     .then(messages => {
                         if (chatMode !== 'staff') return;
+                        staffMessages = mergeChatMessages(staffMessages, messages);
+                        messages = staffMessages;
                         if (!messages || messages.length === 0) {
                             chatBox.innerHTML = `<div style="text-align:center;margin:auto;color:#94a3b8;font-size:0.82rem;"><i class="bi bi-chat-square-text d-block mb-1" style="font-size:1.5rem;opacity:0.4;"></i>Bắt đầu trò chuyện</div>`;
                             return;
