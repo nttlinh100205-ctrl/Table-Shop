@@ -146,10 +146,16 @@ class ChatProductSearch
     {
         if (!self::budget($message)) return false;
         $previous = self::criteria('', $history, $behavior['chat_search_context'] ?? []);
-        if (!$previous['types'] && !$previous['budget_vnd'] && !$previous['styles'] && !$previous['colors']) return false;
-        // A narrow fallback for pure budget changes, never for mixed requests or instructions.
-        $text = preg_replace('/\b\d+(?:[.,]\d+)*\s*(?:trieu|tr|nghin|ngan|k|vnd|dong|d)?\b/', ' ', self::normalize($message));
-        $text = preg_replace('/\b(?:thi sao|the nao|khong qua|it hon|toi da|toi thieu|tro xuong|tro len|ngan sach|duoi|tren|tam|khoang|tu|den|toi|gia|muc|con|nhe|a|thoi|sao|thi)\b/', ' ', $text);
+        // An explicit product + budget is valid even in the very first turn.
+        // Keep Vietnamese "bạn" (you) distinct from "bàn" (table) for this check.
+        $text = self::normalize(preg_replace('/\bbạn\b/ui', 'nguoi dung', $message));
+        $productWords = ['san pham', 'noi that', 'ban van phong', 'ban tra', 'ban an', 'ban cafe', 'ban', 'ghe', 'sofa', 'giuong'];
+        if (!$previous['types'] && !$previous['budget_vnd'] && !$previous['styles'] && !$previous['colors']
+            && !self::phrases($text, $productWords)) return false;
+        // Consume the whole shopping request; unknown/mixed instructions still fail closed.
+        $text = preg_replace('/\b\d+(?:[.,]\d+)*\s*(?:trieu|tr|nghin|ngan|k|vnd|dong|d)?\b/', ' ', $text);
+        foreach ($productWords as $word) $text = preg_replace('/\b'.preg_quote($word, '/').'\b/', ' ', $text);
+        $text = preg_replace('/\b(?:thi sao|the nao|khong qua|it hon|toi da|toi thieu|tro xuong|tro len|ngan sach|duoi|tren|tam|khoang|tu|den|toi|gia|muc|con|nhe|a|thoi|sao|thi|tim|giup|minh|cho|xem|shop|co|nao|khong|ko|muon|can|mua)\b/', ' ', $text);
         return trim(preg_replace('/[\s?!.,-]+/', '', $text)) === '';
     }
 
