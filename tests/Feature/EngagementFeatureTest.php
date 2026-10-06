@@ -91,6 +91,22 @@ class EngagementFeatureTest extends TestCase
         }
     }
 
+    public function test_analysis_rate_limit_is_independent_and_returns_to_admin_with_retry_message(): void
+    {
+        $admin = User::factory()->create(['role'=>'admin']);
+        $this->actingAs($admin);
+        // Other numeric throttle routes used to share this user-wide counter.
+        for ($i=0;$i<5;$i++) \Illuminate\Support\Facades\RateLimiter::hit(sha1($admin->id),60);
+        $advisor = \Mockery::mock(\App\Services\AiProductAdvisor::class);
+        $advisor->shouldReceive('generate')->twice()->with(7)->andThrow(new \DomainException('Chưa có dữ liệu'));
+        $this->app->instance(\App\Services\AiProductAdvisor::class,$advisor);
+        for ($i=0;$i<2;$i++) $this->post(route('admin.ai-demands.analyze'),['days'=>7])->assertSessionHas('error','Chưa có dữ liệu');
+        $this->post(route('admin.ai-demands.analyze'),['days'=>7])
+            ->assertRedirect(route('admin.ai-demands.index',['days'=>7]))
+            ->assertSessionHas('error',fn($message)=>str_contains($message,'giây'));
+        $this->postJson(route('admin.ai-demands.analyze'),['days'=>7])->assertStatus(429)->assertJsonStructure(['message','retry_after']);
+    }
+
     public function test_ai_product_advisor_uses_only_product_evidence_and_saves_grounded_report(): void
     {
         config(['services.groq.api_key'=>'test']);

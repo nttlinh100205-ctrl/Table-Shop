@@ -57,6 +57,16 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function configureRateLimiting()
     {
+        RateLimiter::for('ai-product-analysis', function (Request $request) {
+            return Limit::perMinute(2)->by('ai-product-analysis:'.$request->user()->id)
+                ->response(function (Request $request, array $headers) {
+                    $seconds = max(1, (int)($headers['Retry-After'] ?? 60));
+                    $message = 'Bạn vừa yêu cầu phân tích AI nhiều lần. Vui lòng chờ '.$seconds.' giây rồi thử lại. Bản phân tích đã lưu vẫn được giữ.';
+                    if ($request->expectsJson()) return response()->json(['message'=>$message,'retry_after'=>$seconds],429,$headers);
+                    $days = in_array((string)$request->input('days'),['7','30','90'],true) ? (int)$request->input('days') : 30;
+                    return redirect()->route('admin.ai-demands.index',['days'=>$days])->with('error',$message);
+                });
+        });
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
