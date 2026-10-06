@@ -228,6 +228,9 @@ Route::get('/payment/momo/callback', [MomoController::class, 'callback'])
 
 Route::get('/ai-chat/greeting', [\App\Http\Controllers\User\AiChatController::class, 'greeting'])->middleware('throttle:30,1')->name('ai.greeting');
 Route::post('/ai-chat', [\App\Http\Controllers\User\AiChatController::class, 'send'])->middleware('throttle:10,1')->name('ai.send');
+Route::get('/chat/session', function (\Illuminate\Http\Request $request) {
+    return response()->json(['user_id'=>$request->user()->id, 'csrf_token'=>csrf_token()])->header('Cache-Control', 'no-store, private');
+})->middleware('auth')->name('chat.session');
 Route::middleware(['auth', 'verified', 'user'])->prefix('user')->name('user.')->group(function () {
     Route::get('/spin', [\App\Http\Controllers\User\SpinController::class, 'index'])->name('spin.index');
     Route::post('/spin', [\App\Http\Controllers\User\SpinController::class, 'store'])->middleware('throttle:10,1')->name('spin.store');

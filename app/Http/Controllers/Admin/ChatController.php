@@ -107,6 +107,7 @@ class ChatController extends Controller
     /** Admin gửi tin */
     public function send(Request $request)
     {
+        abort_if($request->filled('expected_user_id') && (int)$request->input('expected_user_id') !== (int)$request->user()->id, 409, 'Phiên đăng nhập đã đổi tài khoản. Vui lòng tải lại trang.');
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'message' => 'required|string|max:2000',

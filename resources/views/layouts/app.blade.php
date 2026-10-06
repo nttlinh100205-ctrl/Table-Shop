@@ -781,16 +781,7 @@
                 const message = (fromPreset ? preset : input.value).trim();
                 if (!message) return;
                 setSending(true);
-                fetch('{{ route('user.chat.send') }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': csrf,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({ message }),
-                })
-                    .then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.message || 'Không gửi được tin nhắn.'); return data; })
+                sendStaffChat('{{ route('user.chat.send') }}', {message}, myId)
                     .then(() => {
                         if (!fromPreset) input.value = '';
                         setSending(false);

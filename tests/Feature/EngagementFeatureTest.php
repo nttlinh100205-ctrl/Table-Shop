@@ -733,6 +733,8 @@ class EngagementFeatureTest extends TestCase
         $customer = User::factory()->create(['role'=>'user']);
         $other = User::factory()->create(['role'=>'user']);
         $admins = [User::factory()->create(['role'=>'admin']), User::factory()->create(['role'=>'admin'])];
+        $this->actingAs($admins[0])->getJson(route('chat.session'))->assertOk()->assertJson(['user_id'=>$admins[0]->id])->assertJsonStructure(['csrf_token']);
+        $this->postJson(route('admin.chat.send'), ['user_id'=>$customer->id,'message'=>'Wrong session','expected_user_id'=>$admins[1]->id])->assertStatus(409);
         foreach ($admins as $admin) {
             $this->actingAs($admin)->postJson(route('admin.chat.send'), ['user_id'=>$customer->id,'message'=>'Phản hồi '.$admin->id])->assertOk();
         }
@@ -741,6 +743,7 @@ class EngagementFeatureTest extends TestCase
         $this->assertStringContainsString('no-store', $first->headers->get('Cache-Control'));
         $this->getJson(route('user.chat.messages'))->assertJson($first->json());
         $this->getJson(route('user.chat.messages', ['after_id'=>$first->json('0.id')]))->assertJsonCount(1);
+        $this->postJson(route('user.chat.send'), ['message'=>'Wrong user session','expected_user_id'=>$other->id])->assertStatus(409);
     }
 
     public function test_ai_adds_clickable_links_when_product_answer_omits_them(): void

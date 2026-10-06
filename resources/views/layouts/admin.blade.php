@@ -772,7 +772,7 @@
                             <input type="text" id="chat-input" class="form-control"
                                    placeholder="Nhập câu trả lời..." autocomplete="off" maxlength="2000"
                                    style="border-radius:8px 0 0 8px; font-size:0.85rem;">
-                            <button id="send-btn" class="btn btn-primary px-3" style="border-radius:0 8px 8px 0;" title="Gửi tin nhắn">
+                            <button type="button" id="send-btn" class="btn btn-primary px-3" style="border-radius:0 8px 8px 0;" title="Gửi tin nhắn">
                                 <i class="bi bi-send-fill me-1"></i> Gửi
                             </button>
                         </div>
@@ -1021,6 +1021,7 @@
                     html += `<div class="msg-row ${isMe ? 'msg-me' : 'msg-other'}">
                         <strong style="font-size:0.72rem;display:block;margin-bottom:2px;opacity:0.7;">${escapeHtml(name)}</strong>
                         ${escapeHtml(msg.content)}
+                        ${msg.send_error ? `<div class="small text-danger mt-1">Chưa gửi: ${escapeHtml(msg.send_error)}</div>` : String(msg.id).startsWith('temp_') ? '<div class="small text-muted mt-1">Đang gửi…</div>' : ''}
                     </div>`;
                 });
             } else {
@@ -1312,30 +1313,21 @@
                 if (userCard) userCard.textContent = message;
             }
 
-            fetch('{{ route('admin.chat.send') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrf,
-                },
-                body: JSON.stringify({ message, user_id: sendingUserId }),
-            })
-                .then(async r => { const data = await r.json(); if (!r.ok || !data.id) throw new Error(data.message || 'Không gửi được tin nhắn.'); return data; })
+            sendStaffChat('{{ route('admin.chat.send') }}', {message, user_id:sendingUserId}, myId)
                 .then(saved => {
                     messagesCache[sendingUserId] = mergeChatMessages((messagesCache[sendingUserId] || []).filter(m => m.id !== optimisticMsg.id), [saved]);
                     if (currentUserId === sendingUserId) renderMessages(messagesCache[sendingUserId]);
                     loadMessages();
                 })
                 .catch(err => {
-                    messagesCache[sendingUserId] = (messagesCache[sendingUserId] || []).filter(m => m.id !== optimisticMsg.id);
+                    optimisticMsg.send_error = err.message || 'Lỗi kết nối. Vui lòng thử lại.';
+                    messagesCache[sendingUserId] = mergeChatMessages(messagesCache[sendingUserId] || [], [optimisticMsg]);
                     if (currentUserId === sendingUserId) { renderMessages(messagesCache[sendingUserId]); if (!fromPreset && !chatInput.value) chatInput.value = message; }
-                    alert(err.message || 'Không gửi được tin nhắn. Vui lòng thử lại.');
                 });
         }
 
         document.getElementById('send-btn').onclick = () => sendMessage();
-        chatInput.onkeypress = e => { if (e.key === 'Enter') sendMessage(); };
+        chatInput.onkeypress = e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } };
 
         setInterval(() => {
             if (chatPopup.classList.contains('open')) {
