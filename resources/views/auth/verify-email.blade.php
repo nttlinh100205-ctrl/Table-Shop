@@ -47,7 +47,11 @@
                         <p class="mb-4">
                             Email chứa link xác thực đang được gửi đến địa chỉ email của bạn.
                             Vui lòng kiểm tra hộp thư (kể cả thư mục Spam) và nhấn vào link để hoàn tất đăng ký.
+                            Bạn có thể mở email trên điện thoại; trang này sẽ tự vào website khi xác thực thành công.
                         </p>
+                        <p id="verification-status" class="small text-muted" role="status" aria-live="polite">Đang chờ bạn xác thực email…</p>
+                        <button type="button" id="verification-check" class="btn btn-outline-secondary w-100 mb-3">Tôi đã xác thực — kiểm tra lại</button>
+                        <a href="{{ route('login') }}" id="verification-login" class="btn btn-primary w-100 mb-3" hidden>Đăng nhập lại</a>
 
                         <form method="POST" action="{{ route('verification.send') }}">
                             @csrf
@@ -67,5 +71,8 @@
             </div>
         </div>
     </div>
+<script>
+@include('components.email-verification-poll')
+</script>
 </body>
 </html>

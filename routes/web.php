@@ -20,7 +20,6 @@ use App\Http\Controllers\User\MomoController;
 use App\Http\Controllers\User\ChatController as UserChatController;
 use App\Http\Controllers\User\ReviewController;
 use App\Http\Controllers\User\PointController;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -67,18 +66,10 @@ Route::get('/email/verify', function () {
 })->middleware('auth')->name('verification.notice');
 
 // Xử lý link xác nhận (từ email)
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill();
-
-    $user = $request->user();
-    if ($user->isAdmin()) {
-        return redirect()->route('admin.dashboard')
-            ->with('success', 'Xác thực email thành công!');
-    }
-
-    return redirect()->route('user.home')
-        ->with('success', 'Xác thực email thành công!');
-})->middleware(['auth', 'signed'])->name('verification.verify');
+Route::get('/email/verify/{id}/{hash}', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'verify'])
+    ->middleware(['signed', 'throttle:20,1'])->name('verification.verify');
+Route::get('/email/verification-status', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'status'])
+    ->middleware(['auth', 'throttle:60,1'])->name('verification.status');
 
 // Gửi lại email xác nhận
 Route::post('/email/verification-notification', function (Request $request) {

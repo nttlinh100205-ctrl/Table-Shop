@@ -852,6 +852,47 @@ class EngagementFeatureTest extends TestCase
         $this->assertSame(500, $buyer->fresh()->coin_balance);
     }
 
+    public function test_phone_can_verify_without_login_and_desktop_detects_it(): void
+    {
+        \Illuminate\Support\Facades\Event::fake([\Illuminate\Auth\Events\Verified::class]);
+        $user = User::factory()->unverified()->create(['role'=>'user']);
+        $url = \Illuminate\Support\Facades\URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
+            'id'=>$user->id, 'hash'=>sha1($user->getEmailForVerification()),
+        ]);
+        $this->actingAs($user)->get(route('verification.notice'))->assertOk()->assertSee('verification-status')->assertSee('điện thoại');
+        $this->getJson(route('verification.status'))->assertOk()->assertJson(['verified'=>false,'redirect'=>null]);
+        \Illuminate\Support\Facades\Auth::logout();
+        $this->get($url)->assertOk()->assertSee('Xác thực email thành công');
+        $this->assertGuest();
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
+        $this->get($url)->assertOk();
+        \Illuminate\Support\Facades\Event::assertDispatchedTimes(\Illuminate\Auth\Events\Verified::class, 1);
+        // The desktop's existing user instance can be stale; the status endpoint rereads the DB.
+        $status = $this->actingAs($user)->getJson(route('verification.status'))->assertOk()
+            ->assertJson(['user_id'=>$user->id,'verified'=>true,'redirect'=>route('user.home')]);
+        $this->assertStringContainsString('no-store',$status->headers->get('Cache-Control'));
+        $this->get($url)->assertRedirect(route('user.home'));
+    }
+
+    public function test_cross_device_verification_rejects_invalid_links_and_preserves_other_login(): void
+    {
+        $user = User::factory()->unverified()->create(['role'=>'user']);
+        $other = User::factory()->unverified()->create(['role'=>'user']);
+        $parameters = ['id'=>$user->id,'hash'=>sha1($user->getEmailForVerification())];
+        $url = \Illuminate\Support\Facades\URL::temporarySignedRoute('verification.verify',now()->addHour(),$parameters);
+        $this->getJson(route('verification.status'))->assertUnauthorized();
+        $this->get(route('verification.verify',$parameters))->assertForbidden();
+        $this->get(\Illuminate\Support\Facades\URL::temporarySignedRoute('verification.verify',now()->subMinute(),$parameters))->assertForbidden();
+        $this->get(str_replace('/'.$user->id.'/', '/'.$other->id.'/', $url))->assertForbidden();
+        $this->get(\Illuminate\Support\Facades\URL::temporarySignedRoute('verification.verify',now()->addHour(),['id'=>$user->id,'hash'=>sha1('old@example.com')]))->assertForbidden();
+        $this->assertFalse($user->fresh()->hasVerifiedEmail());
+        $this->actingAs($other)->get($url)->assertOk();
+        $this->assertAuthenticatedAs($other);
+        $this->assertFalse($other->fresh()->hasVerifiedEmail());
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
+        $this->getJson(route('verification.status'))->assertJson(['user_id'=>$other->id,'verified'=>false]);
+    }
+
     public function test_legacy_accounts_skip_verification_and_new_accounts_still_require_it(): void
     {
         $migration=require database_path('migrations/2026_10_06_120000_add_review_management.php');

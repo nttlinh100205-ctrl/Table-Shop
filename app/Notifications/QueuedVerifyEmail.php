@@ -53,6 +53,7 @@ class QueuedVerifyEmail extends VerifyEmail implements ShouldQueue
             ->line('Cảm ơn bạn đã đăng ký tài khoản tại Table Shop.')
             ->line('Vui lòng bấm vào nút bên dưới để xác thực địa chỉ email và hoàn tất kích hoạt tài khoản của bạn:')
             ->action('Xác thực tài khoản ngay', $url)
+            ->line('Bạn có thể mở link trên điện thoại. Trang đang chờ xác thực trên máy tính sẽ tự chuyển vào website khi còn đăng nhập.')
             ->line('Liên kết xác thực này sẽ hết hạn sau 60 phút.')
             ->line('Nếu bạn không thực hiện đăng ký tài khoản này, vui lòng bỏ qua email này.')
             ->salutation('Trân trọng, Đội ngũ Table Shop');
