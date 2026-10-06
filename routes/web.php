@@ -132,6 +132,8 @@ Route::prefix('admin')
         Route::resource('users', AdminUserController::class);
         Route::resource('prizes', \App\Http\Controllers\Admin\PrizeController::class)->except(['show','destroy']);
         Route::get('/reviews', [\App\Http\Controllers\Admin\ReviewController::class, 'index'])->name('reviews.index');
+        Route::get('/ai-demands', [\App\Http\Controllers\Admin\AiDemandController::class, 'index'])->name('ai-demands.index');
+        Route::put('/ai-demands/{key}', [\App\Http\Controllers\Admin\AiDemandController::class, 'update'])->where('key', '[a-f0-9]{64}')->name('ai-demands.update');
         Route::put('/reviews/{review}', [\App\Http\Controllers\Admin\ReviewController::class, 'update'])->name('reviews.update');
 
         // Báo cáo

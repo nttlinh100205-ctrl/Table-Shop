@@ -39,10 +39,89 @@ class EngagementFeatureTest extends TestCase
             '2026_10_06_120000_add_review_management',
             '2026_10_06_180000_add_ai_review_replies',
             '2026_09_21_000001_create_messages_table',
+            '2026_10_07_000001_create_ai_demand_analytics',
         ] as $migration) {
             (require database_path('migrations/'.$migration.'.php'))->up();
         }
         Prize::query()->update(['is_active' => false]);
+    }
+
+    public function test_ai_demand_records_budget_followups_and_aggregates_admin_opportunities(): void
+    {
+        config(['services.ai.provider'=>'groq','services.groq.api_key'=>'test']);
+        $customer = User::factory()->create(['role'=>'user']);
+        $category = \App\Models\Category::create(['name'=>'Bàn']);
+        \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn lớn','price'=>6000000]);
+        Http::fake(['api.groq.com/*'=>Http::sequence()
+            ->push(['choices'=>[['message'=>['content'=>'ALLOWED']]]])
+            ->push(['choices'=>[['message'=>['content'=>'Chưa có mẫu phù hợp.']]]])
+            ->push(['choices'=>[['message'=>['content'=>'ALLOWED']]]])
+            ->push(['choices'=>[['message'=>['content'=>'Chưa có mẫu phù hợp.']]]])
+            ->push(['choices'=>[['message'=>['content'=>'OFF_TOPIC']]]])]);
+        $this->actingAs($customer)->postJson(route('ai.send'),['message'=>'bàn dưới 5 triệu'])->assertOk();
+        $this->postJson(route('ai.send'),['message'=>'màu đen thì sao'])->assertOk();
+        $this->postJson(route('ai.send'),['message'=>'viết code cho tôi'])->assertOk();
+        $events = \App\Models\AiQuestionEvent::orderBy('id')->get();
+        $this->assertCount(3,$events);
+        $this->assertSame('product',$events[1]->topic);
+        $this->assertEquals(5000000,$events[1]->criteria['budget_vnd']['max']);
+        $this->assertSame(['den'],$events[1]->criteria['colors']);
+        $this->assertSame(0,$events[1]->match_count);
+        $this->assertSame('off_topic',$events[2]->topic);
+        $this->assertNull($events[2]->demand_key);
+        $this->assertSame($events[0]->visitor_key,$events[1]->visitor_key);
+        $this->assertNotEquals((string)$customer->id,$events[0]->visitor_key);
+        $this->get(route('admin.ai-demands.index'))->assertRedirect();
+        $this->put(route('admin.ai-demands.update',$events[0]->demand_key),['status'=>'done'])->assertRedirect();
+        $admin = User::factory()->create(['role'=>'admin']);
+        $this->actingAs($admin)->get(route('admin.ai-demands.index'))->assertOk()
+            ->assertSee('Gợi ý bổ sung sản phẩm')->assertSee('màu đen')->assertSee('5.000.000đ')
+            ->assertViewHas('gaps',2)->assertViewHas('visitors',1);
+        $this->put(route('admin.ai-demands.update',$events[1]->demand_key),['status'=>'planned','note'=>'Tìm bàn đen giá dưới 5 triệu'])->assertSessionHas('success');
+        $this->assertDatabaseHas('ai_demand_plans',['demand_key'=>$events[1]->demand_key,'status'=>'planned']);
+        $this->putJson(route('admin.ai-demands.update',$events[1]->demand_key),['status'=>'invalid'])->assertUnprocessable();
+        $this->get(route('admin.ai-demands.index',['days'=>7,'topic'=>'off_topic']))->assertOk()->assertViewHas('questions',fn($q)=>$q->total()===1);
+    }
+
+    public function test_ai_demand_checks_matching_variant_stock_and_does_not_count_thanks_as_demand(): void
+    {
+        config(['services.ai.provider'=>'groq','services.groq.api_key'=>'test']);
+        $category = \App\Models\Category::create(['name'=>'Bàn']);
+        $product = \App\Models\Product::create(['category_id'=>$category->id,'name'=>'Bàn thử','price'=>2000000]);
+        foreach (['Đen'=>2,'Đỏ'=>0] as $color=>$stock) {
+            \App\Models\ProductVariant::create(['product_id'=>$product->id,'color'=>$color,'price'=>2000000,'stock'=>$stock]);
+        }
+        Http::fake(['api.groq.com/*'=>Http::response(['choices'=>[['message'=>['content'=>'ALLOWED']]]])]);
+        $this->postJson(route('ai.send'),['message'=>'bàn màu đen'])->assertOk();
+        $this->postJson(route('ai.send'),['message'=>'màu đỏ thì sao'])->assertOk();
+        $this->postJson(route('ai.send'),['message'=>'Cảm ơn bạn'])->assertOk();
+        $events = \App\Models\AiQuestionEvent::orderBy('id')->get();
+        $this->assertSame(1,$events[0]->match_count);
+        $this->assertSame(0,$events[1]->match_count);
+        $this->assertNull($events[2]->demand_key);
+    }
+
+    public function test_ai_demand_redacts_contacts_groups_questions_and_does_not_break_chat_if_storage_fails(): void
+    {
+        $analytics = \App\Services\AiDemandAnalytics::class;
+        $safe = $analytics::redact('Gọi 0912345678 hoặc test@example.com <script>alert(1)</script>');
+        $this->assertStringNotContainsString('0912345678',$safe);
+        $this->assertStringNotContainsString('test@example.com',$safe);
+        $this->assertStringNotContainsString('<script>',$safe);
+        $this->postJson(route('ai.send'),['message'=>'Tôi muốn tra cứu đơn hàng.'])->assertOk();
+        $this->postJson(route('ai.send'),['message'=>'TÔI MUỐN TRA CỨU ĐƠN HÀNG!'])->assertOk();
+        $events = \App\Models\AiQuestionEvent::get();
+        $this->assertCount(2,$events);
+        $this->assertSame($events[0]->question_key,$events[1]->question_key);
+        $this->assertSame('orders',$events[0]->topic);
+        $this->assertNull($events[0]->demand_key);
+        $events[0]->update(['created_at'=>now()->subDays(100)]);
+        $admin = User::factory()->create(['role'=>'admin']);
+        $this->actingAs($admin)->get(route('admin.ai-demands.index',['days'=>7]))->assertOk()->assertViewHas('total',1);
+        $this->postJson(route('ai.send'),['message'=>'Tôi muốn tra cứu đơn hàng.'])->assertOk();
+        $this->assertSame(2,\App\Models\AiQuestionEvent::count(), 'Admin test questions must not inflate customer demand');
+        \Illuminate\Support\Facades\Schema::drop('ai_question_events');
+        $this->actingAs(User::factory()->create(['role'=>'user']))->postJson(route('ai.send'),['message'=>'Tôi muốn tra cứu đơn hàng.'])->assertOk();
     }
 
     public function test_spin_is_idempotent_and_consumes_stock_and_ticket(): void

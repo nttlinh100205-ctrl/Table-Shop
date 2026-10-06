@@ -596,6 +596,7 @@
             </a>
 
             <div class="sidebar-section-label">Hệ thống</div>
+            <a href="{{ route('admin.ai-demands.index') }}" class="sidebar-nav-link {{ request()->routeIs('admin.ai-demands.*') ? 'active' : '' }}"><span class="nav-icon"><i class="bi bi-chat-square-text"></i></span>Nhu cầu từ AI</a>
             <a href="{{ route('admin.prizes.index') }}" class="sidebar-nav-link {{ request()->routeIs('admin.prizes.*') ? 'active' : '' }}"><span class="nav-icon"><i class="bi bi-gift"></i></span>Vòng quay may mắn</a>
             <a href="{{ route('admin.reviews.index') }}" class="sidebar-nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}"><span class="nav-icon"><i class="bi bi-chat-square-heart"></i></span>Đánh giá & phản hồi</a>
 

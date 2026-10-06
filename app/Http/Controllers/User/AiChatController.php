@@ -23,13 +23,14 @@ class AiChatController extends Controller
         return $request->session()->get('ai_transcript');
     }
 
-    private function reply(Request $request, string $message, string $reply, int $status = 200, ?string $code = null)
+    private function reply(Request $request, string $message, string $reply, int $status = 200, ?string $code = null, string $kind = 'support')
     {
         // Display history is separate from model context: private order/account replies never go to AI.
         $messages = $this->transcript($request);
         $messages[] = ['text' => $message, 'user' => true];
         $messages[] = ['text' => $reply, 'user' => false];
         $request->session()->put('ai_transcript', $messages);
+        \App\Services\AiDemandAnalytics::record($request, $message, $status === 200 ? $kind : 'error');
         $data = $status === 200 ? ['reply' => $reply] : ['message' => $reply, 'code' => $code];
         return response()->json($data + ['messages' => $messages], $status)->header('Cache-Control', 'no-store, private');
     }
@@ -56,13 +57,13 @@ class AiChatController extends Controller
             return $this->reply($request, $data['message'], 'AI tạm thời không khả dụng. Vui lòng thử lại.', 503, 'AI_UNAVAILABLE');
         }
         if ($reply === AiChatService::OUT_OF_SCOPE) {
-            return $this->reply($request, $data['message'], $reply);
+            return $this->reply($request, $data['message'], $reply, 200, null, 'off_topic');
         }
         $reply = \App\Services\ChatProductSearch::ensureProductLinks($reply, $data['message'], $behavior, $history);
         $request->session()->put('ai_search_context', \App\Services\ChatProductSearch::criteria($data['message'], $history, $behavior['chat_search_context']));
         $history[] = ['role' => 'user', 'text' => $data['message']];
         $history[] = ['role' => 'model', 'text' => $reply];
         $request->session()->put('ai_history', array_slice($history, -6));
-        return $this->reply($request, $data['message'], $reply);
+        return $this->reply($request, $data['message'], $reply, 200, null, 'answer');
     }
 }
