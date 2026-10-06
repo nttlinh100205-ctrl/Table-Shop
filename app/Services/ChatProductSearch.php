@@ -125,13 +125,18 @@ class ChatProductSearch
     public static function isAttributeFollowUp(string $message, array $history, ?array $behavior): bool
     {
         $previous = self::criteria('', $history, $behavior['chat_search_context'] ?? []);
-        if (!array_filter($previous)) return false;
         $text = self::normalize($message);
+        // Everyday shorthand must not turn a valid shopping follow-up into OFF_TOPIC.
+        // Do not replace "k" globally: it is also the thousand-VND price unit.
+        $text = preg_replace('/\b(?:ko|k0|hok|khum)\b/', 'khong', $text);
+        $text = preg_replace('/\bk\s*([?!.,]*)$/', 'khong$1', $text);
+        $types = self::phrases($text, ['ban','ghe','sofa','giuong']);
+        if (!array_filter($previous) && !$types && empty($behavior['last_product_id'])) return false;
         if (!self::phrases($text, array_merge(self::COLORS, self::STYLES)) && !self::dimensions($text)) return false;
         // Consume only a small shopping grammar. Arbitrary instructions and mixed requests fail closed.
         $text = preg_replace('/(?<=\d)[x×*](?=\d)/', ' ', $text);
         $text = preg_replace('/\b\d+m\d{1,2}\b|\b\d+(?:[.,]\d+)?\s*(?:mm|cm|m)?\b/', ' ', $text);
-        foreach (array_merge(self::STYLES, self::COLORS, ['phong cach','kich thuoc','thi sao','co','mau','dai','rong','cao','sau','size','sz','khong','nhe','a','con','doi','sang','va','loai','kieu']) as $word) {
+        foreach (array_merge(self::STYLES, self::COLORS, ['ban van phong','ban tra','ban an','ban cafe','ban','ghe','sofa','giuong','san pham','phong cach','kich thuoc','thi sao','co','mau','dai','rong','cao','sau','size','sz','khong','nhe','a','con','doi','sang','va','loai','kieu','toi','minh','muon','can','tim','cho','xem','giup','shop','nao','nay','do','duoc']) as $word) {
             $text = preg_replace('/\b'.preg_quote($word, '/').'\b/', ' ', $text);
         }
         return trim(preg_replace('/[\s?!.,×*x-]+/', '', $text)) === '';
