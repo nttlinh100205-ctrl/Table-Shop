@@ -778,6 +778,26 @@ class EngagementFeatureTest extends TestCase
         $this->postJson(route('user.chat.send'), ['message'=>'Wrong user session','expected_user_id'=>$other->id])->assertStatus(409);
     }
 
+    public function test_admin_quick_reply_is_persisted_and_visible_after_both_sides_poll(): void
+    {
+        $admin = User::factory()->create(['role'=>'admin']);
+        $customer = User::factory()->create(['role'=>'user']);
+        $this->actingAs($admin)->get(route('admin.prizes.index'))->assertOk()
+            ->assertSee('async function sendStaffChat', false)
+            ->assertSee('Chưa gửi:', false);
+        $reply = 'Dạ chào anh/chị! Anh/chị cho shop biết kích thước không gian, mục đích sử dụng (làm việc, ăn uống, học tập...) và ngân sách dự kiến để shop tư vấn mẫu bàn phù hợp nhất nhé.';
+        $saved = $this->postJson(route('admin.chat.send'), [
+            'user_id'=>$customer->id, 'expected_user_id'=>$admin->id, 'message'=>$reply,
+        ])->assertOk()->assertJson(['content'=>$reply, 'sender_id'=>$admin->id, 'receiver_id'=>$customer->id]);
+        $this->assertDatabaseHas('messages', ['id'=>$saved->json('id'), 'content'=>$reply]);
+        for ($poll = 0; $poll < 2; $poll++) {
+            $this->actingAs($admin)->getJson(route('admin.chat.messages', $customer->id))
+                ->assertOk()->assertJsonCount(1)->assertJsonPath('0.content', $reply);
+            $this->actingAs($customer)->getJson(route('user.chat.messages'))
+                ->assertOk()->assertJsonCount(1)->assertJsonPath('0.content', $reply);
+        }
+    }
+
     public function test_ai_adds_clickable_links_when_product_answer_omits_them(): void
     {
         $category = \App\Models\Category::create(['name'=>'Bàn']);
