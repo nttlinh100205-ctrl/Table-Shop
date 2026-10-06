@@ -22,6 +22,43 @@ class ChatProductSearch
         return array_values(array_filter($phrases, fn($phrase) => preg_match('/\b'.preg_quote($phrase, '/').'\b/', $text)));
     }
 
+    private static function productTypes(string $text): array
+    {
+        $specific = self::phrases($text, ['ban an','ban tra','ban van phong','ban cafe']);
+        return $specific ?: self::phrases($text, ['ban','ghe','sofa','giuong']);
+    }
+
+    public static function catalogReply(string $message, array $history, ?array $behavior): ?string
+    {
+        $text = self::normalize($message);
+        if (!preg_match('/\b(goi y|gioi thieu|cho (?:toi |minh )?xem|tim (?:giup )?(?:toi |minh )?)\b/', $text)
+            || !self::productTypes($text)) return null;
+        // Only serve a fully understood shopping request directly. Mixed instructions go to scope checking.
+        $remainder = preg_replace('/\b\d+m\d{1,2}\b|\b\d+(?:[.,]\d+)*\s*(?:trieu|tr|nghin|ngan|k|vnd|dong|d|cm|mm|m)?\b/', ' ', $text);
+        foreach (array_merge(self::STYLES,self::COLORS, ['ban van phong','ban an','ban tra','ban cafe','goi y','gioi thieu','mot so','ngan sach','toi da','khong qua','it hon','toi thieu','tro len','tro xuong','thi sao','phong cach','kich thuoc','san pham','ban','ghe','sofa','giuong','tim','giup','toi','minh','cho','xem','mau','dai','rong','cao','sau','size','sz','gia','duoi','tren','tam','khoang','tu','den','va','so','mau','chiec','bo','vai','muon','can','shop','voi','nhe','a']) as $word) {
+            $remainder = preg_replace('/\b'.preg_quote($word,'/').'\b/', ' ', $remainder);
+        }
+        if (trim(preg_replace('/[\s?!.,×*x-]+/','',$remainder)) !== '') return null;
+        $catalog = self::search($message,$behavior,$history);
+        $rows = [];
+        foreach ($catalog['products'] as $product) {
+            $variant = collect($product['variants'])->first(fn($v)=>$v['matches_detected_filters'] && ($v['stock'] === null || $v['stock'] > 0));
+            if (!$variant) continue;
+            $details = [number_format($variant['price_vnd'],0,',','.').'đ'];
+            if ($variant['color']) $details[] = 'màu '.$variant['color'];
+            $dimensions = array_filter($variant['dimensions_cm'],fn($n)=>$n !== null);
+            if (count($dimensions) === 3) $details[] = implode(' × ',$dimensions).' cm';
+            elseif ($dimensions) foreach ($dimensions as $axis=>$value) $details[] = (['width'=>'rộng/dài','depth'=>'sâu','height'=>'cao'][$axis]).' '.$value.' cm';
+            $details[] = $variant['stock'] === null ? 'cần xác nhận tồn kho' : 'còn '.$variant['stock'].' sản phẩm';
+            $rows[] = '['.$product['name'].']('.$product['url'].') — '.implode('; ',$details).'.';
+            if (count($rows) === 3) break;
+        }
+        if (!$rows) return 'Mình chưa tìm thấy mẫu khớp các điều kiện hiện tại trong danh mục. Bạn muốn đổi tầm giá, màu hoặc kích thước để mình tìm tiếp không?';
+        $intro = 'Bạn tham khảo các mẫu sau trong danh mục shop:';
+        if ($catalog['detected_filters']['budget_vnd']['approximate'] ?? false) $intro .= ' Mình tìm quanh ngân sách bạn đưa ra, trong khoảng ±20%.';
+        return $intro."\n\n".implode("\n\n",$rows)."\n\nBạn muốn kích thước và màu nào để mình tư vấn sát hơn?";
+    }
+
     private static function dimensions(string $text): array
     {
         // Database dimensions are centimetres: 1m2, 1.2m and 120cm mean 120cm.
@@ -84,7 +121,7 @@ class ChatProductSearch
                     if (preg_match('/\b('.$words.')\b/', $text)) $state[$field] = $field === 'budget_vnd' ? null : [];
                 }
             }
-            $types = self::phrases($text, ['ban','ghe','sofa','giuong']);
+            $types = self::productTypes($text);
             if ($types && $state['types'] && $types !== $state['types']) {
                 $state = ['types'=>[], 'colors'=>[], 'styles'=>[], 'dimensions_cm'=>[], 'budget_vnd'=>null];
             }

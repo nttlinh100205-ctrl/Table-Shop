@@ -75,6 +75,7 @@ class AiDemandAnalytics
     public static function label(array $criteria): string
     {
         $labels = ['ban'=>'Bàn','ghe'=>'Ghế','sofa'=>'Sofa','giuong'=>'Giường','trang'=>'trắng','den'=>'đen','nau'=>'nâu','be'=>'be','xam'=>'xám','xanh'=>'xanh','do'=>'đỏ','vang'=>'vàng','hong'=>'hồng','kem'=>'kem','hien dai'=>'hiện đại','toi gian'=>'tối giản','co dien'=>'cổ điển','tan co dien'=>'tân cổ điển','bac au'=>'Bắc Âu'];
+        $labels += ['ban an'=>'Bàn ăn','ban tra'=>'Bàn trà','ban van phong'=>'Bàn làm việc','ban cafe'=>'Bàn cafe'];
         $translate = fn($values)=>implode(', ', array_map(fn($value)=>$labels[$value] ?? $value, $values));
         $parts = [$translate($criteria['types'] ?? []) ?: 'Sản phẩm nội thất'];
         if ($criteria['colors'] ?? []) $parts[] = 'màu '.$translate($criteria['colors']);

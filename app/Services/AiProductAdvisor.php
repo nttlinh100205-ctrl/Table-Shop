@@ -12,7 +12,7 @@ class AiProductAdvisor
     {
         $safe = [];
         foreach ([
-            'types'=>['ban','ghe','sofa','giuong'],
+            'types'=>['ban','ban an','ban tra','ban van phong','ban cafe','ghe','sofa','giuong'],
             'colors'=>['trang','den','nau','be','xam','xanh','do','vang','hong','kem'],
             'styles'=>['hien dai','toi gian','co dien','tan co dien','bac au','japandi','vintage','industrial','luxury'],
         ] as $key=>$allowed) {
