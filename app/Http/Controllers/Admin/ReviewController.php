@@ -16,7 +16,7 @@ class ReviewController extends Controller
     }
     public function update(Request $request, Review $review) {
         $data=$request->validate(['admin_reply'=>'required|string|min:5|max:2000','resolution_status'=>'required|in:pending,resolved']);
-        $review->update($data+['replied_at'=>now()]);
+        $review->update($data+['replied_at'=>now(), 'reply_source'=>'admin', 'ai_reply_status'=>'skipped']);
         return back()->with('success','Đã lưu phản hồi. Khách có thể xem trong đơn hàng và trang sản phẩm.');
     }
 }

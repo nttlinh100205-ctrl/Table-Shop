@@ -74,12 +74,14 @@ class ReviewController extends Controller
         }
 
         // 6. Lưu vào cơ sở dữ liệu
-        $awarded = \Illuminate\Support\Facades\DB::transaction(function () use ($order, $productId, $validated, $uploadedImages) {
+        $createdReview = null;
+        $awarded = \Illuminate\Support\Facades\DB::transaction(function () use ($order, $productId, $validated, $uploadedImages, &$createdReview) {
             $lockedOrder = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
             if ($lockedOrder->status !== 'completed' || Review::where('order_id', $order->id)->where('product_id', $productId)->exists()) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['review' => 'Đơn chưa hoàn thành hoặc sản phẩm đã được đánh giá.']);
             }
-            Review::create([
+            $createdReview = Review::create([
+                'ai_reply_status' => 'queued',
                 'order_id'   => $order->id,
                 'product_id' => $productId,
                 'user_id'    => Auth::id(),
@@ -97,6 +99,12 @@ class ReviewController extends Controller
             ]);
             return true;
         }, 3);
+        try {
+            \App\Jobs\ReplyToReview::dispatch($createdReview->id);
+        } catch (\Throwable $e) {
+            $createdReview->update(['ai_reply_status'=>'failed']);
+            \Illuminate\Support\Facades\Log::warning('Unable to enqueue review reply', ['review_id'=>$createdReview->id]);
+        }
         return back()->with('success', 'Gửi đánh giá thành công!'.($awarded ? ' Bạn được cộng 200 xu.' : ' Đơn này đã nhận thưởng đánh giá.'));
     }
 }

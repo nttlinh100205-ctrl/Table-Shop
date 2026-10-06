@@ -20,6 +20,8 @@ class Review extends Model
         'admin_reply',
         'replied_at',
         'resolution_status',
+        'reply_source',
+        'ai_reply_status',
     ];
 
     protected $casts = [

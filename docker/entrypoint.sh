@@ -84,9 +84,11 @@ php-fpm -t
 server_pids=()
 queue_pid=""
 mail_pid=""
+ai_review_pid=""
 cleanup() {
     trap - EXIT TERM INT
     [[ -n "$mail_pid" ]] && kill -TERM "$mail_pid" 2>/dev/null || true
+    [[ -n "$ai_review_pid" ]] && kill -TERM "$ai_review_pid" 2>/dev/null || true
     [[ -n "$queue_pid" ]] && kill -QUIT "$queue_pid" 2>/dev/null || true
     if (( ${#server_pids[@]} )); then
         kill -QUIT "${server_pids[@]}" 2>/dev/null || true
@@ -114,6 +116,20 @@ server_pids+=("$!")
     done
 ) &
 mail_pid="$!"
+
+# AI replies have their own worker so slow provider requests never delay verification email.
+(
+    ai_worker=""
+    trap '[[ -n "$ai_worker" ]] && kill -TERM "$ai_worker" 2>/dev/null; exit 0' TERM INT
+    while true; do
+        su-exec www-data php artisan queue:work "$MAIL_QUEUE_CONNECTION" \
+            --queue=ai-reviews --tries=3 --timeout=45 --sleep=1 --max-time=3600 --no-interaction &
+        ai_worker="$!"
+        wait "$ai_worker" || true
+        sleep 2
+    done
+) &
+ai_review_pid="$!"
 
 # Queue worker: xử lý email verification jobs (database queue).
 # Restart tự động nếu chết (--tries=3 --sleep=3 --max-time=3600).

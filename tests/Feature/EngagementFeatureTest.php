@@ -37,6 +37,7 @@ class EngagementFeatureTest extends TestCase
             '2026_09_30_082510_create_jobs_table',
             '2026_10_05_110001_create_reviews_table',
             '2026_10_06_120000_add_review_management',
+            '2026_10_06_180000_add_ai_review_replies',
         ] as $migration) {
             (require database_path('migrations/'.$migration.'.php'))->up();
         }
@@ -728,6 +729,7 @@ class EngagementFeatureTest extends TestCase
 
     public function test_reviews_award_200_coins_once_per_completed_order_even_for_low_rating(): void
     {
+        \Illuminate\Support\Facades\Queue::fake();
         $buyer=User::factory()->create(['role'=>'user']);
         $category=\App\Models\Category::create(['name'=>'Bàn']);
         $products=collect([1,2])->map(fn($i)=>\App\Models\Product::create(['name'=>'Bàn '.$i,'category_id'=>$category->id,'price'=>10000]));
@@ -739,11 +741,55 @@ class EngagementFeatureTest extends TestCase
         foreach($products as $product) $this->actingAs($buyer)->post(route('user.reviews.store',$order),['product_id'=>$product->id,'rating'=>1,'comment'=>'Chưa hài lòng với sản phẩm'])->assertSessionHasNoErrors();
         $this->assertSame(200,$buyer->fresh()->coin_balance);
         $this->assertSame(2,\App\Models\Review::count());
+        \Illuminate\Support\Facades\Queue::assertPushed(\App\Jobs\ReplyToReview::class, 2);
+        \Illuminate\Support\Facades\Queue::assertPushed(\App\Jobs\ReplyToReview::class, fn($job)=>$job->queue === 'ai-reviews' && $job->connection !== 'sync');
         $this->assertSame(1,\Illuminate\Support\Facades\DB::table('coin_transactions')->where('type','review')->count());
         $this->post(route('user.reviews.store',$order),['product_id'=>$products->first()->id,'rating'=>5,'comment'=>'Đánh giá lại'])->assertSessionHas('error');
         $this->assertSame(200,$buyer->fresh()->coin_balance);
         $outsider=User::factory()->create(['role'=>'user']);
         $this->actingAs($outsider)->post(route('user.reviews.store',$order),[])->assertForbidden();
+    }
+
+    public function test_ai_review_job_publishes_once_without_resolving_complaint_or_disclosing_account_data(): void
+    {
+        config(['services.groq.api_key'=>'test']);
+        $user = User::factory()->create();
+        $category = \App\Models\Category::create(['name'=>'Bàn']);
+        $product = \App\Models\Product::create(['name'=>'Bàn thử','category_id'=>$category->id,'price'=>10000]);
+        $order = Order::create(['user_id'=>$user->id,'name'=>'Private buyer','phone'=>'0912345678','address'=>'Private address','total_price'=>10000,'status'=>'completed']);
+        $review = \App\Models\Review::create(['user_id'=>$user->id,'order_id'=>$order->id,'product_id'=>$product->id,'rating'=>1,'comment'=>'Bàn bị xước. Email private@example.com, số 0912345678','ai_reply_status'=>'queued']);
+        Http::fake(['api.groq.com/*'=>Http::response(['choices'=>[['message'=>['content'=>'Shop xin lỗi về trải nghiệm. Bạn chọn Nhân viên trong chat để được kiểm tra nhé.']]]])]);
+        $job = new \App\Jobs\ReplyToReview($review->id);
+        $service = new \App\Services\ReviewReplyService;
+        $job->handle($service);
+        $job->handle($service);
+        $this->assertSame('ai', $review->fresh()->reply_source);
+        $this->assertSame('completed', $review->fresh()->ai_reply_status);
+        $this->assertSame('pending', $review->fresh()->resolution_status);
+        $this->assertStringContainsString('Trợ lý AI', view('components.review-reply', ['rev'=>$review->fresh()])->render());
+        Http::assertSentCount(1);
+        Http::assertSent(function ($request) use ($user) {
+            $data = $request['messages'][1]['content'];
+            return str_contains($data, 'Bàn bị xước') && !str_contains($data, 'private@example.com') && !str_contains($data, '0912345678')
+                && !str_contains($data, $user->email) && !str_contains($data, 'Private address');
+        });
+        $review->update(['admin_reply'=>null,'reply_source'=>null]);
+        Http::swap(new \Illuminate\Http\Client\Factory);
+        Http::fake(['api.groq.com/*'=>function () use ($review) {
+            $review->update(['admin_reply'=>'Admin đã tiếp nhận.', 'reply_source'=>'admin', 'ai_reply_status'=>'skipped']);
+            return Http::response(['choices'=>[['message'=>['content'=>'Phản hồi AI đến muộn.']]]]);
+        }]);
+        $job->handle($service);
+        $job->failed(new \RuntimeException('Test failure'));
+        $this->assertSame('Admin đã tiếp nhận.', $review->fresh()->admin_reply);
+        $this->assertSame('admin', $review->fresh()->reply_source);
+        $review->update(['admin_reply'=>null,'reply_source'=>null,'ai_reply_status'=>'queued']);
+        Http::swap(new \Illuminate\Http\Client\Factory);
+        Http::fake(['api.groq.com/*'=>Http::response([], 429)]);
+        try { $job->handle($service); $this->fail('Provider failure must retry'); }
+        catch (\App\Exceptions\AiUnavailableException $e) { $this->assertNull($review->fresh()->admin_reply); }
+        $job->failed(new \RuntimeException('Retries exhausted'));
+        $this->assertSame('failed', $review->fresh()->ai_reply_status);
     }
 
     public function test_admin_can_manage_prizes_and_reply_to_reviews_but_customer_cannot(): void

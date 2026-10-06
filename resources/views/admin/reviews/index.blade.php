@@ -16,6 +16,9 @@
 <p style="white-space:pre-line;overflow-wrap:anywhere">{{ $review->comment }}</p>
 <div class="d-flex gap-2 flex-wrap">@foreach($review->images??[] as $url)<a href="{{ $url }}" target="_blank" rel="noopener"><img src="{{ $url }}" alt="Ảnh khách đánh giá" width="70" height="70" class="rounded border" style="object-fit:cover"></a>@endforeach</div>
 </div><div class="col-lg-5 border-start"><form method="POST" action="{{ route('admin.reviews.update',$review) }}">@csrf @method('PUT')
+@if($review->reply_source === 'ai')<div class="alert alert-light border small py-2">AI đã phản hồi · Bạn có thể chỉnh sửa bên dưới. Trạng thái xử lý vẫn do admin quyết định.</div>
+@elseif($review->ai_reply_status === 'queued')<div class="small text-muted mb-2">AI đang chờ phản hồi tự động. Bạn vẫn có thể trả lời ngay.</div>
+@elseif($review->ai_reply_status === 'failed')<div class="alert alert-warning small py-2">AI chưa trả lời được sau khi thử lại. Bạn có thể phản hồi trực tiếp bên dưới.</div>@endif
 <label class="form-label" for="reply-{{ $review->id }}">Phản hồi của cửa hàng</label><textarea id="reply-{{ $review->id }}" name="admin_reply" class="form-control mb-2" rows="3" minlength="5" maxlength="2000" required>{{ $review->admin_reply }}</textarea>
 <div class="d-flex gap-2"><select name="resolution_status" class="form-select" aria-label="Trạng thái đánh giá #{{ $review->id }}"><option value="pending" @selected($review->resolution_status==='pending')>Cần xử lý</option><option value="resolved" @selected($review->resolution_status==='resolved')>Đã xử lý</option></select><button class="btn btn-primary text-nowrap">Lưu phản hồi</button></div><small class="text-muted">Phản hồi hiển thị cho khách ở đơn hàng và trang sản phẩm.</small></form></div></div></div></article>
 @empty<div class="card p-5 text-center text-muted">Không có đánh giá phù hợp.</div>@endforelse
